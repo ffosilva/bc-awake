@@ -51,6 +51,13 @@
     .btn-danger:hover { background:var(--err); color:#fff; }
     .btn-edit { background:transparent; color:var(--fg); border:1px solid #444; }
     .btn-edit:hover { border-color:var(--accent); color:var(--accent); }
+    .ctrl-item.editing { border-color:var(--accent); background:#201e14; }
+    .ctrl-item .rename-input { width:100%; padding:5px 8px; font-size:13px; border-radius:6px; border:1px solid #444; background:#111; color:var(--fg); margin-bottom:4px; }
+    .ctrl-item .rename-input:focus { border-color:var(--accent); outline:none; }
+    .btn-save { background:var(--accent); color:#000; font-weight:bold; }
+    .btn-save:hover { opacity:.9; }
+    .btn-cancel { background:transparent; color:var(--muted); border:1px solid #444; }
+    .btn-cancel:hover { color:var(--fg); border-color:#666; }
 
     /* Modal styles */
     .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); display:flex; justify-content:center; align-items:center; z-index:100; padding:16px; }
@@ -182,6 +189,7 @@
     let isCam = false;
     let boundControllers = [];
     let detectedMac = "";
+    let editingMac = null;
 
     const $ = (id) => document.getElementById(id);
     const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -305,18 +313,79 @@
       $("btn-add-ctrl").textContent = count >= 8 ? "Controller limit reached (8/8)" : "+ Add controller (" + count + "/8)";
 
       boundControllers.forEach((c) => {
+        const isEditing = editingMac === c.mac;
         const item = document.createElement("div");
-        item.className = "ctrl-item";
-        item.innerHTML =
-          '<div class="ctrl-info"><b>' + esc(c.name || "Controller") + '</b>' +
-          '<small>' + esc(c.mac) + '</small></div>' +
-          '<div class="ctrl-actions">' +
-          '<button class="btn-sm btn-edit" data-mac="' + esc(c.mac) + '" data-name="' + esc(c.name) + '">Rename</button>' +
-          '<button class="btn-sm btn-danger" data-mac="' + esc(c.mac) + '">Remove</button>' +
-          '</div>';
+        item.className = "ctrl-item" + (isEditing ? " editing" : "");
 
-        item.querySelector(".btn-danger").onclick = () => removeCtrl(c.mac);
-        item.querySelector(".btn-edit").onclick = () => renameCtrlPrompt(c.mac, c.name);
+        if (isEditing) {
+          item.innerHTML =
+            '<div class="ctrl-info">' +
+            '<input class="rename-input" type="text" maxlength="32" value="' + esc(c.name || "Controller") + '" />' +
+            '<small>' + esc(c.mac) + '</small></div>' +
+            '<div class="ctrl-actions">' +
+            '<button class="btn-sm btn-save">Save</button>' +
+            '<button class="btn-sm btn-cancel">Cancel</button>' +
+            '</div>';
+
+          const input = item.querySelector(".rename-input");
+          const saveBtn = item.querySelector(".btn-save");
+          const cancelBtn = item.querySelector(".btn-cancel");
+
+          cancelBtn.onclick = () => {
+            editingMac = null;
+            renderBoundList();
+          };
+
+          const doSave = async () => {
+            const newName = input.value.trim();
+            if (!newName) {
+              input.focus();
+              return;
+            }
+            try {
+              saveBtn.disabled = true;
+              cancelBtn.disabled = true;
+              await api("/api/controllers/rename", "POST", { mac: c.mac, name: newName });
+              editingMac = null;
+              await refreshControllers();
+            } catch (e) {
+              const msg = $("dev-msg");
+              if (msg) {
+                msg.className = "msg err";
+                msg.textContent = "Could not rename: " + e.message;
+              }
+              saveBtn.disabled = false;
+              cancelBtn.disabled = false;
+            }
+          };
+
+          saveBtn.onclick = doSave;
+          input.onkeydown = (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              doSave();
+            } else if (e.key === "Escape") {
+              e.preventDefault();
+              editingMac = null;
+              renderBoundList();
+            }
+          };
+          setTimeout(() => { input.focus(); input.select(); }, 0);
+        } else {
+          item.innerHTML =
+            '<div class="ctrl-info"><b>' + esc(c.name || "Controller") + '</b>' +
+            '<small>' + esc(c.mac) + '</small></div>' +
+            '<div class="ctrl-actions">' +
+            '<button class="btn-sm btn-edit" data-mac="' + esc(c.mac) + '">Rename</button>' +
+            '<button class="btn-sm btn-danger" data-mac="' + esc(c.mac) + '">Remove</button>' +
+            '</div>';
+
+          item.querySelector(".btn-danger").onclick = () => removeCtrl(c.mac);
+          item.querySelector(".btn-edit").onclick = () => {
+            editingMac = c.mac;
+            renderBoundList();
+          };
+        }
         listEl.appendChild(item);
       });
 
@@ -329,20 +398,14 @@
     async function removeCtrl(mac) {
       try {
         await api("/api/controllers/remove", "POST", { mac });
+        if (editingMac === mac) editingMac = null;
         await refreshControllers();
       } catch (e) {
-        alert("Could not remove: " + e.message);
-      }
-    }
-
-    async function renameCtrlPrompt(mac, currentName) {
-      const newName = prompt("Enter new name for " + mac + ":", currentName);
-      if (newName === null || !newName.trim()) return;
-      try {
-        await api("/api/controllers/rename", "POST", { mac, name: newName.trim() });
-        await refreshControllers();
-      } catch (e) {
-        alert("Could not rename: " + e.message);
+        const msg = $("dev-msg");
+        if (msg) {
+          msg.className = "msg err";
+          msg.textContent = "Could not remove: " + e.message;
+        }
       }
     }
 
