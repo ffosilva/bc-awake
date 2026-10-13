@@ -114,8 +114,8 @@ const unsigned long HEARTBEAT_MS = 1000;
 
 //*******  WiFi setup portal  ***************
 
-// SoftAP name shown when the device is in setup mode (open network).
-const char *const AP_SSID = "BC250 Switch Setup";
+// SoftAP prefix shown when the device is in setup mode (appended with last 3 MAC bytes).
+const char *const AP_SSID_PREFIX = "BC250_";
 
 // WiFi TX power for the SoftAP.
 // ESP32-C3 mini boards have an RF/power design flaw (arduino-esp32 #6551):

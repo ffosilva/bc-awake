@@ -1,6 +1,6 @@
 #pragma once
 
-// Setup mode (SoftAP + captive portal DNS + discovery)
+// Setup mode (SoftAP + discovery)
 void portalBegin();
 void portalLoop();
 

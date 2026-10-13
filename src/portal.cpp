@@ -2,12 +2,12 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
-#include <DNSServer.h>
 #include "portal_html.h"
 #include <ArduinoJson.h>
 #include <AsyncJson.h>
 #include <ESPAsyncWebServer.h>
 #include <esp_random.h>
+#include <esp_mac.h>
 #include "mbedtls/sha256.h"
 
 #include "board.h"
@@ -22,7 +22,6 @@
 
 static const size_t MIN_PASSWORD_LEN = 6;
 
-static DNSServer       dnsServer;
 static AsyncWebServer  server(80);
 
 // Single-session bearer token, handed out on password set / login and required
@@ -70,7 +69,7 @@ static void sendJsonError(AsyncWebServerRequest *req, int code, const char *msg)
 }
 
 static void serveIndex(AsyncWebServerRequest *req) {
-  AsyncWebServerResponse *response = req->beginResponse_P(200, "text/html", INDEX_HTML_GZ, INDEX_HTML_GZ_LEN);
+  AsyncWebServerResponse *response = req->beginResponse(200, "text/html", INDEX_HTML_GZ, INDEX_HTML_GZ_LEN);
   response->addHeader("Content-Encoding", "gzip");
   req->send(response);
 }
@@ -465,11 +464,12 @@ static void handleUpdateUpload(AsyncWebServerRequest *req, String filename, size
     server.addHandler(new AsyncCallbackJsonWebHandler("/api/network", handleNetwork));
 
     server.on("/", HTTP_GET, serveIndex);
+    server.on("/index.html", HTTP_GET, serveIndex);
     server.onNotFound([](AsyncWebServerRequest *req) {
       if (req->url().startsWith("/api/")) {
         sendJsonError(req, 404, "not found");
       } else {
-        serveIndex(req);  // captive-portal catch-all
+        req->send(404, "text/plain", "Not Found");
       }
     });
   }
@@ -500,14 +500,17 @@ static void handleUpdateUpload(AsyncWebServerRequest *req, String filename, size
     }
     pinMode(BUTTON_SENSE, INPUT_PULLUP);
 
-    bool ok = WiFi.softAP(AP_SSID);  // open network
+    uint8_t mac[6] = {0};
+    esp_read_mac(mac, ESP_MAC_WIFI_STA);
+    char apSsid[32];
+    snprintf(apSsid, sizeof(apSsid), "%s%02X%02X%02X",
+             AP_SSID_PREFIX, mac[3], mac[4], mac[5]);
+
+    bool ok = WiFi.softAP(apSsid);  // open network
     // Must be set AFTER softAP().
     WiFi.setTxPower(AP_TX_POWER);
-    Serial.printf("[PORTAL] softAP ret=%d ssid='%s' ip=%s txpwr=%d\n", ok, AP_SSID,
+    Serial.printf("[PORTAL] softAP ret=%d ssid='%s' ip=%s txpwr=%d\n", ok, apSsid,
                   WiFi.softAPIP().toString().c_str(), WiFi.getTxPower());
-
-    dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-    dnsServer.start(53, "*", WiFi.softAPIP());
 
     // Start device discovery for the picker
     wakeSetDiscovery(true);
@@ -517,7 +520,6 @@ static void handleUpdateUpload(AsyncWebServerRequest *req, String filename, size
   }
 
   void portalLoop() {
-    dnsServer.processNextRequest();
     wakeLoop();
 
     // Button held in setup mode = escape back to normal mode (only useful once
