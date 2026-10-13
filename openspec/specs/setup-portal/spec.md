@@ -110,7 +110,7 @@ The setup web interface SHALL perform all user input entry, editing, and confirm
 The system SHALL provide portal UI controls and API endpoints to configure network wake settings, credentials, and target hardware addresses while off, and SHALL enforce read-only access while the host is on.
 
 #### Scenario: Updating network wake settings with passphrase
-- **WHEN** an authenticated POST request is received at /api/network with valid wolEnabled, wifiSsid, wifiPassword, and colon-delimited bc250Mac while in STATE_OFF
+- **WHEN** an authenticated POST request is received at /api/network with valid wolEnabled, wifiSsid, wifiPassword, colon-delimited bc250Mac, and optional hostname while in STATE_OFF
 - **THEN** the system persists the configuration to NVS and returns HTTP 200 OK
 
 #### Scenario: Updating network wake settings for an open network
@@ -123,11 +123,15 @@ The system SHALL provide portal UI controls and API endpoints to configure netwo
 
 #### Scenario: Inspecting network wake status
 - **WHEN** an authenticated GET request is received at /api/status
-- **THEN** the response includes wolEnabled, wifiSsid, bc250Mac, and an indicator of whether a Wi-Fi password is saved
+- **THEN** the response includes wolEnabled, wifiSsid, bc250Mac, hostname, and an indicator of whether a Wi-Fi password is saved
 
 #### Scenario: Attempting to update network wake settings while host machine is on
 - **WHEN** an authenticated POST request is received at /api/network while the system is in STATE_BOOTING or STATE_ON
 - **THEN** the system rejects the update with HTTP status 403 Forbidden without modifying stored network configuration
+
+#### Scenario: Validating hostname format
+- **WHEN** an authenticated POST request is received at /api/network with a hostname containing characters outside [a-z0-9-] or length exceeding 32 characters
+- **THEN** the system rejects the update with HTTP status 400 Bad Request
 
 ### Requirement: Firmware Version and Target Reporting
 The setup portal status API SHALL report the compiled firmware version and target hardware identifier, and the portal web interface SHALL display them.
@@ -175,7 +179,7 @@ The system SHALL keep the HTTP web portal and REST API online in normal operatio
 
 #### Scenario: mDNS hostname advertised
 - **WHEN** the system establishes Wi-Fi Station connectivity
-- **THEN** the system advertises the hostname bc250-switch.local via mDNS
+- **THEN** the system registers the configured hostname (defaulting to bc250-switch.local) via mDNS and configures the DHCP client hostname
 
 #### Scenario: Reporting host power state in status API
 - **WHEN** a client performs a GET request to /api/status

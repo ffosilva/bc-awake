@@ -25,6 +25,7 @@ const size_t MAX_CONTROLLERS = 8;
 //   wifiSsid    - Wi-Fi network SSID to connect to in normal mode.
 //   wifiPassword- Wi-Fi network password (empty for open networks).
 //   bc250Mac    - BC250 Ethernet MAC address for WOL magic packet filtering.
+//   hostname    - device mDNS and DHCP hostname (default: "bc250-switch").
 struct Config {
   std::vector<BoundController> controllers;
   String wakeAddr;
@@ -36,6 +37,7 @@ struct Config {
   String wifiSsid;
   String wifiPassword;
   String bc250Mac;
+  String hostname;
 };
 
 extern Config config;
@@ -53,7 +55,9 @@ void setPassHash(const String &hash);
 void setForceSetup(bool force);
 void setFlashOnWake(bool enable);
 void setWolEnabled(bool enable);
-void setWifiConfig(const String &ssid, const String &password, const String &bc250Mac);
+void setWifiConfig(const String &ssid, const String &password, const String &bc250Mac, const String &hostname = "");
+bool isValidHostname(const String &name);
+void setHostname(const String &hostname);
 
 // Fully provisioned: a password and controller(s) are set (plus host adapter if Classic BT).
 bool isConfigured();

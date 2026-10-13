@@ -91,6 +91,7 @@ static void handleStatus(AsyncWebServerRequest *req) {
   doc["wifiSsid"]    = config.wifiSsid;
   doc["hasWifiPassword"] = !config.wifiPassword.isEmpty();
   doc["bc250Mac"]    = config.bc250Mac;
+  doc["hostname"]    = config.hostname.isEmpty() ? "bc250-switch" : config.hostname;
   doc["boardState"]  = getBoardStateName();
 #if defined(BOARD_ESP32CAM)
   doc["isCam"]       = true;
@@ -361,9 +362,23 @@ static void handleNetwork(AsyncWebServerRequest *req, JsonVariant &json) {
     }
   }
 
-  setWifiConfig(ssid, pass, mac);
-  Serial.printf("[PORTAL] network config updated: wolEnabled=%d ssid='%s' passLen=%d mac='%s'\n",
-                wolEnabled, ssid.c_str(), (int)pass.length(), mac.c_str());
+  String host = config.hostname;
+  if (o["hostname"].is<const char *>()) {
+    host = o["hostname"].as<String>();
+    host.trim();
+    host.toLowerCase();
+    if (host.isEmpty()) {
+      host = "bc250-switch";
+    }
+    if (!isValidHostname(host)) {
+      sendJsonError(req, 400, "invalid hostname: must be 1-32 characters of lowercase alphanumeric and hyphens, no leading/trailing hyphen");
+      return;
+    }
+  }
+
+  setWifiConfig(ssid, pass, mac, host);
+  Serial.printf("[PORTAL] network config updated: wolEnabled=%d ssid='%s' passLen=%d mac='%s' hostname='%s'\n",
+                wolEnabled, ssid.c_str(), (int)pass.length(), mac.c_str(), host.c_str());
 
   req->send(200, "application/json", "{\"ok\":true}");
 }

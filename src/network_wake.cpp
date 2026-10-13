@@ -5,10 +5,15 @@
 #include <ESPmDNS.h>
 #include <esp_mac.h>
 #include <esp_wifi.h>
+#include <ArduinoJson.h>
 #include "config.h"
+#include "portal.h"
+#include "version.h"
 
 static WiFiUDP udpPort9;
 static WiFiUDP udpPort7;
+static WiFiUDP udpDiscovery;
+static const uint16_t DISCOVERY_PORT = 25025;
 static bool udpStarted = false;
 
 static volatile bool g_wolSeenEver = false;
@@ -71,18 +76,68 @@ static bool checkMagicPacket(WiFiUDP &udp, const uint8_t targetMac[6]) {
   return true;
 }
 
+static void checkDiscoveryPacket() {
+  int packetSize = udpDiscovery.parsePacket();
+  if (packetSize <= 0) return;
+
+  char buf[128];
+  int readLen = udpDiscovery.read(buf, sizeof(buf) - 1);
+  if (readLen <= 0) return;
+  buf[readLen] = '\0';
+
+  int start = 0;
+  while (start < readLen && isspace((unsigned char)buf[start])) start++;
+  int end = readLen - 1;
+  while (end >= start && isspace((unsigned char)buf[end])) {
+    buf[end] = '\0';
+    end--;
+  }
+
+  if (strcmp(buf + start, "BC250_DISCOVER") == 0) {
+    uint8_t curMac[6] = {0};
+    esp_wifi_get_mac(WIFI_IF_STA, curMac);
+    char macStr[18];
+    snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
+             curMac[0], curMac[1], curMac[2], curMac[3], curMac[4], curMac[5]);
+
+    const char *host = config.hostname.isEmpty() ? "bc250-switch" : config.hostname.c_str();
+
+    JsonDocument doc;
+    doc["proto"]      = "v1";
+    doc["device"]     = "bc250-switch";
+    doc["hostname"]   = host;
+    doc["ip"]         = WiFi.localIP().toString();
+    doc["mac"]        = macStr;
+    doc["boardState"] = getBoardStateName();
+    doc["version"]    = FW_VERSION;
+    doc["port"]       = 80;
+
+    String reply;
+    serializeJson(doc, reply);
+
+    udpDiscovery.beginPacket(udpDiscovery.remoteIP(), udpDiscovery.remotePort());
+    udpDiscovery.write((const uint8_t *)reply.c_str(), reply.length());
+    udpDiscovery.endPacket();
+
+    Serial.printf("[DISC] Discovery probe answered to %s:%u\n",
+                  udpDiscovery.remoteIP().toString().c_str(), udpDiscovery.remotePort());
+  }
+}
+
 static void startUdpListeners() {
   if (udpStarted) return;
   udpPort9.begin(9);
   udpPort7.begin(7);
+  udpDiscovery.begin(DISCOVERY_PORT);
   udpStarted = true;
-  Serial.println("[WOL ] UDP listeners started on ports 9 and 7");
+  Serial.printf("[WOL ] UDP listeners started on ports 9, 7 and %u\n", DISCOVERY_PORT);
 }
 
 static void stopUdpListeners() {
   if (!udpStarted) return;
   udpPort9.stop();
   udpPort7.stop();
+  udpDiscovery.stop();
   udpStarted = false;
   Serial.println("[WOL ] UDP listeners stopped");
 }
@@ -104,6 +159,8 @@ bool networkWakeBegin(bool isOff) {
 
   WiFi.mode(WIFI_STA);
   WiFi.setAutoReconnect(true);
+  const char *host = config.hostname.isEmpty() ? "bc250-switch" : config.hostname.c_str();
+  WiFi.setHostname(host);
 
   uint8_t targetMac[6];
   memcpy(targetMac, g_defaultMac, 6);
@@ -171,6 +228,8 @@ void networkWakeOnStateChanged(bool isOff) {
 
   WiFi.mode(WIFI_STA);
   WiFi.setAutoReconnect(true);
+  const char *host = config.hostname.isEmpty() ? "bc250-switch" : config.hostname.c_str();
+  WiFi.setHostname(host);
   if (config.wifiPassword.isEmpty()) {
     WiFi.begin(config.wifiSsid.c_str());
   } else {
@@ -191,9 +250,10 @@ void networkWakeLoop() {
   if (connected && !g_wasConnected) {
     g_wasConnected = true;
     Serial.printf("[WOL ] Wi-Fi connected! IP: %s\n", WiFi.localIP().toString().c_str());
-    if (MDNS.begin("bc250-switch")) {
+    const char *host = config.hostname.isEmpty() ? "bc250-switch" : config.hostname.c_str();
+    if (MDNS.begin(host)) {
       MDNS.addService("http", "tcp", 80);
-      Serial.println("[MDNS] Responding at http://bc250-switch.local");
+      Serial.printf("[MDNS] Responding at http://%s.local\n", host);
     } else {
       Serial.println("[MDNS] Failed to start responder");
     }
@@ -219,6 +279,8 @@ void networkWakeLoop() {
   if (!udpStarted) {
     startUdpListeners();
   }
+
+  checkDiscoveryPacket();
 
   uint8_t targetMac[6];
   if (!parseMac(config.bc250Mac, targetMac)) {

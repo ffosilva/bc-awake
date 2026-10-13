@@ -8,10 +8,10 @@ Because the ESP32 disables over-the-air Bluetooth sensing while the BC250 host i
 
 ## Features
 
-- **Zero External Dependencies**: Implemented using pure Python 3 standard library (`urllib`, `json`, `subprocess`).
+- **Zero External Dependencies**: Implemented using pure Python 3 standard library (`socket`, `urllib`, `json`, `subprocess`).
+- **Zero-Config UDP Auto-Discovery**: Automatically broadcasts on UDP port 25025 (`url = auto`) to locate the switch IP and custom hostname dynamically, falling back to mDNS.
 - **Immutable Distro Ready**: Fully compatible with **Bazzite** and **SteamOS** without requiring `rpm-ostree` layering or `pip` package installation.
 - **Systemd Integration**: Runs automatically on boot and every 5 minutes via a systemd timer.
-- **mDNS Auto-Discovery**: Resolves `http://bc250-switch.local` seamlessly across DHCP IP changes.
 
 ---
 
@@ -38,7 +38,8 @@ Edit `/etc/bc250-sync.conf`:
 
 ```ini
 [bc250]
-url = http://bc250-switch.local
+# Use 'auto' for zero-config UDP broadcast discovery, or a specific URL
+url = auto
 password = your_portal_password
 timeout = 10
 ```

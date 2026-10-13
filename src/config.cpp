@@ -2,7 +2,7 @@
 #include <Preferences.h>
 #include <ArduinoJson.h>
 
-Config config{{}, "", "", "", false, true, false, "", "", ""};
+Config config{{}, "", "", "", false, true, false, "", "", "", "bc250-switch"};
 
 static Preferences prefs;
 static const char *NS = "bc250";
@@ -38,6 +38,10 @@ void loadConfig() {
   config.wifiSsid     = prefs.getString("wifiSsid", "");
   config.wifiPassword = prefs.getString("wifiPassword", "");
   config.bc250Mac     = prefs.getString("bc250Mac", "");
+  config.hostname     = prefs.getString("hostname", "bc250-switch");
+  if (config.hostname.isEmpty()) {
+    config.hostname = "bc250-switch";
+  }
   String controllersJson = prefs.getString("controllers", "");
   String legacyWakeAddr  = prefs.getString("wakeAddr", "");
   prefs.end();
@@ -195,7 +199,7 @@ void setWolEnabled(bool enable) {
   prefs.end();
 }
 
-void setWifiConfig(const String &ssid, const String &password, const String &bc250Mac) {
+void setWifiConfig(const String &ssid, const String &password, const String &bc250Mac, const String &hostname) {
   config.wifiSsid = ssid;
   config.wifiPassword = password;
   String normMac = bc250Mac;
@@ -207,6 +211,41 @@ void setWifiConfig(const String &ssid, const String &password, const String &bc2
   prefs.putString("wifiSsid", ssid);
   prefs.putString("wifiPassword", password);
   prefs.putString("bc250Mac", normMac);
+  if (!hostname.isEmpty()) {
+    String normHost = hostname;
+    normHost.trim();
+    normHost.toLowerCase();
+    config.hostname = normHost;
+    prefs.putString("hostname", normHost);
+  }
+  prefs.end();
+}
+
+bool isValidHostname(const String &name) {
+  if (name.length() < 1 || name.length() > 32) return false;
+  if (name[0] == '-' || name[name.length() - 1] == '-') return false;
+  for (unsigned int i = 0; i < name.length(); i++) {
+    char c = name[i];
+    bool isLowerAlpha = (c >= 'a' && c <= 'z');
+    bool isDigit = (c >= '0' && c <= '9');
+    bool isHyphen = (c == '-');
+    if (!isLowerAlpha && !isDigit && !isHyphen) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void setHostname(const String &hostname) {
+  String norm = hostname;
+  norm.trim();
+  norm.toLowerCase();
+  if (norm.isEmpty()) {
+    norm = "bc250-switch";
+  }
+  config.hostname = norm;
+  prefs.begin(NS, false);
+  prefs.putString("hostname", norm);
   prefs.end();
 }
 

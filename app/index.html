@@ -159,7 +159,13 @@
           <span><b>Enable Wake-on-LAN (Wi-Fi)</b></span>
         </label>
         <div id="wol-fields" class="hidden" style="margin-top:10px">
-          <label for="wifi-ssid">Wi-Fi Network (SSID)</label>
+          <label for="device-hostname">Device Hostname / mDNS Name</label>
+          <input id="device-hostname" placeholder="bc250-switch" maxlength="32" autocomplete="off" autocapitalize="off" />
+          <div class="help" style="margin-top:6px;font-size:11px">
+            Network hostname (accessible at http://&lt;hostname&gt;.local). 1–32 lowercase letters, numbers, and hyphens.
+          </div>
+
+          <label for="wifi-ssid" style="margin-top:10px">Wi-Fi Network (SSID)</label>
           <input id="wifi-ssid" placeholder="HomeNetwork" autocomplete="off" />
 
           <label for="wifi-pass">Wi-Fi Password (leave empty for open networks)</label>
@@ -283,6 +289,7 @@
       const isBoardOn = (currentBoardState === "ON" || currentBoardState === "BOOTING");
 
       if ($("wol-enabled")) $("wol-enabled").disabled = isBoardOn;
+      if ($("device-hostname")) $("device-hostname").disabled = isBoardOn;
       if ($("wifi-ssid")) $("wifi-ssid").disabled = isBoardOn;
       if ($("wifi-pass")) $("wifi-pass").disabled = isBoardOn;
       if ($("bc250-mac")) $("bc250-mac").disabled = isBoardOn;
@@ -682,6 +689,7 @@
           $("wol-enabled").checked = !!st.wolEnabled;
           $("wol-fields").classList.toggle("hidden", !st.wolEnabled);
         }
+        if (st.hostname) $("device-hostname").value = st.hostname;
         if (st.wifiSsid) $("wifi-ssid").value = st.wifiSsid;
         if (st.bc250Mac) $("bc250-mac").value = st.bc250Mac;
         stHasSavedPass = !!st.hasWifiPassword;
@@ -703,11 +711,18 @@
       const msg = $("wol-msg");
       msg.className = "msg";
       const wolEnabled = $("wol-enabled").checked;
+      const hostname = ($("device-hostname").value.trim().toLowerCase()) || "bc250-switch";
       const wifiSsid = $("wifi-ssid").value.trim();
       const wifiPassword = $("wifi-pass").value;
       const bc250Mac = $("bc250-mac").value.trim().toLowerCase();
 
+      const HOSTNAME_RE = /^[a-z0-9](?:[a-z0-9-]{0,30}[a-z0-9])?$/;
       if (wolEnabled) {
+        if (!HOSTNAME_RE.test(hostname)) {
+          msg.className = "msg err";
+          msg.textContent = "Invalid hostname. Use 1–32 lowercase letters, numbers, and hyphens (cannot start or end with a hyphen).";
+          return false;
+        }
         if (!wifiSsid) {
           msg.className = "msg err";
           msg.textContent = "Please enter a Wi-Fi SSID.";
@@ -722,7 +737,7 @@
 
       try {
         $("btn-save-wol").disabled = true;
-        const payload = { wolEnabled, wifiSsid, bc250Mac };
+        const payload = { wolEnabled, wifiSsid, bc250Mac, hostname };
         if (wifiPassword.length > 0 || !stHasSavedPass) {
           payload.wifiPassword = wifiPassword;
         }

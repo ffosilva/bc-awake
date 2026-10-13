@@ -10,12 +10,45 @@ import configparser
 import json
 import os
 import re
+import socket
 import subprocess
 import sys
 import urllib.error
 import urllib.request
 
 MAC_REGEX = re.compile(r"^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$")
+DISCOVERY_PORT = 25025
+
+
+def discover_esp32(timeout=2.0, port=DISCOVERY_PORT):
+    """
+    Broadcasts 'BC250_DISCOVER' on UDP port 25025 and waits for a unicast JSON response.
+    Returns the resolved HTTP URL or None if not found.
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    s.settimeout(timeout)
+    try:
+        s.sendto(b"BC250_DISCOVER", ("255.255.255.255", port))
+        while True:
+            try:
+                data, addr = s.recvfrom(1024)
+                info = json.loads(data.decode("utf-8"))
+                if info.get("device") == "bc250-switch":
+                    ip = info.get("ip") or addr[0]
+                    web_port = info.get("port", 80)
+                    hostname = info.get("hostname", "bc250-switch")
+                    print(f"[SYNC] Discovered {info.get('device')} ({hostname}) at {ip}:{web_port} (state: {info.get('boardState')})")
+                    return f"http://{ip}:{web_port}"
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue
+    except socket.timeout:
+        return None
+    except Exception as e:
+        print(f"[SYNC] Discovery warning: {e}", file=sys.stderr)
+        return None
+    finally:
+        s.close()
 
 
 def run_command(cmd):
@@ -88,9 +121,18 @@ def main():
             cfg.read(cp)
             break
 
-    url = args.url or cfg.get("bc250", "url", fallback="http://bc250-switch.local")
+    url = args.url or cfg.get("bc250", "url", fallback="auto")
     password = args.password or cfg.get("bc250", "password", fallback="")
     timeout = cfg.getint("bc250", "timeout", fallback=10)
+
+    if url.strip().lower() == "auto":
+        print(f"[SYNC] URL set to 'auto'; broadcasting discovery probe on UDP port {DISCOVERY_PORT}...")
+        discovered = discover_esp32(timeout=2.0)
+        if discovered:
+            url = discovered
+        else:
+            print("[SYNC] Auto-discovery timed out; falling back to http://bc250-switch.local")
+            url = "http://bc250-switch.local"
 
     print(f"[SYNC] Connecting to ESP32 at {url}...")
 
