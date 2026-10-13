@@ -219,23 +219,45 @@
         <div style="text-align:center;font-size:13px;line-height:1.5;color:var(--muted)">
           Press the <b>PS</b>, <b>Xbox</b>, or <b>Home</b> button on the controller you want to pair.
         </div>
-        <div class="help" style="text-align:center;margin-top:12px">
+        <div class="help" style="text-align:center;margin-top:10px">
           (Make sure it was already paired to your computer's Bluetooth adapter!)
         </div>
-        <button id="modal-cancel-btn" class="secondary" style="margin-top:18px">Cancel</button>
+
+        <div style="margin-top:14px;padding:10px;border-radius:8px;background:#201e14;border:1px solid #443c16;font-size:12px;color:#ffd217;line-height:1.4;text-align:center">
+          <b>Board power-on is paused</b> while pairing is active so your PC won't boot up.<br>
+          <span style="color:var(--muted);font-size:11px">(Case power button remains active)</span>
+        </div>
+
+        <div id="listen-countdown" style="text-align:center;font-size:13px;color:var(--muted);margin-top:12px;font-weight:bold">
+          Listening… 60s remaining
+        </div>
+
+        <button id="modal-cancel-btn" class="secondary" style="margin-top:14px">Cancel</button>
       </div>
 
       <div id="modal-detected-state" class="hidden">
         <div style="font-weight:bold;font-size:16px;color:var(--ok);text-align:center">Controller detected!</div>
         <div style="text-align:center;margin-top:4px"><code id="detected-mac" style="font-size:14px;color:var(--accent)"></code></div>
 
-        <div id="already-bound-alert" class="msg err hidden" style="text-align:center;margin-top:6px">This controller is already bound.</div>
+        <div id="already-bound-alert" class="msg err hidden" style="text-align:center;margin-top:6px">This controller is already bound. (Power-on was prevented)</div>
 
         <label for="detected-name" style="margin-top:14px">Friendly name</label>
         <input id="detected-name" placeholder="e.g. Living Room DualSense" />
 
         <button id="modal-save-btn">Save controller</button>
         <button id="modal-retry-btn" class="secondary" style="margin-top:8px">Try again</button>
+      </div>
+
+      <div id="modal-timeout-state" class="hidden">
+        <div style="font-weight:bold;font-size:16px;color:var(--err);text-align:center">Pairing Timed Out</div>
+        <div style="text-align:center;font-size:13px;line-height:1.5;color:var(--muted);margin-top:10px">
+          No controller was detected within 60 seconds.
+        </div>
+        <div style="margin-top:14px;padding:10px;border-radius:8px;background:#1b231b;border:1px solid #2d462d;font-size:12px;color:var(--ok);line-height:1.4;text-align:center">
+          <b>Normal wake restored:</b> Any bound controller can now wake the computer again.
+        </div>
+        <button id="modal-timeout-retry-btn" style="margin-top:16px">Try again</button>
+        <button id="modal-timeout-close-btn" class="secondary" style="margin-top:8px">Close</button>
       </div>
     </div>
   </div>
@@ -548,6 +570,9 @@
     }
 
     // --- Interactive Listener Modal ---
+    let listenCountdownTimer = null;
+    let listenSecondsLeft = 60;
+
     $("btn-add-ctrl").onclick = () => {
       startListening();
     };
@@ -560,10 +585,32 @@
       startListening();
     };
 
+    $("modal-timeout-retry-btn").onclick = () => {
+      startListening();
+    };
+
+    $("modal-timeout-close-btn").onclick = () => {
+      $("listener-modal").classList.add("hidden");
+    };
+
     async function startListening() {
       $("listener-modal").classList.remove("hidden");
       $("modal-listen-state").classList.remove("hidden");
       $("modal-detected-state").classList.add("hidden");
+      $("modal-timeout-state").classList.add("hidden");
+
+      listenSecondsLeft = 60;
+      if ($("listen-countdown")) $("listen-countdown").textContent = "Listening… 60s remaining";
+      if (listenCountdownTimer) clearInterval(listenCountdownTimer);
+      listenCountdownTimer = setInterval(() => {
+        listenSecondsLeft--;
+        if (listenSecondsLeft <= 0) {
+          showTimeoutState();
+        } else if ($("listen-countdown")) {
+          $("listen-countdown").textContent = "Listening… " + listenSecondsLeft + "s remaining";
+        }
+      }, 1000);
+
       try {
         await api("/api/listener/start", "POST", {});
       } catch (e) { /* ignore */ }
@@ -572,14 +619,26 @@
     }
 
     function stopListening() {
+      if (listenCountdownTimer) { clearInterval(listenCountdownTimer); listenCountdownTimer = null; }
       if (listenTimer) { clearInterval(listenTimer); listenTimer = null; }
       $("listener-modal").classList.add("hidden");
+      api("/api/listener/stop", "POST", {}).catch(() => {});
+    }
+
+    function showTimeoutState() {
+      if (listenCountdownTimer) { clearInterval(listenCountdownTimer); listenCountdownTimer = null; }
+      if (listenTimer) { clearInterval(listenTimer); listenTimer = null; }
+      $("modal-listen-state").classList.add("hidden");
+      $("modal-detected-state").classList.add("hidden");
+      $("modal-timeout-state").classList.remove("hidden");
+      api("/api/listener/stop", "POST", {}).catch(() => {});
     }
 
     async function pollListener() {
       try {
         const res = await api("/api/listener/status");
         if (res.detected) {
+          if (listenCountdownTimer) { clearInterval(listenCountdownTimer); listenCountdownTimer = null; }
           if (listenTimer) { clearInterval(listenTimer); listenTimer = null; }
           detectedMac = res.mac;
           $("detected-mac").textContent = res.mac;
@@ -587,7 +646,10 @@
           $("already-bound-alert").classList.toggle("hidden", !res.alreadyBound);
           $("modal-save-btn").disabled = !!res.alreadyBound;
           $("modal-listen-state").classList.add("hidden");
+          $("modal-timeout-state").classList.add("hidden");
           $("modal-detected-state").classList.remove("hidden");
+        } else if (res.timedOut) {
+          showTimeoutState();
         }
       } catch (e) { /* ignore */ }
     }
@@ -597,8 +659,16 @@
       try {
         $("modal-save-btn").disabled = true;
         await api("/api/controllers/add", "POST", { mac: detectedMac, name });
-        stopListening();
+        if (listenCountdownTimer) { clearInterval(listenCountdownTimer); listenCountdownTimer = null; }
+        if (listenTimer) { clearInterval(listenTimer); listenTimer = null; }
+        $("listener-modal").classList.add("hidden");
         await refreshControllers();
+        const msg = $("dev-msg");
+        if (msg) {
+          msg.className = "msg ok";
+          msg.textContent = "Controller saved! Controller wake will resume in 15 seconds.";
+          setTimeout(() => { if (msg.textContent.includes("resume in 15 seconds")) msg.textContent = ""; }, 15000);
+        }
       } catch (e) {
         alert("Error saving: " + e.message);
         $("modal-save-btn").disabled = false;

@@ -44,6 +44,8 @@ struct BtListenerResult {
 };
 
 void             btListenerStart();
+void             btListenerStop();
+bool             btListenerIsActive();
 BtListenerResult btListenerGetStatus();
 String           btResolveHeuristicName(const char *mac, uint32_t cod);
 

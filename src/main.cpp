@@ -88,17 +88,45 @@ static bool readBoardSense(uint32_t *outMv = nullptr) {
 
 // Flash LED indicator pulse tracking (GPIO 4)
 static unsigned long flashUntil = 0;
+static int           flashBurstRemaining = 0;
+static unsigned long flashBurstNext = 0;
+static unsigned long flashBurstOnMs = 60;
+static unsigned long flashBurstOffMs = 60;
+static bool          flashBurstState = false;
 
 static void triggerFlash(unsigned long durationMs = FLASH_DURATION_MS) {
+  flashBurstRemaining = 0;
   digitalWrite(FLASH_LED, HIGH);
   flashUntil = millis() + durationMs;
   Serial.println("[LED ] Flash LED ON (controller wake pulse)");
+}
+
+void triggerFlashBurst(int count, unsigned long onMs, unsigned long offMs) {
+  flashUntil = 0;
+  flashBurstRemaining = count * 2;
+  flashBurstOnMs = onMs;
+  flashBurstOffMs = offMs;
+  flashBurstState = true;
+  digitalWrite(FLASH_LED, HIGH);
+  flashBurstNext = millis() + onMs;
+  Serial.printf("[LED ] Flash LED burst started (%d pulses)\n", count);
 }
 
 static void updateFlash(unsigned long now) {
   if (flashUntil && (long)(now - flashUntil) >= 0) {
     digitalWrite(FLASH_LED, LOW);
     flashUntil = 0;
+  }
+  if (flashBurstRemaining > 0 && (long)(now - flashBurstNext) >= 0) {
+    flashBurstRemaining--;
+    if (flashBurstRemaining == 0) {
+      digitalWrite(FLASH_LED, LOW);
+      flashBurstState = false;
+    } else {
+      flashBurstState = !flashBurstState;
+      digitalWrite(FLASH_LED, flashBurstState ? HIGH : LOW);
+      flashBurstNext = now + (flashBurstState ? flashBurstOnMs : flashBurstOffMs);
+    }
   }
 }
 #else
@@ -170,9 +198,15 @@ static void powerOff(const char *reason, unsigned long now) {
 #if defined(BOARD_ESP32CAM)
   digitalWrite(FLASH_LED, LOW);
   flashUntil = 0;
+  flashBurstRemaining = 0;
 #endif
   wakeInhibitUntil = now + WAKE_WAKE_COOLDOWN_MS;
   setState(STATE_OFF);
+}
+
+void armWakeCooldown(unsigned long durationMs) {
+  wakeInhibitUntil = millis() + durationMs;
+  Serial.printf("[ACT ] wake cooldown armed for %lu ms\n", durationMs);
 }
 
 static void startWake() {
@@ -312,6 +346,7 @@ static void normalLoop() {
       Serial.printf("[BTN ] released after %lu ms\n", held);
       if (pressStartedOff && !setupFired && state == STATE_OFF &&
           held < SETUP_HOLD_MS) {
+        portalPairingStop();
         powerOn("short press while OFF", now);
       }
     }
@@ -335,7 +370,7 @@ static void normalLoop() {
   wakeLoop();
   unsigned long wakeLast = 0;
   bool wakePresent = wakeSeen(&wakeLast) && (now - wakeLast) < WAKE_PRESENCE_TIMEOUT_MS;
-  bool wakeInhibited = (int32_t)(wakeInhibitUntil - now) > 0;
+  bool wakeInhibited = ((int32_t)(wakeInhibitUntil - now) > 0) || portalIsPairingActive();
   if (state == STATE_OFF && wakePresent && !wakeInhibited) {
 #if defined(BOARD_ESP32CAM)
     if (config.flashOnWake) {

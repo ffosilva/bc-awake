@@ -17,11 +17,15 @@ The power controller SHALL maintain three mutually exclusive operational states:
 - **THEN** the system enters STATE_ON and asserts PS_ON# LOW to synchronize with the running board
 
 ### Requirement: Push-Button Power On
-The system SHALL trigger a system power-on sequence when the momentary power button is tapped while in STATE_OFF.
+The system SHALL trigger a system power-on sequence when the momentary power button is tapped while in STATE_OFF, including when controller pairing mode is active.
 
 #### Scenario: Short button press while off
 - **WHEN** the momentary button is pressed and released in under 8000 ms while in STATE_OFF
 - **THEN** the system asserts PS_ON# LOW, starts the boot timer, and transitions to STATE_BOOTING
+
+#### Scenario: Short button press while off during pairing mode
+- **WHEN** the momentary button is pressed and released in under 8000 ms while in STATE_OFF and controller pairing mode is active
+- **THEN** the system asserts PS_ON# LOW, cancels any active pairing mode, starts the boot timer, and transitions to STATE_BOOTING
 
 ### Requirement: Boot Watchdog
 The system SHALL monitor the board sense line during boot and abort power-up if the motherboard fails to signal active power within the boot timeout.

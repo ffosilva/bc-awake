@@ -323,12 +323,14 @@ static int onHostRecv(uint8_t *data, uint16_t len) {
         uint32_t cod = p[6] | (p[7] << 8) | (p[8] << 16);
 
         portENTER_CRITICAL(&stMux);
-        for (int i = 0; i < wakeAddrCount; i++) {
-          if (memcmp(p, wakeAddrs[i], 6) == 0) {
-            wakeLastSeen = millis();
-            wakeSeenEver = true;
-            isWake = true;
-            break;
+        if (!listenerActive) {
+          for (int i = 0; i < wakeAddrCount; i++) {
+            if (memcmp(p, wakeAddrs[i], 6) == 0) {
+              wakeLastSeen = millis();
+              wakeSeenEver = true;
+              isWake = true;
+              break;
+            }
           }
         }
 
@@ -576,6 +578,17 @@ void btListenerStart() {
   listenerActive = true;
   portEXIT_CRITICAL(&stMux);
   Serial.println("[BT  ] listener started");
+}
+
+void btListenerStop() {
+  portENTER_CRITICAL(&stMux);
+  listenerActive = false;
+  portEXIT_CRITICAL(&stMux);
+  Serial.println("[BT  ] listener stopped");
+}
+
+bool btListenerIsActive() {
+  return listenerActive;
 }
 
 BtListenerResult btListenerGetStatus() {

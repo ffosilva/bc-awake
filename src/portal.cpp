@@ -213,21 +213,67 @@ static void handleSelect(AsyncWebServerRequest *req, JsonVariant &json) {
   req->send(200, "application/json", "{\"ok\":true}");
 }
 
+static const unsigned long PAIRING_TIMEOUT_MS = 60000;
+static unsigned long       g_pairingTimeoutAt = 0;
+static bool                g_pairingActive = false;
+static bool                g_pairingTimedOut = false;
+
+bool portalIsPairingActive() {
+  if (!g_pairingActive) return false;
+  if ((long)(millis() - g_pairingTimeoutAt) >= 0) {
+    g_pairingActive = false;
+    g_pairingTimedOut = true;
+#if !defined(WAKE_BLE)
+    btListenerStop();
+#endif
+    Serial.println("[PORTAL] pairing listener timed out (60s)");
+    return false;
+  }
+  return true;
+}
+
+void portalPairingStop() {
+  g_pairingActive = false;
+  g_pairingTimeoutAt = 0;
+#if !defined(WAKE_BLE)
+  btListenerStop();
+#endif
+  Serial.println("[PORTAL] pairing listener stopped");
+}
+
 static void handleListenerStart(AsyncWebServerRequest *req) {
   if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
   if (isBoardPowered()) {
     sendJsonError(req, 409, "Bluetooth listener disabled while host machine is powered on");
     return;
   }
+  g_pairingActive = true;
+  g_pairingTimedOut = false;
+  g_pairingTimeoutAt = millis() + PAIRING_TIMEOUT_MS;
 #if !defined(WAKE_BLE)
   btListenerStart();
 #endif
+#if defined(BOARD_ESP32CAM)
+  if (config.flashOnWake) {
+    triggerFlashBurst(3, 60, 60);
+  }
+#endif
+  Serial.println("[PORTAL] pairing listener started (60s timeout)");
+  req->send(200, "application/json", "{\"ok\":true}");
+}
+
+static void handleListenerStop(AsyncWebServerRequest *req) {
+  if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
+  portalPairingStop();
   req->send(200, "application/json", "{\"ok\":true}");
 }
 
 static void handleListenerStatus(AsyncWebServerRequest *req) {
   if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
   JsonDocument doc;
+  bool active = portalIsPairingActive();
+  doc["active"] = active;
+  doc["timedOut"] = g_pairingTimedOut;
 #if !defined(WAKE_BLE)
   BtListenerResult res = btListenerGetStatus();
   doc["detected"] = res.detected;
@@ -274,6 +320,8 @@ static void handleControllersAdd(AsyncWebServerRequest *req, JsonVariant &json) 
     sendJsonError(req, 400, "could not add controller");
     return;
   }
+  portalPairingStop();
+  armWakeCooldown(WAKE_WAKE_COOLDOWN_MS);
   Serial.printf("[PORTAL] added controller %s (%s)\n", mac.c_str(), name.c_str());
   req->send(200, "application/json", "{\"ok\":true}");
 }
@@ -449,6 +497,7 @@ static void handleUpdateUpload(AsyncWebServerRequest *req, String filename, size
     server.on("/api/finish", HTTP_POST, handleFinish);
     server.on("/api/update", HTTP_POST, handleUpdateResponse, handleUpdateUpload);
     server.on("/api/listener/start", HTTP_POST, handleListenerStart);
+    server.on("/api/listener/stop", HTTP_POST, handleListenerStop);
     server.on("/api/listener/status", HTTP_GET, handleListenerStatus);
     server.addHandler(new AsyncCallbackJsonWebHandler("/api/password", handlePassword));
     server.addHandler(new AsyncCallbackJsonWebHandler("/api/login", handleLogin));
