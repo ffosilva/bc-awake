@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <DNSServer.h>
-#include <SPIFFS.h>
+#include "portal_html.h"
 #include <ArduinoJson.h>
 #include <AsyncJson.h>
 #include <ESPAsyncWebServer.h>
@@ -65,13 +65,9 @@ static void sendJsonError(AsyncWebServerRequest *req, int code, const char *msg)
 }
 
 static void serveIndex(AsyncWebServerRequest *req) {
-  if (SPIFFS.exists("/index.html")) {
-    req->send(SPIFFS, "/index.html", "text/html");
-  } else {
-    req->send(200, "text/html",
-              "<h1>BC250 Switch</h1><p>Filesystem image missing. Flash it with "
-              "<code>pio run -t uploadfs</code>.</p>");
-  }
+  AsyncWebServerResponse *response = req->beginResponse_P(200, "text/html", INDEX_HTML_GZ, INDEX_HTML_GZ_LEN);
+  response->addHeader("Content-Encoding", "gzip");
+  req->send(response);
 }
 
 // --- Endpoint handlers ---
@@ -419,9 +415,6 @@ void portalBegin() {
   }
   pinMode(BUTTON_SENSE, INPUT_PULLUP);
 
-  if (!SPIFFS.begin(true)) {
-    Serial.println("[PORTAL] WARNING: SPIFFS mount failed");
-  }
 
   bool ok = WiFi.softAP(AP_SSID);  // open network
   // Must be set AFTER softAP().

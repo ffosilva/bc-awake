@@ -21,11 +21,11 @@ The system SHALL launch a captive WiFi SoftAP portal when explicitly requested b
 - **THEN** the system clears forceSetup and restarts into normal operation mode
 
 ### Requirement: Captive Network and Web Serving
-The system SHALL broadcast an open WiFi SoftAP named 'BC250 Switch Setup' and redirect HTTP traffic to the setup interface.
+The system SHALL broadcast an open WiFi SoftAP named 'BC250 Switch Setup' and serve the embedded setup interface from firmware memory.
 
 #### Scenario: Client connects to setup network
 - **WHEN** a client associates with the BC250 Switch Setup access point and queries any DNS address
-- **THEN** the captive DNS server resolves all queries to 192.168.4.1 and the web server serves index.html from SPIFFS
+- **THEN** the captive DNS server resolves all queries to 192.168.4.1 and the web server serves embedded gzipped index.html directly from firmware memory with Content-Encoding: gzip without requiring a mounted filesystem
 
 ### Requirement: Portal Password Protection
 The system SHALL require password authentication for configuration changes and issue single-session bearer tokens.

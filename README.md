@@ -121,26 +121,22 @@ Hold the button ≥ 8 s while off (or on first use) to start the portal:
 
 ## Build & flash
 
-PlatformIO (pioarduino). Two steps — firmware and the portal's web UI (a single
-`app/index.html` packed into SPIFFS).
+PlatformIO (pioarduino). Flashing is a single step — the setup portal web UI (`app/index.html`) is automatically gzipped and embedded directly into the firmware binary during the build.
 
 **ESP32-DevKitC (`esp32dev`, default — Classic BT wake):**
 ```bash
-pio run -e esp32dev -t upload     # firmware
-pio run -e esp32dev -t uploadfs   # web UI filesystem
+pio run -e esp32dev -t upload
 ```
 
 **AI-Thinker ESP32-CAM (`esp32cam` — Classic BT wake):**
 ```bash
-pio run -e esp32cam -t upload     # firmware
-pio run -e esp32cam -t uploadfs   # web UI filesystem
+pio run -e esp32cam -t upload
 ```
 > *ESP32-CAM flashing note*: Use a USB-to-UART adapter (or ESP32-CAM-MB base board). Connect **GPIO0 to GND** before powering on to enter download mode; disconnect GPIO0 and reset to run.
 
 **ESP32-C3 DevKitM-1 (`esp32-c3-devkitm-1` — BLE wake):**
 ```bash
-pio run -e esp32-c3-devkitm-1 -t upload     # firmware
-pio run -e esp32-c3-devkitm-1 -t uploadfs   # web UI filesystem
+pio run -e esp32-c3-devkitm-1 -t upload
 ```
 
 ### Over-the-Air (OTA) Updates
@@ -156,7 +152,7 @@ Once the device has been flashed with the dual-bank partition table via USB, all
 4. In the **Firmware update (OTA)** card, select your `.bin` file and click **Upload & flash**.
 5. The device flashes the inactive bank and automatically reboots into the updated firmware.
 
-> **Note on Initial Partitioning**: The switch uses a dual-bank 1.81 MB OTA layout (`partitions.csv`). Transitioning from older single-partition builds requires **one initial wired flash** (`pio run -t upload && pio run -t uploadfs`) to repartition flash.
+> **Note on Initial Partitioning**: The switch uses a dual-bank 1.81 MB OTA layout (`partitions.csv`). Transitioning from older single-partition builds requires **one initial wired flash** (`pio run -t upload`) to repartition flash.
 
 ## Notes
 
