@@ -1,0 +1,84 @@
+# BC250 Host Device Sync Tool (`bc250-sync`)
+
+The `bc250-sync` utility is a lightweight, zero-dependency Python 3 tool and systemd service that automatically synchronizes your host PC's Bluetooth adapter MAC address and paired gamepad controllers to the BC250 ESP32 power switch via its REST API.
+
+Because the ESP32 disables over-the-air Bluetooth sensing while the BC250 host is powered on (to avoid RF and HCI collisions with the host's active Bluetooth adapter), `bc250-sync` bridges the host's paired devices directly to the switch while the system is running.
+
+---
+
+## Features
+
+- **Zero External Dependencies**: Implemented using pure Python 3 standard library (`urllib`, `json`, `subprocess`).
+- **Immutable Distro Ready**: Fully compatible with **Bazzite** and **SteamOS** without requiring `rpm-ostree` layering or `pip` package installation.
+- **Systemd Integration**: Runs automatically on boot and every 5 minutes via a systemd timer.
+- **mDNS Auto-Discovery**: Resolves `http://bc250-switch.local` seamlessly across DHCP IP changes.
+
+---
+
+## Installation
+
+### 1. Copy the Script and Configuration
+
+```bash
+# Copy the sync script
+sudo cp tools/bc250-sync/bc250-sync.py /usr/local/bin/
+sudo chmod +x /usr/local/bin/bc250-sync.py
+
+# Copy the configuration file
+sudo cp tools/bc250-sync/bc250-sync.conf /etc/bc250-sync.conf
+sudo chmod 600 /etc/bc250-sync.conf
+```
+
+> **Note for Bazzite / SteamOS User-Level Install (Alternative):**
+> If you prefer not to write to `/usr/local/bin`, you can place the script in `~/.local/bin/bc250-sync.py` and configuration in `~/.config/bc250-sync/config.ini`, then run the service under `systemctl --user`.
+
+### 2. Configure Your Password
+
+Edit `/etc/bc250-sync.conf`:
+
+```ini
+[bc250]
+url = http://bc250-switch.local
+password = your_portal_password
+timeout = 10
+```
+
+### 3. Install and Enable Systemd Units
+
+```bash
+# Copy systemd unit and timer
+sudo cp tools/bc250-sync/bc250-sync.service /etc/systemd/system/
+sudo cp tools/bc250-sync/bc250-sync.timer /etc/systemd/system/
+
+# Reload systemd and enable timer
+sudo systemctl daemon-reload
+sudo systemctl enable --now bc250-sync.timer
+```
+
+---
+
+## Manual Execution & Verification
+
+You can test synchronization manually anytime:
+
+```bash
+# Dry-run inspection (shows what would change without modifying ESP32 state)
+python3 /usr/local/bin/bc250-sync.py --config /etc/bc250-sync.conf --dry-run
+
+# Run synchronization pass
+python3 /usr/local/bin/bc250-sync.py --config /etc/bc250-sync.conf
+```
+
+Check the systemd logs:
+
+```bash
+sudo journalctl -u bc250-sync.service -n 50 --no-pager
+```
+
+---
+
+## Distribution Specific Notes
+
+- **Bazzite / SteamOS**: `/usr/local/bin` and `/etc` are writable state directories on ostree and Btrfs layouts, so the standard install works cleanly out of the box.
+- **Ubuntu / Debian**: Ensure `bluez` and `python3` are installed (`sudo apt install bluez python3`).
+- **Arch Linux**: Standard BlueZ package (`bluez`, `bluez-utils`) provides `bluetoothctl`.

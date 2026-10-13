@@ -63,12 +63,17 @@ static const char *stateName(PowerState s) {
   return "?";
 }
 
+const char *getBoardStateName() {
+  return stateName(state);
+}
+
 static void setState(PowerState next) {
   if (next == state) return;
   Serial.printf("[STATE] %s -> %s\n", stateName(state), stateName(next));
   state = next;
   // Only watch for wake while the machine is down.
   if (wakeActive) wakeSetConnectable(next == STATE_OFF);
+  networkWakeOnStateChanged(next == STATE_OFF);
 }
 
 #if defined(BOARD_ESP32CAM)
@@ -243,7 +248,8 @@ static void normalBegin() {
                 wakeModeName());
 
   startWake();
-  networkWakeBegin();
+  networkWakeBegin(state == STATE_OFF);
+  portalServerBegin();
 }
 
 static bool g_setupMode = false;
@@ -391,6 +397,8 @@ static void normalLoop() {
                   config.wolEnabled ? (networkWakeIsConnected() ? networkWakeIp().c_str() : "connecting") : "off",
                   senseMv, boardRaw ? "high" : "low");
   }
+
+  portalCheckRestart();
 }
 
 void loop() {

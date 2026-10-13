@@ -1,0 +1,13 @@
+[Unit]
+Description=BC250 ESP32 Bluetooth Device Sync Service
+After=bluetooth.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/bin/bc250-sync.py --config /etc/bc250-sync.conf
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

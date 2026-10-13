@@ -56,6 +56,11 @@ static bool authed(AsyncWebServerRequest *req) {
   return req->header("X-Auth-Token") == g_token;
 }
 
+static bool isBoardPowered() {
+  const char *st = getBoardStateName();
+  return (strcmp(st, "ON") == 0 || strcmp(st, "BOOTING") == 0);
+}
+
 static void sendJsonError(AsyncWebServerRequest *req, int code, const char *msg) {
   JsonDocument doc;
   doc["error"] = msg;
@@ -86,6 +91,7 @@ static void handleStatus(AsyncWebServerRequest *req) {
   doc["wifiSsid"]    = config.wifiSsid;
   doc["hasWifiPassword"] = !config.wifiPassword.isEmpty();
   doc["bc250Mac"]    = config.bc250Mac;
+  doc["boardState"]  = getBoardStateName();
 #if defined(BOARD_ESP32CAM)
   doc["isCam"]       = true;
   doc["flashOnWake"] = config.flashOnWake;
@@ -150,6 +156,10 @@ static void handleLogin(AsyncWebServerRequest *req, JsonVariant &json) {
 
 static void handleDevices(AsyncWebServerRequest *req) {
   if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
+  if (isBoardPowered()) {
+    sendJsonError(req, 409, "Bluetooth sensing disabled while host machine is powered on");
+    return;
+  }
 
   static const int MAX_OUT = 48;
   WakeDev snap[MAX_OUT];
@@ -205,6 +215,10 @@ static void handleSelect(AsyncWebServerRequest *req, JsonVariant &json) {
 
 static void handleListenerStart(AsyncWebServerRequest *req) {
   if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
+  if (isBoardPowered()) {
+    sendJsonError(req, 409, "Bluetooth listener disabled while host machine is powered on");
+    return;
+  }
 #if !defined(WAKE_BLE)
   btListenerStart();
 #endif
@@ -313,6 +327,10 @@ static void handleSettings(AsyncWebServerRequest *req, JsonVariant &json) {
 
 static void handleNetwork(AsyncWebServerRequest *req, JsonVariant &json) {
   if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
+  if (isBoardPowered()) {
+    sendJsonError(req, 403, "Network settings are read-only while host machine is powered on");
+    return;
+  }
   JsonObject o = json.as<JsonObject>();
 
   bool wolEnabled = config.wolEnabled;
@@ -403,86 +421,104 @@ static void handleUpdateUpload(AsyncWebServerRequest *req, String filename, size
 
 // --- Lifecycle ---
 
-void portalBegin() {
-  Serial.println("=== BC250 PSU controller : SETUP MODE ===");
+  static bool g_routesRegistered = false;
+  static bool g_serverStarted = false;
 
-  // Keep the PSU off and the button readable while configuring.
-  pinMode(PS_ON_PIN, OUTPUT_OPEN_DRAIN);
-  digitalWrite(PS_ON_PIN, PS_ON_RELEASE);
-  if (BUTTON_GND >= 0) {
-    pinMode(BUTTON_GND, OUTPUT);
-    digitalWrite(BUTTON_GND, LOW);
+  static void registerRoutes() {
+    if (g_routesRegistered) return;
+    g_routesRegistered = true;
+
+    server.on("/api/status", HTTP_GET, handleStatus);
+    server.on("/api/devices", HTTP_GET, handleDevices);
+    server.on("/api/bt/devices", HTTP_GET, handleDevices);
+    server.on("/api/ble/devices", HTTP_GET, handleDevices);
+    server.on("/api/finish", HTTP_POST, handleFinish);
+    server.on("/api/update", HTTP_POST, handleUpdateResponse, handleUpdateUpload);
+    server.on("/api/listener/start", HTTP_POST, handleListenerStart);
+    server.on("/api/listener/status", HTTP_GET, handleListenerStatus);
+    server.addHandler(new AsyncCallbackJsonWebHandler("/api/password", handlePassword));
+    server.addHandler(new AsyncCallbackJsonWebHandler("/api/login", handleLogin));
+    server.addHandler(new AsyncCallbackJsonWebHandler("/api/host", handleHost));
+    server.addHandler(new AsyncCallbackJsonWebHandler("/api/bt/host", handleHost));
+    server.addHandler(new AsyncCallbackJsonWebHandler("/api/select", handleSelect));
+    server.addHandler(new AsyncCallbackJsonWebHandler("/api/bt/select", handleSelect));
+    server.addHandler(new AsyncCallbackJsonWebHandler("/api/ble/select", handleSelect));
+    server.addHandler(new AsyncCallbackJsonWebHandler("/api/controllers/add", handleControllersAdd));
+    server.addHandler(new AsyncCallbackJsonWebHandler("/api/controllers/remove", handleControllersRemove));
+    server.addHandler(new AsyncCallbackJsonWebHandler("/api/controllers/rename", handleControllersRename));
+    server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", handleSettings));
+    server.addHandler(new AsyncCallbackJsonWebHandler("/api/network", handleNetwork));
+
+    server.on("/", HTTP_GET, serveIndex);
+    server.onNotFound([](AsyncWebServerRequest *req) {
+      if (req->url().startsWith("/api/")) {
+        sendJsonError(req, 404, "not found");
+      } else {
+        serveIndex(req);  // captive-portal catch-all
+      }
+    });
   }
-  pinMode(BUTTON_SENSE, INPUT_PULLUP);
 
+  void portalServerBegin() {
+    if (g_serverStarted) return;
+    registerRoutes();
+    server.begin();
+    g_serverStarted = true;
+    Serial.println("[PORTAL] web server up on port 80");
+  }
 
-  bool ok = WiFi.softAP(AP_SSID);  // open network
-  // Must be set AFTER softAP().
-  WiFi.setTxPower(AP_TX_POWER);
-  Serial.printf("[PORTAL] softAP ret=%d ssid='%s' ip=%s txpwr=%d\n", ok, AP_SSID,
-                WiFi.softAPIP().toString().c_str(), WiFi.getTxPower());
-
-  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-  dnsServer.start(53, "*", WiFi.softAPIP());
-
-  // Start device discovery for the picker
-  wakeSetDiscovery(true);
-
-  server.on("/api/status", HTTP_GET, handleStatus);
-  server.on("/api/devices", HTTP_GET, handleDevices);
-  server.on("/api/bt/devices", HTTP_GET, handleDevices);
-  server.on("/api/ble/devices", HTTP_GET, handleDevices);
-  server.on("/api/finish", HTTP_POST, handleFinish);
-  server.on("/api/update", HTTP_POST, handleUpdateResponse, handleUpdateUpload);
-  server.on("/api/listener/start", HTTP_POST, handleListenerStart);
-  server.on("/api/listener/status", HTTP_GET, handleListenerStatus);
-  server.addHandler(new AsyncCallbackJsonWebHandler("/api/password", handlePassword));
-  server.addHandler(new AsyncCallbackJsonWebHandler("/api/login", handleLogin));
-  server.addHandler(new AsyncCallbackJsonWebHandler("/api/host", handleHost));
-  server.addHandler(new AsyncCallbackJsonWebHandler("/api/bt/host", handleHost));
-  server.addHandler(new AsyncCallbackJsonWebHandler("/api/select", handleSelect));
-  server.addHandler(new AsyncCallbackJsonWebHandler("/api/bt/select", handleSelect));
-  server.addHandler(new AsyncCallbackJsonWebHandler("/api/ble/select", handleSelect));
-  server.addHandler(new AsyncCallbackJsonWebHandler("/api/controllers/add", handleControllersAdd));
-  server.addHandler(new AsyncCallbackJsonWebHandler("/api/controllers/remove", handleControllersRemove));
-  server.addHandler(new AsyncCallbackJsonWebHandler("/api/controllers/rename", handleControllersRename));
-  server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", handleSettings));
-  server.addHandler(new AsyncCallbackJsonWebHandler("/api/network", handleNetwork));
-
-
-  server.on("/", HTTP_GET, serveIndex);
-  server.onNotFound([](AsyncWebServerRequest *req) {
-    if (req->url().startsWith("/api/")) {
-      sendJsonError(req, 404, "not found");
-    } else {
-      serveIndex(req);  // captive-portal catch-all
+  void portalCheckRestart() {
+    if (g_restartAt && (int32_t)(millis() - g_restartAt) >= 0) {
+      ESP.restart();
     }
-  });
-
-  server.begin();
-  Serial.println("[PORTAL] web server up. Connect to the AP and open http://192.168.4.1");
-}
-
-void portalLoop() {
-  dnsServer.processNextRequest();
-  wakeLoop();
-
-  // Button held in setup mode = escape back to normal mode (only useful once
-  // configured; an unconfigured device just re-enters setup).
-  static unsigned long pressStart = 0;
-  static bool wasDown = false;
-  bool down = (digitalRead(BUTTON_SENSE) == LOW);
-  if (down && !wasDown) {
-    pressStart = millis();
-  } else if (down && (millis() - pressStart) >= SETUP_HOLD_MS) {
-    Serial.println("[PORTAL] button held, leaving setup mode");
-    setForceSetup(false);
-    delay(50);
-    ESP.restart();
   }
-  wasDown = down;
 
-  if (g_restartAt && (int32_t)(millis() - g_restartAt) >= 0) {
-    ESP.restart();
+  void portalBegin() {
+    Serial.println("=== BC250 PSU controller : SETUP MODE ===");
+
+    // Keep the PSU off and the button readable while configuring.
+    pinMode(PS_ON_PIN, OUTPUT_OPEN_DRAIN);
+    digitalWrite(PS_ON_PIN, PS_ON_RELEASE);
+    if (BUTTON_GND >= 0) {
+      pinMode(BUTTON_GND, OUTPUT);
+      digitalWrite(BUTTON_GND, LOW);
+    }
+    pinMode(BUTTON_SENSE, INPUT_PULLUP);
+
+    bool ok = WiFi.softAP(AP_SSID);  // open network
+    // Must be set AFTER softAP().
+    WiFi.setTxPower(AP_TX_POWER);
+    Serial.printf("[PORTAL] softAP ret=%d ssid='%s' ip=%s txpwr=%d\n", ok, AP_SSID,
+                  WiFi.softAPIP().toString().c_str(), WiFi.getTxPower());
+
+    dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+    dnsServer.start(53, "*", WiFi.softAPIP());
+
+    // Start device discovery for the picker
+    wakeSetDiscovery(true);
+
+    portalServerBegin();
+    Serial.println("[PORTAL] connect to AP and open http://192.168.4.1");
   }
-}
+
+  void portalLoop() {
+    dnsServer.processNextRequest();
+    wakeLoop();
+
+    // Button held in setup mode = escape back to normal mode (only useful once
+    // configured; an unconfigured device just re-enters setup).
+    static unsigned long pressStart = 0;
+    static bool wasDown = false;
+    bool down = (digitalRead(BUTTON_SENSE) == LOW);
+    if (down && !wasDown) {
+      pressStart = millis();
+    } else if (down && (millis() - pressStart) >= SETUP_HOLD_MS) {
+      Serial.println("[PORTAL] button held, leaving setup mode");
+      setForceSetup(false);
+      delay(50);
+      ESP.restart();
+    }
+    wasDown = down;
+
+    portalCheckRestart();
+  }

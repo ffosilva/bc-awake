@@ -4,8 +4,11 @@
 
 // Initializes network wake subsystem:
 // Starts Wi-Fi in STA mode and binds the WOL UDP listener if wolEnabled is true and wifiSsid is set.
-// Returns true if network wake is enabled and active.
-bool networkWakeBegin();
+// Parameter isOff indicates whether the host is currently in STATE_OFF.
+bool networkWakeBegin(bool isOff = true);
+
+// Power state change notification to swap Station MAC dynamically between dongle MAC (OFF) and factory MAC (ON).
+void networkWakeOnStateChanged(bool isOff);
 
 // Polling loop for non-blocking Wi-Fi station management and incoming WOL magic packet processing.
 void networkWakeLoop();

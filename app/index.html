@@ -70,7 +70,13 @@
   <div class="wrap">
     <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px">
       <h1 style="margin:0">BC250 Switch</h1>
-      <span id="fw-badge" class="tag" style="display:none;border-color:#444;color:var(--muted);font-size:12px;padding:2px 8px"></span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span id="power-badge" class="tag" style="display:none;font-size:12px;padding:2px 8px;align-items:center;gap:6px">
+          <span id="power-dot" style="width:8px;height:8px;border-radius:50%;display:inline-block"></span>
+          <span id="power-text">OFF</span>
+        </span>
+        <span id="fw-badge" class="tag" style="display:none;border-color:#444;color:var(--muted);font-size:12px;padding:2px 8px"></span>
+      </div>
     </div>
     <div class="sub" id="subtitle">Setup portal</div>
 
@@ -144,6 +150,8 @@
         </label>
         <div class="help" style="margin-top:6px;font-size:11px">
           Blinks the onboard white LED once (500 ms) when the machine is woken up by your controller.
+        </div>
+      </div>
       <!-- Network Wake (Wake-on-LAN) Section -->
       <div id="wol-options" style="margin-top:16px;padding-top:14px;border-top:1px solid #333">
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--fg);margin:0 0 10px">
@@ -237,10 +245,82 @@
     let boundControllers = [];
     let detectedMac = "";
     let editingMac = null;
+    let currentBoardState = "OFF";
 
     const $ = (id) => document.getElementById(id);
     const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
     const MAC_RE = /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/;
+
+    function updateBoardState(boardState) {
+      currentBoardState = boardState || "OFF";
+      const badge = $("power-badge");
+      const dot = $("power-dot");
+      const txt = $("power-text");
+      if (!badge || !dot || !txt) return;
+
+      badge.style.display = "inline-flex";
+      if (currentBoardState === "ON") {
+        dot.style.background = "var(--ok)";
+        badge.style.borderColor = "var(--ok)";
+        badge.style.color = "var(--ok)";
+        txt.textContent = "POWERED ON";
+      } else if (currentBoardState === "BOOTING") {
+        dot.style.background = "var(--accent)";
+        badge.style.borderColor = "var(--accent)";
+        badge.style.color = "var(--accent)";
+        txt.textContent = "BOOTING";
+      } else {
+        dot.style.background = "var(--err)";
+        badge.style.borderColor = "var(--err)";
+        badge.style.color = "var(--err)";
+        txt.textContent = "POWERED OFF";
+      }
+
+      applyBoardStateLocks();
+    }
+
+    function applyBoardStateLocks() {
+      const isBoardOn = (currentBoardState === "ON" || currentBoardState === "BOOTING");
+
+      if ($("wol-enabled")) $("wol-enabled").disabled = isBoardOn;
+      if ($("wifi-ssid")) $("wifi-ssid").disabled = isBoardOn;
+      if ($("wifi-pass")) $("wifi-pass").disabled = isBoardOn;
+      if ($("bc250-mac")) $("bc250-mac").disabled = isBoardOn;
+      const saveWolBtn = $("btn-save-wol");
+      if (saveWolBtn) {
+        saveWolBtn.disabled = isBoardOn;
+        saveWolBtn.classList.toggle("hidden", isBoardOn);
+      }
+
+      let notice = $("wol-readonly-notice");
+      const wolFields = $("wol-fields");
+      if (wolFields) {
+        if (isBoardOn) {
+          if (!notice) {
+            notice = document.createElement("div");
+            notice.id = "wol-readonly-notice";
+            notice.className = "help";
+            notice.style.color = "var(--accent)";
+            notice.style.marginTop = "8px";
+            notice.textContent = "Host is powered on. Wi-Fi configuration is read-only.";
+            wolFields.appendChild(notice);
+          }
+        } else if (notice) {
+          notice.remove();
+        }
+      }
+
+      const addCtrlBtn = $("btn-add-ctrl");
+      if (addCtrlBtn) {
+        if (isBoardOn) {
+          addCtrlBtn.disabled = true;
+          addCtrlBtn.title = "Bluetooth sensing disabled while host is powered on to prevent radio interference.";
+        } else {
+          addCtrlBtn.title = "";
+          addCtrlBtn.disabled = boundControllers.length >= 8;
+        }
+      }
+    }
 
     async function api(path, method = "GET", body = null) {
       const headers = {};
@@ -348,6 +428,7 @@
     async function refreshControllers() {
       try {
         const st = await api("/api/status");
+        if (st.boardState) updateBoardState(st.boardState);
         boundControllers = st.controllers || [];
         renderBoundList();
       } catch (e) { /* ignore */ }
@@ -442,6 +523,7 @@
         $("save-btn").disabled = count === 0;
         $("save-btn").textContent = count > 0 ? "Finish setup" : "Bind at least 1 controller";
       }
+      applyBoardStateLocks();
     }
 
     async function removeCtrl(mac) {
@@ -595,6 +677,7 @@
     async function loadNetworkSettings() {
       try {
         const st = await api("/api/status");
+        if (st.boardState) updateBoardState(st.boardState);
         if (st.wolEnabled !== undefined) {
           $("wol-enabled").checked = !!st.wolEnabled;
           $("wol-fields").classList.toggle("hidden", !st.wolEnabled);
@@ -772,6 +855,7 @@
     (async () => {
       try {
         const st = await api("/api/status");
+        if (st.boardState) updateBoardState(st.boardState);
         if (st.version && st.target) {
           const badge = $("fw-badge");
           badge.textContent = `v${st.version} (${st.target})`;
@@ -791,6 +875,16 @@
         $("subtitle").textContent = "Cannot reach device: " + e.message;
       }
     })();
+
+    // Background power state poll
+    setInterval(async () => {
+      if (token) {
+        try {
+          const st = await api("/api/status");
+          if (st.boardState) updateBoardState(st.boardState);
+        } catch (e) { /* ignore */ }
+      }
+    }, 4000);
   </script>
 </body>
 </html>

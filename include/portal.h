@@ -1,6 +1,12 @@
 #pragma once
 
-// WiFi setup portal (setup mode only). Brings up an open SoftAP + captive
-// portal that forces the user to set a password and then bind a Bluetooth controller.
+// Setup mode (SoftAP + captive portal DNS + discovery)
 void portalBegin();
 void portalLoop();
+
+// Normal mode persistent web server
+void portalServerBegin();
+void portalCheckRestart();
+
+// Board state provider implemented by main.cpp
+const char *getBoardStateName();
