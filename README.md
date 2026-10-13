@@ -18,7 +18,8 @@ Supports multiple targets from the same repository:
 - **Bluetooth controller wake** (optional):
   - **Classic Bluetooth (BR/EDR)** on ESP32 / ESP32-CAM (PS4/PS5, Xbox, Switch Pro, 8BitDo in Classic mode).
   - **BLE advertisement wake** on ESP32-C3 (controllers operating in BLE mode).
-- **WiFi setup portal**: configure the bound controller from a phone — no reflashing.
+- **Wake-on-LAN (WOL) over Wi-Fi** (optional): wake the BC250 from Moonlight, Steam Link, or mobile WOL apps targeting your PC's Ethernet MAC address.
+- **WiFi setup portal**: configure bound controllers and Wake-on-LAN settings from a phone — no reflashing.
 
 ## Wiring
 
@@ -84,6 +85,18 @@ Requirements:
   `bluetoothctl show` (the `Controller aa:bb:cc:dd:ee:ff` line); on Windows, Device
   Manager → Bluetooth adapter → Properties → Advanced.
 
+## Wake-on-LAN (Network Wake)
+
+The BC250's onboard Ethernet controller is unpowered when the SFX PSU is off, so it cannot
+receive Wake-on-LAN packets natively. When **Enable Wake-on-LAN** is configured:
+
+1. The ESP32 connects to your Wi-Fi network in station (STA) mode and listens for standard
+   WOL Magic Packets on UDP ports 9 and 7.
+2. When a Magic Packet matching your configured **BC250 Ethernet MAC** arrives from a
+   streaming app (Moonlight, Steam Link) or LAN tool, the ESP32 asserts `PS_ON#` to boot the PC.
+3. Supports both password-protected and open (passwordless) networks.
+4. If disabled, the Wi-Fi radio stays completely off in normal mode for zero RF/power overhead.
+
 ## Setup portal
 
 Hold the button ≥ 8 s while off (or on first use) to start the portal:
@@ -96,7 +109,11 @@ Hold the button ≥ 8 s while off (or on first use) to start the portal:
    - Press the **PS / Xbox / Home button** on your gamepad; the switch instantly detects it.
    - Review or customize the friendly name (e.g. *Living Room DualSense*) and save.
    - Bind up to 8 controllers, or rename/remove existing ones anytime.
-5. Finish — the device reboots into normal operation.
+5. (Optional) Configure **Wake-on-LAN**:
+   - Check **Enable Wake-on-LAN (Wi-Fi)**.
+   - Enter your Wi-Fi network SSID and password (leave blank for open networks).
+   - Enter your BC250 Ethernet adapter's MAC address.
+6. Finish — the device reboots into normal operation.
 
 
 ## Build & flash

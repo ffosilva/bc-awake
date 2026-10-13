@@ -2,7 +2,7 @@
 #include <Preferences.h>
 #include <ArduinoJson.h>
 
-Config config{{}, "", "", "", false, true};
+Config config{{}, "", "", "", false, true, false, "", "", ""};
 
 static Preferences prefs;
 static const char *NS = "bc250";
@@ -30,10 +30,14 @@ static void saveControllersNvs() {
 
 void loadConfig() {
   prefs.begin(NS, true);  // read-only
-  config.hostAddr    = prefs.getString("hostAddr", "");
-  config.passHash    = prefs.getString("passHash", "");
-  config.forceSetup  = prefs.getBool("forceSetup", false);
-  config.flashOnWake = prefs.getBool("flashOnWake", true);
+  config.hostAddr     = prefs.getString("hostAddr", "");
+  config.passHash     = prefs.getString("passHash", "");
+  config.forceSetup   = prefs.getBool("forceSetup", false);
+  config.flashOnWake  = prefs.getBool("flashOnWake", true);
+  config.wolEnabled   = prefs.getBool("wolEnabled", false);
+  config.wifiSsid     = prefs.getString("wifiSsid", "");
+  config.wifiPassword = prefs.getString("wifiPassword", "");
+  config.bc250Mac     = prefs.getString("bc250Mac", "");
   String controllersJson = prefs.getString("controllers", "");
   String legacyWakeAddr  = prefs.getString("wakeAddr", "");
   prefs.end();
@@ -181,6 +185,28 @@ void setFlashOnWake(bool enable) {
   config.flashOnWake = enable;
   prefs.begin(NS, false);
   prefs.putBool("flashOnWake", enable);
+  prefs.end();
+}
+
+void setWolEnabled(bool enable) {
+  config.wolEnabled = enable;
+  prefs.begin(NS, false);
+  prefs.putBool("wolEnabled", enable);
+  prefs.end();
+}
+
+void setWifiConfig(const String &ssid, const String &password, const String &bc250Mac) {
+  config.wifiSsid = ssid;
+  config.wifiPassword = password;
+  String normMac = bc250Mac;
+  normMac.trim();
+  normMac.toLowerCase();
+  config.bc250Mac = normMac;
+
+  prefs.begin(NS, false);
+  prefs.putString("wifiSsid", ssid);
+  prefs.putString("wifiPassword", password);
+  prefs.putString("bc250Mac", normMac);
   prefs.end();
 }
 

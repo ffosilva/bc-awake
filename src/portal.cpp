@@ -82,6 +82,10 @@ static void handleStatus(AsyncWebServerRequest *req) {
   doc["configured"]  = isConfigured();
   doc["mode"]        = wakeModeName();
   doc["needsHost"]   = wakeNeedsHostAddr();
+  doc["wolEnabled"]  = config.wolEnabled;
+  doc["wifiSsid"]    = config.wifiSsid;
+  doc["hasWifiPassword"] = !config.wifiPassword.isEmpty();
+  doc["bc250Mac"]    = config.bc250Mac;
 #if defined(BOARD_ESP32CAM)
   doc["isCam"]       = true;
   doc["flashOnWake"] = config.flashOnWake;
@@ -307,6 +311,45 @@ static void handleSettings(AsyncWebServerRequest *req, JsonVariant &json) {
   req->send(200, "application/json", "{\"ok\":true}");
 }
 
+static void handleNetwork(AsyncWebServerRequest *req, JsonVariant &json) {
+  if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
+  JsonObject o = json.as<JsonObject>();
+
+  bool wolEnabled = config.wolEnabled;
+  if (o["wolEnabled"].is<bool>()) {
+    wolEnabled = o["wolEnabled"].as<bool>();
+    setWolEnabled(wolEnabled);
+  }
+
+  String ssid = config.wifiSsid;
+  if (o["wifiSsid"].is<const char *>()) {
+    ssid = o["wifiSsid"].as<String>();
+    ssid.trim();
+  }
+
+  String pass = config.wifiPassword;
+  if (o["wifiPassword"].is<const char *>()) {
+    pass = o["wifiPassword"].as<String>();
+  }
+
+  String mac = config.bc250Mac;
+  if (o["bc250Mac"].is<const char *>()) {
+    mac = o["bc250Mac"].as<String>();
+    mac.trim();
+    mac.toLowerCase();
+    if (!mac.isEmpty() && !wakeValidMac(mac)) {
+      sendJsonError(req, 400, "invalid BC250 Ethernet MAC address");
+      return;
+    }
+  }
+
+  setWifiConfig(ssid, pass, mac);
+  Serial.printf("[PORTAL] network config updated: wolEnabled=%d ssid='%s' passLen=%d mac='%s'\n",
+                wolEnabled, ssid.c_str(), (int)pass.length(), mac.c_str());
+
+  req->send(200, "application/json", "{\"ok\":true}");
+}
+
 static void handleFinish(AsyncWebServerRequest *req) {
   if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
   if (!isConfigured()) { sendJsonError(req, 400, "not fully configured"); return; }
@@ -364,6 +407,7 @@ void portalBegin() {
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/controllers/remove", handleControllersRemove));
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/controllers/rename", handleControllersRename));
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", handleSettings));
+  server.addHandler(new AsyncCallbackJsonWebHandler("/api/network", handleNetwork));
 
 
   server.on("/", HTTP_GET, serveIndex);

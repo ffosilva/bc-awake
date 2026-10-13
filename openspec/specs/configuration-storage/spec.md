@@ -10,7 +10,7 @@ The system SHALL store and retrieve configuration keys from non-volatile storage
 
 #### Scenario: Loading configuration at startup
 - **WHEN** the firmware boots
-- **THEN** the system reads controllers list, hostAddr, passHash, forceSetup, and flashOnWake from NVS Preferences
+- **THEN** the system reads controllers list, hostAddr, passHash, forceSetup, flashOnWake, wolEnabled, wifiSsid, wifiPassword, and bc250Mac from NVS Preferences
 
 #### Scenario: Updating configuration values
 - **WHEN** any configuration setter is called

@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "wake.h"
+#include "network_wake.h"
 #include "board.h"
 #include "config.h"
 #include "portal.h"
@@ -241,6 +242,7 @@ static void normalBegin() {
                 wakeModeName());
 
   startWake();
+  networkWakeBegin();
 }
 
 static bool g_setupMode = false;
@@ -336,6 +338,19 @@ static void normalLoop() {
     powerOn("controller present", now);
   }
 
+  // --- Network Wake-on-LAN ---
+  networkWakeLoop();
+  unsigned long wolLast = 0;
+  bool wolPresent = networkWakeSeen(&wolLast);
+  if (state == STATE_OFF && wolPresent && !wakeInhibited) {
+#if defined(BOARD_ESP32CAM)
+    if (config.flashOnWake) {
+      triggerFlash();
+    }
+#endif
+    powerOn("WOL magic packet", now);
+  }
+
   bool boardChanged = debounce(boardRaw, &boardSenseStable, &boardSenseLastRaw,
                                &boardSenseChange, now,
                                state == STATE_BOOTING ? DEBOUNCE_MS
@@ -367,11 +382,12 @@ static void normalLoop() {
   // --- Heartbeat ---
   if (now - lastHeartbeat >= HEARTBEAT_MS) {
     lastHeartbeat = now;
-    Serial.printf("[HB  ] state=%s board=%s btn=%s wake=%s | sense: %umV (%s)\n",
+    Serial.printf("[HB  ] state=%s board=%s btn=%s wake=%s wol=%s | sense: %umV (%s)\n",
                   stateName(state),
                   boardSenseStable ? "UP" : "DOWN",
                   buttonStable ? "down" : "up",
                   wakePresent ? "present" : "absent",
+                  config.wolEnabled ? (networkWakeIsConnected() ? networkWakeIp().c_str() : "connecting") : "off",
                   senseMv, boardRaw ? "high" : "low");
   }
 }

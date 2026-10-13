@@ -141,6 +141,26 @@
         </label>
         <div class="help" style="margin-top:6px;font-size:11px">
           Blinks the onboard white LED once (500 ms) when the machine is woken up by your controller.
+      <!-- Network Wake (Wake-on-LAN) Section -->
+      <div id="wol-options" style="margin-top:16px;padding-top:14px;border-top:1px solid #333">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--fg);margin:0 0 10px">
+          <input type="checkbox" id="wol-enabled" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--accent)" />
+          <span><b>Enable Wake-on-LAN (Wi-Fi)</b></span>
+        </label>
+        <div id="wol-fields" class="hidden" style="margin-top:10px">
+          <label for="wifi-ssid">Wi-Fi Network (SSID)</label>
+          <input id="wifi-ssid" placeholder="HomeNetwork" autocomplete="off" />
+
+          <label for="wifi-pass">Wi-Fi Password (leave empty for open networks)</label>
+          <input id="wifi-pass" type="password" placeholder="Leave empty for open networks" autocomplete="new-password" />
+
+          <label for="bc250-mac">BC250 Ethernet MAC address</label>
+          <input id="bc250-mac" placeholder="aa:bb:cc:dd:ee:ff" autocapitalize="off" />
+          <div class="help" style="margin-top:6px;font-size:11px">
+            When off, standard Wake-on-LAN tools (Moonlight, Steam Link) can wake your PC by sending magic packets to this Ethernet MAC address.
+          </div>
+          <button id="btn-save-wol" class="secondary" style="margin-top:12px">Save Network Settings</button>
+          <div class="msg" id="wol-msg"></div>
         </div>
       </div>
 
@@ -280,6 +300,7 @@
     async function gotoDeviceScreen() {
       show("dev");
       await refreshControllers();
+      await loadNetworkSettings();
 
       if (mode === "classic") {
         $("classic-controls").classList.remove("hidden");
@@ -541,11 +562,89 @@
       } catch (e) { /* ignore */ }
     };
 
+    let stHasSavedPass = false;
+
+    async function loadNetworkSettings() {
+      try {
+        const st = await api("/api/status");
+        if (st.wolEnabled !== undefined) {
+          $("wol-enabled").checked = !!st.wolEnabled;
+          $("wol-fields").classList.toggle("hidden", !st.wolEnabled);
+        }
+        if (st.wifiSsid) $("wifi-ssid").value = st.wifiSsid;
+        if (st.bc250Mac) $("bc250-mac").value = st.bc250Mac;
+        stHasSavedPass = !!st.hasWifiPassword;
+        if (stHasSavedPass) {
+          $("wifi-pass").placeholder = "•••••••• (saved; leave blank to keep)";
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    $("wol-enabled").onchange = () => {
+      $("wol-fields").classList.toggle("hidden", !$("wol-enabled").checked);
+    };
+
+    $("btn-save-wol").onclick = async () => {
+      await saveNetworkSettings();
+    };
+
+    async function saveNetworkSettings() {
+      const msg = $("wol-msg");
+      msg.className = "msg";
+      const wolEnabled = $("wol-enabled").checked;
+      const wifiSsid = $("wifi-ssid").value.trim();
+      const wifiPassword = $("wifi-pass").value;
+      const bc250Mac = $("bc250-mac").value.trim().toLowerCase();
+
+      if (wolEnabled) {
+        if (!wifiSsid) {
+          msg.className = "msg err";
+          msg.textContent = "Please enter a Wi-Fi SSID.";
+          return false;
+        }
+        if (!MAC_RE.test(bc250Mac)) {
+          msg.className = "msg err";
+          msg.textContent = "Please enter a valid BC250 Ethernet MAC (aa:bb:cc:dd:ee:ff).";
+          return false;
+        }
+      }
+
+      try {
+        $("btn-save-wol").disabled = true;
+        const payload = { wolEnabled, wifiSsid, bc250Mac };
+        if (wifiPassword.length > 0 || !stHasSavedPass) {
+          payload.wifiPassword = wifiPassword;
+        }
+        await api("/api/network", "POST", payload);
+        if (wifiPassword.length > 0) {
+          stHasSavedPass = true;
+          $("wifi-pass").placeholder = "•••••••• (saved; leave blank to keep)";
+          $("wifi-pass").value = "";
+        }
+        msg.className = "msg ok";
+        msg.textContent = "Network settings saved!";
+        return true;
+      } catch (e) {
+        msg.className = "msg err";
+        msg.textContent = "Could not save network settings: " + e.message;
+        return false;
+      } finally {
+        $("btn-save-wol").disabled = false;
+      }
+    }
+
     $("save-btn").onclick = async () => {
       const msg = $("dev-msg");
       msg.className = "msg";
       try {
         $("save-btn").disabled = true;
+        if ($("wol-enabled").checked) {
+          const ok = await saveNetworkSettings();
+          if (!ok) {
+            $("save-btn").disabled = false;
+            return;
+          }
+        }
         if (isCam) {
           await api("/api/settings", "POST", { flashOnWake: $("flash-on-wake").checked });
         }
