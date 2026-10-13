@@ -4,6 +4,7 @@
 #include "board.h"
 #include "config.h"
 #include "portal.h"
+#include "version.h"
 
 // The ESP32 is permanently powered from the ATX connector (5VSB), so it runs
 // independently of the PSU's main rails. It controls the SFX PSU through PS_ON#
@@ -201,7 +202,7 @@ static bool debounce(bool raw, bool *stable, bool *lastRaw,
 }
 
 static void normalBegin() {
-  Serial.println("=== BC250 PSU controller ===");
+  Serial.printf("=== BC250 PSU controller v%s (%s) ===\n", FW_VERSION, FW_TARGET);
 
   // PS_ON# open-drain, released by default so the PSU stays off at boot.
   pinMode(PS_ON_PIN, OUTPUT_OPEN_DRAIN);

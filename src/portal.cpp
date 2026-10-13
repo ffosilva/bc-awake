@@ -13,6 +13,8 @@
 #include "board.h"
 #include "wake.h"
 #include "config.h"
+#include "version.h"
+#include <Update.h>
 #if !defined(WAKE_BLE)
 #include "bt_classic.h"
 #endif
@@ -76,6 +78,8 @@ static void serveIndex(AsyncWebServerRequest *req) {
 
 static void handleStatus(AsyncWebServerRequest *req) {
   JsonDocument doc;
+  doc["version"]     = FW_VERSION;
+  doc["target"]      = FW_TARGET;
   doc["passwordSet"] = config.passHash.length() > 0;
   doc["wakeAddr"]    = config.wakeAddr;
   doc["hostAddr"]    = config.hostAddr;
@@ -359,6 +363,48 @@ static void handleFinish(AsyncWebServerRequest *req) {
   g_restartAt = millis() + 800;
 }
 
+static void handleUpdateResponse(AsyncWebServerRequest *req) {
+  if (!authed(req)) {
+    sendJsonError(req, 401, "unauthorized");
+    return;
+  }
+  if (Update.hasError() || !Update.isFinished()) {
+    Update.abort();
+    sendJsonError(req, 500, "firmware update failed");
+  } else {
+    req->send(200, "application/json", "{\"ok\":true}");
+    Serial.println("[OTA ] Firmware update complete! Restarting in 800ms...");
+    g_restartAt = millis() + 800;
+  }
+}
+
+static void handleUpdateUpload(AsyncWebServerRequest *req, String filename, size_t index, uint8_t *data, size_t len, bool final) {
+  if (!authed(req)) return;
+
+  if (index == 0) {
+    // Suspend Bluetooth discovery to free heap and avoid SPI cache contention
+    wakeSetDiscovery(false);
+    Serial.printf("[OTA ] Starting firmware update: %s\n", filename.c_str());
+    if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH)) {
+      Update.printError(Serial);
+    }
+  }
+
+  if (!Update.hasError()) {
+    if (Update.write(data, len) != len) {
+      Update.printError(Serial);
+    }
+  }
+
+  if (final) {
+    if (Update.end(true)) {
+      Serial.printf("[OTA ] Firmware update written successfully: %u bytes\n", (unsigned)(index + len));
+    } else {
+      Update.printError(Serial);
+    }
+  }
+}
+
 // --- Lifecycle ---
 
 void portalBegin() {
@@ -394,6 +440,7 @@ void portalBegin() {
   server.on("/api/bt/devices", HTTP_GET, handleDevices);
   server.on("/api/ble/devices", HTTP_GET, handleDevices);
   server.on("/api/finish", HTTP_POST, handleFinish);
+  server.on("/api/update", HTTP_POST, handleUpdateResponse, handleUpdateUpload);
   server.on("/api/listener/start", HTTP_POST, handleListenerStart);
   server.on("/api/listener/status", HTTP_GET, handleListenerStatus);
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/password", handlePassword));

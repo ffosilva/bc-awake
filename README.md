@@ -20,6 +20,8 @@ Supports multiple targets from the same repository:
   - **BLE advertisement wake** on ESP32-C3 (controllers operating in BLE mode).
 - **Wake-on-LAN (WOL) over Wi-Fi** (optional): wake the BC250 from Moonlight, Steam Link, or mobile WOL apps targeting your PC's Ethernet MAC address.
 - **WiFi setup portal**: configure bound controllers and Wake-on-LAN settings from a phone — no reflashing.
+- **Over-the-Air (OTA) firmware updates**: update firmware wirelessly via the setup portal web UI.
+- **Firmware versioning**: compile-time semantic versioning and target hardware reporting.
 
 ## Wiring
 
@@ -113,7 +115,8 @@ Hold the button ≥ 8 s while off (or on first use) to start the portal:
    - Check **Enable Wake-on-LAN (Wi-Fi)**.
    - Enter your Wi-Fi network SSID and password (leave blank for open networks).
    - Enter your BC250 Ethernet adapter's MAC address.
-6. Finish — the device reboots into normal operation.
+6. (Optional) **Firmware update (OTA)**: Upload a compiled `.bin` firmware file directly in the browser.
+7. Finish — the device reboots into normal operation.
 
 
 ## Build & flash
@@ -139,6 +142,21 @@ pio run -e esp32cam -t uploadfs   # web UI filesystem
 pio run -e esp32-c3-devkitm-1 -t upload     # firmware
 pio run -e esp32-c3-devkitm-1 -t uploadfs   # web UI filesystem
 ```
+
+### Over-the-Air (OTA) Updates
+
+Once the device has been flashed with the dual-bank partition table via USB, all future updates can be applied wirelessly:
+
+1. Compile the firmware binary for your target:
+   ```bash
+   pio run -e esp32dev   # binary generated at .pio/build/esp32dev/firmware.bin
+   ```
+2. Hold the switch button ≥ 8 s while OFF to enter the setup portal.
+3. Connect to **`BC250 Switch Setup`** (`http://192.168.4.1`) and unlock.
+4. In the **Firmware update (OTA)** card, select your `.bin` file and click **Upload & flash**.
+5. The device flashes the inactive bank and automatically reboots into the updated firmware.
+
+> **Note on Initial Partitioning**: The switch uses a dual-bank 1.81 MB OTA layout (`partitions.csv`). Transitioning from older single-partition builds requires **one initial wired flash** (`pio run -t upload && pio run -t uploadfs`) to repartition flash.
 
 ## Notes
 

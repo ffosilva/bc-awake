@@ -68,7 +68,10 @@
 </head>
 <body>
   <div class="wrap">
-    <h1>BC250 Switch</h1>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px">
+      <h1 style="margin:0">BC250 Switch</h1>
+      <span id="fw-badge" class="tag" style="display:none;border-color:#444;color:var(--muted);font-size:12px;padding:2px 8px"></span>
+    </div>
     <div class="sub" id="subtitle">Setup portal</div>
 
     <!-- Password screen -->
@@ -167,6 +170,30 @@
       <button id="save-btn" disabled>Finish setup</button>
       <div class="msg" id="dev-msg"></div>
     </div>
+
+    <!-- Firmware Update card -->
+    <div class="card hidden" id="card-ota">
+      <div style="font-size:15px;font-weight:bold">Firmware update (OTA)</div>
+      <div class="sub" style="margin:6px 0 12px">
+        Upload a compiled firmware binary (<code>.bin</code>) to update wirelessly over-the-air.
+      </div>
+      <div style="font-size:13px;margin-bottom:12px">
+        Installed version: <b id="ota-current-ver" style="color:var(--accent)">-</b>
+      </div>
+      <label for="ota-file">Firmware binary (.bin)</label>
+      <input type="file" id="ota-file" accept=".bin" style="padding:8px" />
+      <div id="ota-progress-wrap" class="hidden" style="margin-top:14px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span id="ota-status-label">Uploading…</span>
+          <span id="ota-progress-pct">0%</span>
+        </div>
+        <div style="width:100%;height:8px;background:#333;border-radius:4px;overflow:hidden">
+          <div id="ota-progress-bar" style="width:0%;height:100%;background:var(--accent);transition:width 0.2s"></div>
+        </div>
+      </div>
+      <button id="ota-btn" class="secondary" disabled style="margin-top:14px">Upload &amp; flash</button>
+      <div class="msg" id="ota-msg"></div>
+    </div>
   </div>
 
   <!-- Interactive Listener Modal -->
@@ -232,6 +259,7 @@
       $("screen-pass").classList.toggle("hidden", screen !== "pass");
       $("screen-host").classList.toggle("hidden", screen !== "host");
       $("screen-dev").classList.toggle("hidden", screen !== "dev");
+      $("card-ota").classList.toggle("hidden", screen !== "dev");
     }
 
     // --- Password screen ---
@@ -662,10 +690,94 @@
       }
     };
 
+    // --- OTA Firmware Update ---
+    $("ota-file").onchange = () => {
+      const file = $("ota-file").files[0];
+      $("ota-btn").disabled = !file || !file.name.endsWith(".bin");
+      $("ota-msg").className = "msg";
+      $("ota-msg").textContent = "";
+    };
+
+    $("ota-btn").onclick = () => {
+      const file = $("ota-file").files[0];
+      if (!file) return;
+
+      const btn = $("ota-btn");
+      const msg = $("ota-msg");
+      const progWrap = $("ota-progress-wrap");
+      const progBar = $("ota-progress-bar");
+      const progPct = $("ota-progress-pct");
+      const statusLabel = $("ota-status-label");
+
+      btn.disabled = true;
+      $("ota-file").disabled = true;
+      msg.className = "msg";
+      msg.textContent = "";
+      progWrap.classList.remove("hidden");
+      progBar.style.width = "0%";
+      progPct.textContent = "0%";
+      statusLabel.textContent = "Uploading…";
+
+      const formData = new FormData();
+      formData.append("firmware", file, file.name);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/api/update");
+      if (token) xhr.setRequestHeader("X-Auth-Token", token);
+
+      xhr.upload.onprogress = (evt) => {
+        if (evt.lengthComputable) {
+          const pct = Math.round((evt.loaded / evt.total) * 100);
+          progBar.style.width = pct + "%";
+          progPct.textContent = pct + "%";
+          if (pct === 100) {
+            statusLabel.textContent = "Writing to flash…";
+          }
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          progBar.style.width = "100%";
+          progPct.textContent = "100%";
+          statusLabel.textContent = "Complete!";
+          msg.className = "msg ok";
+          msg.textContent = "Firmware updated successfully! Rebooting… Please wait 10 seconds.";
+          if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+          if (listenTimer) { clearInterval(listenTimer); listenTimer = null; }
+        } else {
+          btn.disabled = false;
+          $("ota-file").disabled = false;
+          let err = "HTTP " + xhr.status;
+          try {
+            const resp = JSON.parse(xhr.responseText);
+            if (resp.error) err = resp.error;
+          } catch (e) { /* ignore */ }
+          msg.className = "msg err";
+          msg.textContent = "Update failed: " + err;
+        }
+      };
+
+      xhr.onerror = () => {
+        btn.disabled = false;
+        $("ota-file").disabled = false;
+        msg.className = "msg err";
+        msg.textContent = "Network error during upload.";
+      };
+
+      xhr.send(formData);
+    };
+
     // --- Boot ---
     (async () => {
       try {
         const st = await api("/api/status");
+        if (st.version && st.target) {
+          const badge = $("fw-badge");
+          badge.textContent = `v${st.version} (${st.target})`;
+          badge.style.display = "inline-block";
+          $("ota-current-ver").textContent = `v${st.version} (${st.target})`;
+        }
         if (st.wakeAddr) $("subtitle").textContent = "Configured: " + st.wakeAddr;
         if (st.needsHost !== undefined) needsHost = !!st.needsHost;
         if (st.mode) mode = st.mode;
