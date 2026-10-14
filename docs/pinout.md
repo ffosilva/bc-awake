@@ -16,6 +16,7 @@ active PlatformIO environment (`esp32dev`, `esp32cam`, or `esp32-c3-devkitm-1`).
 | `BUTTON_GND` | **GPIO26** | **GND** | **GPIO6** | Momentary switch, terminal B | DevKitC/C3 drives LOW; CAM wires to header GND |
 | `PS_ON_PIN` | **GPIO32** | **GPIO14** | **GPIO4** | ATX `PS_ON#` (green wire) | **Open-drain**, active LOW: LOW = PSU on, released = off |
 | `BOARD_SENSE` | **GPIO34** | **GPIO13** | **GPIO3** | BC250 `TPMS1` pin 9 | ~3.3 V when up, 0 when off (DevKitC/C3: ADC with hysteresis; CAM: digital INPUT_PULLDOWN) |
+| `PWR_BTN_PIN` | **GPIO27** | **GPIO2** | **GPIO7** | Motherboard `PWR_BTN#` (optional) | Direct wire, idles ~3.4 V. High-Z input; pulled LOW only while mirroring the button or sending a 300 ms shutdown pulse; never driven HIGH |
 | `FLASH_LED` | — | **GPIO4** | — | Onboard white LED | Flashes 500 ms when controller wakes the PC (configurable in portal) |
 | `5V` / `VIN` | **5V** | **5V** | **5V** | PSU `+5VSB` | Permanent power for the ESP |
 | `GND` | **GND** | **GND** | **GND** | PSU GND + board GND | Common ground |
@@ -23,11 +24,13 @@ active PlatformIO environment (`esp32dev`, `esp32cam`, or `esp32-c3-devkitm-1`).
 ### Pin rationale
 
 **On ESP32 DevKitC:**
+- **GPIO27** is the optional `PWR_BTN_PIN`: a general GPIO with no strapping or boot-time function.
 - **GPIO34 is ADC1** (ADC1_CH6). ADC2 can't be read while WiFi is running (setup portal), so the analog board-sense must be on ADC1. GPIO34 is input-only.
 - **GPIO32** is high-impedance at reset, so `PS_ON#` stays released (PSU off) while the ESP32 boots. Not a strapping pin.
 - **GPIO25/26** are general GPIOs with no boot-time function.
 
 **On ESP32-C3 (SuperMini / DevKitM-1):**
+- **GPIO7** is the optional `PWR_BTN_PIN`: free on both boards, not a strapping pin (the C3 strapping pins are GPIO2, 8 and 9).
 - **GPIO3 is ADC1** (ADC1_CH3). Read as an analog voltage with factory eFuse calibration.
 - **GPIO4** is open-drain for `PS_ON#`.
 - **GPIO5/6** connect to the momentary switch.
@@ -38,6 +41,7 @@ active PlatformIO environment (`esp32dev`, `esp32cam`, or `esp32-c3-devkitm-1`).
 - **GPIO13** is used for `BOARD_SENSE` as a digital input with internal pull-down (`INPUT_PULLDOWN`). All ADC1 pins (GPIO32–39) are internally dedicated to the camera or red LED. ADC2 cannot be sampled when Bluetooth or WiFi is active, and GPIO13 is shared with the SD DAT3 line which floats HIGH unless pulled down.
 - **GPIO14** is free from strapping functions and used as open-drain for `PS_ON#`.
 - **GPIO15** has an internal pull-up and is used for `BUTTON_SENSE`. Terminal B connects directly to the header `GND` pin (saving a GPIO pin).
+- **GPIO2** is the optional `PWR_BTN_PIN` (header-exposed; wired to SD DAT0, unused by this firmware). It is a strapping pin, but its value is ignored during a normal boot (GPIO0 high). See [`PWR_BTN#` wiring](#optional-pwr_btn-graceful-shutdown-wiring) for the UART-flashing caveat.
 - **GPIO4** drives the onboard high-power white LED (500 ms indicator pulse when controller wake is triggered; can be toggled via setup portal).
 - **Pins avoided on ESP32-CAM**:
   - `GPIO12`: Strapping pin MTDI (if pulled HIGH at boot by 3.3 V TPMS1, sets flash VDD to 1.8 V and prevents boot).
@@ -62,7 +66,7 @@ All four signals and power are on the **left** header (the side with `EN`, `VP`,
    │ IO33                       │
    │ IO25   ◄── switch A        │  pull-up
    │ IO26   ──► switch B        │  driven LOW
-   │ IO27                       │
+   │ IO27   ──► PWR_BTN# (opt.)  │  high-Z, pulled LOW only
    │ IO14                       │
    │ IO12   (strapping, avoid)  │
    │ GND    ◄── common ground   │
@@ -89,7 +93,7 @@ The ESP32-CAM has two 8-pin headers (antenna at top):
          │ IO13 ◄─ TPMS1 pin 9 GND │
          │ IO15 ◄─ switch A   IO0  │  (IO0 to GND to flash)
          │ IO14 ──► PS_ON#    U0TX │
-         │ IO2                U0RX │
+         │ IO2  ──► PWR_BTN#  U0RX │  (optional, see below)
          │ IO4  (flash LED)   IO16 │  (PSRAM)
          │ GND  ◄─ common/swB GND  │
          │ 5V   ◄─ PSU +5VSB  VCC  │
@@ -108,7 +112,7 @@ The ultra-compact ESP32-C3 SuperMini board features a built-in USB-C port and tw
            │                        │
      IO5   │ ◄─ switch A (pull-up)  │ 5V   ◄─ PSU +5VSB
      IO6   │ ──► switch B (driven L)│ GND  ◄─ common ground
-     IO7   │                        │ 3V3
+     IO7   │ ──► PWR_BTN# (optional)│ 3V3
      IO8   │ (blue LED)             │ IO4  ──► PS_ON# (open-drain)
      IO9   │ (BOOT button)          │ IO3  ◄─ TPMS1 pin 9 (ADC1)
     IO10   │                        │ IO2
@@ -134,7 +138,7 @@ The ESP32-C3-DevKitM-1 development board has two 15-pin headers (antenna at top,
 IO3 (ADC1) │ ◄─ TPMS1 pin 9              │ IO9  (BOOT)
        GND │                             │ IO8  (RGB)
        RST │                             │ GND
-       GND │                             │ IO7
+       GND │                             │ IO7  ──► PWR_BTN# (optional)
        IO0 │                             │ IO6  ──► switch B (driven LOW)
        IO1 │                             │ IO5  ◄── switch A (pull-up)
       IO10 │                             │ IO4  ──► PS_ON# (open-drain)
@@ -158,7 +162,36 @@ IO3 (ADC1) │ ◄─ TPMS1 pin 9              │ IO9  (BOOT)
  PSU PS_ON# (green) ──[optional buffer, see below]── DevKitC: GPIO32 | CAM: GPIO14 | C3: GPIO4  (open-drain, active LOW)
 
  BC250 TPMS1 pin 9 ────────────────► DevKitC: GPIO34 | CAM: GPIO13 | C3: GPIO3  (3.3V board sense)
+
+  Motherboard PWR_BTN# (optional) ──► DevKitC: GPIO27 | CAM: GPIO2  | C3: GPIO7  (direct wire, high-Z / LOW only)
 ```
+
+### Optional `PWR_BTN#` (graceful shutdown) wiring
+
+Connect the motherboard's front-panel power-button pin (the one that idles high, **not**
+the ground pin) directly to `PWR_BTN_PIN`. Ground is already shared through the ATX
+connector. Measure it first: on the BC250 board it idles at **~3.4 V**, just under the
+ESP32's ~3.6 V limit. If your board's pin idles at 5 V, do not wire it directly.
+
+```
+ Motherboard FPANEL                      ESP32
+ +------------------+                    +----------------------+
+ | PWR_BTN# (~3.4V) |------------------->| PWR_BTN_PIN (INPUT)  |
+ | GND              |--[common GND]------| GND                  |
+ +------------------+                    +----------------------+
+```
+
+- **Never driven HIGH.** The pin is a high-impedance input and is pulled LOW only while the
+  feature is enabled and the machine is ON: either mirroring your button press or for the
+  300 ms portal "Shut down now" pulse.
+- **Long press and backstop.** Mirroring lets the motherboard apply its own short-press and
+  long-press behavior. The firmware's 5 s hold-to-cut-PSU still releases `PS_ON#`
+  regardless, so power is cut even if the board has no hardware override.
+- **No timeout.** If the OS ignores the shutdown, nothing happens automatically.
+- **ESP32-CAM GPIO2 / UART flashing.** The board's pull-up holds GPIO2 HIGH, which can stop
+  the ESP32 entering download mode. **Unplug the `PWR_BTN#` wire before flashing over UART**;
+  OTA updates are unaffected. A normal boot is unaffected because GPIO2 is ignored when
+  GPIO0 is high, but verify once that the reset-time pull-down does not register as a press.
 
 ### `PS_ON#` 5 V caution (recommended buffer)
 

@@ -2,7 +2,7 @@
 #include <Preferences.h>
 #include <ArduinoJson.h>
 
-Config config{{}, "", "", "", false, true, false, "", "", "", "bc250-switch"};
+Config config{{}, "", "", "", false, true, false, "", "", "", "bc250-switch", false};
 
 static Preferences prefs;
 static const char *NS = "bc250";
@@ -35,6 +35,7 @@ void loadConfig() {
   config.forceSetup   = prefs.getBool("forceSetup", false);
   config.flashOnWake  = prefs.getBool("flashOnWake", true);
   config.wolEnabled   = prefs.getBool("wolEnabled", false);
+  config.gracefulShutdown = prefs.getBool("gracefulShutdown", false);
   config.wifiSsid     = prefs.getString("wifiSsid", "");
   config.wifiPassword = prefs.getString("wifiPassword", "");
   config.bc250Mac     = prefs.getString("bc250Mac", "");
@@ -199,6 +200,13 @@ void setWolEnabled(bool enable) {
   prefs.end();
 }
 
+void setGracefulShutdown(bool enable) {
+  config.gracefulShutdown = enable;
+  prefs.begin(NS, false);
+  prefs.putBool("gracefulShutdown", enable);
+  prefs.end();
+}
+
 void setWifiConfig(const String &ssid, const String &password, const String &bc250Mac, const String &hostname) {
   config.wifiSsid = ssid;
   config.wifiPassword = password;
@@ -264,6 +272,6 @@ void resetConfig() {
   prefs.putBool("forceSetup", true);
   prefs.end();
 
-  config = {{}, "", "", "", true, true, false, "", "", "", "bc250-switch"};
+  config = {{}, "", "", "", true, true, false, "", "", "", "bc250-switch", false};
 }
 

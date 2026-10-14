@@ -14,9 +14,13 @@
 // -------------
 //   * Asserting PS_ON# turns the PSU on; the BC250 is expected to power up from
 //     applied power (BIOS "restore on AC power"), so PSU on == board boots.
-//   * We have no wire to the board's power button, so "turning the board off"
-//     means cutting PSU power via PS_ON#. This is a hard power-off, not a
-//     graceful OS shutdown.
+//   * Without the optional PWR_BTN# wire, "turning the board off" means cutting
+//     PSU power via PS_ON#. This is a hard power-off, not a graceful OS shutdown.
+//   * With the optional graceful-shutdown feature enabled (portal setting), the
+//     ESP also mirrors the physical button onto the motherboard PWR_BTN# line
+//     while the board is ON, so the board itself decides what a short press
+//     (ACPI shutdown) or long press (hardware override) means. The 5 s
+//     hold-to-cut-PSU below stays as a backstop.
 //   * If the board shuts itself down (e.g. OS shutdown), TPMS1 drops to 0 while
 //     the PSU is still energized. We detect that and release PS_ON# so the PSU
 //     follows the board down.
@@ -38,8 +42,15 @@ static bool          buttonLastRaw     = false;
 static unsigned long buttonLastChange  = 0;
 static unsigned long pressStart        = 0;
 static bool          pressStartedOff   = false;  // press began while OFF
+static bool          pressStartedOn    = false;  // press began while STATE_ON
 static bool          longPressFired    = false;
 static bool          setupFired        = false;
+
+// --- Optional PWR_BTN# output (graceful shutdown) ---
+static bool          pwrBtnDriven      = false;  // pin currently driven LOW
+static bool          pwrPulseActive    = false;  // portal-triggered pulse running
+static unsigned long pwrPulseUntil     = 0;
+static volatile bool shutdownRequested = false; // set by the portal task
 
 // --- Board-sense debounce ---
 static bool          boardSenseStable  = false;  // debounced TPMS1 HIGH
@@ -166,6 +177,68 @@ static bool readBoardSense(uint32_t *outMv = nullptr) {
 }
 #endif
 
+// PWR_BTN_PIN is a high-Z INPUT unless we are emulating a press. The motherboard
+// owns the HIGH level (~3.4V pull-up), so we only ever pull the line LOW and
+// then let go; it is never driven HIGH.
+static void pwrBtnDrive(const char *why) {
+  if (pwrBtnDriven) return;
+  digitalWrite(PWR_BTN_PIN, LOW);
+  pinMode(PWR_BTN_PIN, OUTPUT);
+  pwrBtnDriven = true;
+  Serial.printf("[PWR ] PWR_BTN# LOW (%s)\n", why);
+}
+
+static void pwrBtnRelease(const char *why) {
+  if (!pwrBtnDriven) return;
+  pinMode(PWR_BTN_PIN, INPUT);
+  pwrBtnDriven = false;
+  Serial.printf("[PWR ] PWR_BTN# released (%s)\n", why);
+}
+
+// Called from the portal task: only flags the request. All pin handling stays in
+// the main loop. Returns false if a shutdown cannot be sent right now.
+bool requestGracefulShutdown() {
+  if (!config.gracefulShutdown || state != STATE_ON) return false;
+  shutdownRequested = true;
+  return true;
+}
+
+// Drives PWR_BTN_PIN from the loop: services the 300 ms API pulse, otherwise
+// mirrors the physical button while ON for presses that began while ON.
+static void updatePwrBtn(unsigned long now) {
+  if (!config.gracefulShutdown || state != STATE_ON) {
+    shutdownRequested = false;
+    pwrPulseActive = false;
+    pwrBtnRelease("feature off or board not ON");
+    return;
+  }
+
+  if (shutdownRequested) {
+    shutdownRequested = false;
+    if (pwrPulseActive) {
+      Serial.println("[PWR ] shutdown request ignored (pulse already active)");
+    } else {
+      pwrPulseActive = true;
+      pwrPulseUntil = millis() + PWR_PULSE_MS;
+      pwrBtnDrive("shutdown pulse start");
+    }
+  }
+
+  if (pwrPulseActive) {
+    if ((long)(now - pwrPulseUntil) >= 0) {
+      pwrPulseActive = false;
+      pwrBtnRelease("shutdown pulse end");
+    }
+    return;  // the pulse owns the line; mirroring resumes afterwards
+  }
+
+  if (buttonStable && pressStartedOn) {
+    pwrBtnDrive("mirroring button press");
+  } else {
+    pwrBtnRelease("button released");
+  }
+}
+
 static void psuOn() {
   digitalWrite(PS_ON_PIN, PS_ON_ASSERT);
   Serial.println("[PSU ] PS_ON# asserted (LOW) -> PSU ON");
@@ -195,6 +268,8 @@ static void powerOn(const char *reason, unsigned long now) {
 static void powerOff(const char *reason, unsigned long now) {
   Serial.printf("[ACT ] %s -> powering off\n", reason);
   psuOff();
+  pwrPulseActive = false;
+  pwrBtnRelease("powering off");
 #if defined(BOARD_ESP32CAM)
   digitalWrite(FLASH_LED, LOW);
   flashUntil = 0;
@@ -246,6 +321,10 @@ static void normalBegin() {
   // PS_ON# open-drain, released by default so the PSU stays off at boot.
   pinMode(PS_ON_PIN, OUTPUT_OPEN_DRAIN);
   digitalWrite(PS_ON_PIN, PS_ON_RELEASE);
+
+  // Optional PWR_BTN#: always start as a high-Z input, never driven unless the
+  // graceful-shutdown feature is enabled and the board is ON.
+  pinMode(PWR_BTN_PIN, INPUT);
 
   // Switch: optional local ground pin, sensed input with pull-up.
   if (BUTTON_GND >= 0) {
@@ -336,6 +415,7 @@ static void normalLoop() {
       // Press began.
       pressStart = now;
       pressStartedOff = (state == STATE_OFF);
+      pressStartedOn  = (state == STATE_ON);
       longPressFired = false;
       setupFired = false;
       Serial.println("[BTN ] pressed");
@@ -421,13 +501,17 @@ static void normalLoop() {
       break;
   }
 
+  // --- Optional PWR_BTN# output (after state handling so it sees this loop's state) ---
+  updatePwrBtn(now);
+
   // --- Heartbeat ---
   if (now - lastHeartbeat >= HEARTBEAT_MS) {
     lastHeartbeat = now;
-    Serial.printf("[HB  ] state=%s board=%s btn=%s wake=%s wol=%s | sense: %umV (%s)\n",
+    Serial.printf("[HB  ] state=%s board=%s btn=%s pwrbtn=%s wake=%s wol=%s | sense: %umV (%s)\n",
                   stateName(state),
                   boardSenseStable ? "UP" : "DOWN",
                   buttonStable ? "down" : "up",
+                  !config.gracefulShutdown ? "off" : (pwrBtnDriven ? "low" : "idle"),
                   wakePresent ? "present" : "absent",
                   config.wolEnabled ? (networkWakeIsConnected() ? networkWakeIp().c_str() : "connecting") : "off",
                   senseMv, boardRaw ? "high" : "low");

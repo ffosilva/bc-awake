@@ -14,6 +14,10 @@ void portalCheckRestart();
 // Board state provider implemented by main.cpp
 const char *getBoardStateName();
 
+// Request a graceful shutdown (300 ms PWR_BTN# pulse). Safe to call from the web
+// server task; returns false if the feature is disabled or the board is not ON.
+bool requestGracefulShutdown();
+
 // Interactive pairing mode state
 bool portalIsPairingActive();
 void portalPairingStop();

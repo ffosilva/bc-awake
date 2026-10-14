@@ -26,6 +26,9 @@ const size_t MAX_CONTROLLERS = 8;
 //   wifiPassword- Wi-Fi network password (empty for open networks).
 //   bc250Mac    - BC250 Ethernet MAC address for WOL magic packet filtering.
 //   hostname    - device mDNS and DHCP hostname (default: "bc250-switch").
+//   gracefulShutdown - optional: mirror the power button to the motherboard
+//                      PWR_BTN# line while ON and allow portal-triggered
+//                      shutdown pulses (default: disabled).
 struct Config {
   std::vector<BoundController> controllers;
   String wakeAddr;
@@ -38,6 +41,7 @@ struct Config {
   String wifiPassword;
   String bc250Mac;
   String hostname;
+  bool   gracefulShutdown;
 };
 
 extern Config config;
@@ -55,6 +59,7 @@ void setPassHash(const String &hash);
 void setForceSetup(bool force);
 void setFlashOnWake(bool enable);
 void setWolEnabled(bool enable);
+void setGracefulShutdown(bool enable);
 void setWifiConfig(const String &ssid, const String &password, const String &bc250Mac, const String &hostname = "");
 bool isValidHostname(const String &name);
 void setHostname(const String &hostname);

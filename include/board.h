@@ -11,6 +11,7 @@
 //   GND                    <-----> momentary switch terminal B
 //   GPIO14 (PS_ON_PIN)     <-----> ATX PS_ON# (green wire, active LOW)
 //   GPIO13 (BOARD_SENSE)   <-----> BC250 TPMS1 pin 9 (digital, INPUT_PULLDOWN)
+//   GPIO2  (PWR_BTN_PIN)   <-----> motherboard PWR_BTN# (optional)
 //
 // The ESP32-CAM dedicates most pins to the camera, flash LED, and SD card.
 // Switch terminal B is wired directly to header GND (BUTTON_GND = -1).
@@ -24,6 +25,14 @@ const int BUTTON_GND   = -1; // -1 means wired to physical GND header
 
 const int PS_ON_PIN    = 14;
 const int BOARD_SENSE  = 13;
+
+// Optional: motherboard PWR_BTN# (front-panel power button) header pin, wired
+// directly. Idles ~3.4V (pulled up by the board), so it is kept as a high-Z INPUT
+// and only pulled LOW to emulate a button press; it is never driven HIGH.
+// GPIO2 is a strapping pin but is ignored at boot when GPIO0 is HIGH (normal
+// boot). Unplug this wire to flash over UART, since the board's pull-up would
+// hold GPIO2 HIGH during download-mode entry.
+const int PWR_BTN_PIN  = 2;
 
 // Onboard white flashlight LED (GPIO 4). Pulsed as indicator when the
 // Bluetooth controller wakes the machine.
@@ -39,6 +48,7 @@ const unsigned long FLASH_DURATION_MS = 500;
 //   GPIO6  (BUTTON_GND)    <-----> momentary switch terminal B
 //   GPIO4  (PS_ON_PIN)     <-----> ATX PS_ON# (green wire, active LOW)
 //   GPIO3  (BOARD_SENSE)   <-----> BC250 TPMS1 pin 9 (3.3V = board on)
+//   GPIO7  (PWR_BTN_PIN)   <-----> motherboard PWR_BTN# (optional)
 //
 // The switch bridges GPIO5 and GPIO6. GPIO6 is driven LOW to act as a local
 // ground, and GPIO5 is read with an internal pull-up: pressed reads LOW.
@@ -46,6 +56,10 @@ const int BUTTON_SENSE = 5;
 const int BUTTON_GND   = 6;
 const int PS_ON_PIN    = 4;
 const int BOARD_SENSE  = 3;
+
+// Optional: motherboard PWR_BTN# header pin, wired directly. Idles ~3.4V (board
+// pull-up): kept as a high-Z INPUT, only pulled LOW to emulate a press.
+const int PWR_BTN_PIN  = 7;
 
 #else
 // Standard ESP32-WROOM (DevKitC) wiring:
@@ -56,6 +70,7 @@ const int BOARD_SENSE  = 3;
 //   GPIO26 (BUTTON_GND)    <-----> momentary switch terminal B
 //   GPIO32 (PS_ON_PIN)     <-----> ATX PS_ON# (green wire, active LOW)
 //   GPIO34 (BOARD_SENSE)   <-----> BC250 TPMS1 pin 9 (3.3V = board on)
+//   GPIO27 (PWR_BTN_PIN)   <-----> motherboard PWR_BTN# (optional)
 //
 // The switch bridges GPIO25 and GPIO26. GPIO26 is driven LOW to act as a local
 // ground, and GPIO25 is read with an internal pull-up: pressed reads LOW.
@@ -63,6 +78,10 @@ const int BUTTON_SENSE = 25;
 const int BUTTON_GND   = 26;
 const int PS_ON_PIN    = 32;
 const int BOARD_SENSE  = 34;
+
+// Optional: motherboard PWR_BTN# header pin, wired directly. Idles ~3.4V (board
+// pull-up): kept as a high-Z INPUT, only pulled LOW to emulate a press.
+const int PWR_BTN_PIN  = 27;
 #endif
 
 // Hysteresis thresholds for the analog board-sense reading. The gap between
@@ -108,6 +127,11 @@ const unsigned long BOARD_OFF_DEBOUNCE_MS = 1500;
 // hasn't signalled UP by then we assume the boot failed, release the PSU and
 // return to idle (OFF).
 const unsigned long BOOT_TIMEOUT_MS = 10000;
+
+// Duration of the programmatic PWR_BTN# pulse (portal "Shut down"). Matches a
+// typical ACPI power-button press; long enough to register, far short of the
+// motherboard's hard-override hold.
+const unsigned long PWR_PULSE_MS = 300;
 
 // Periodic heartbeat log interval.
 const unsigned long HEARTBEAT_MS = 1000;

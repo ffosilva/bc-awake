@@ -94,6 +94,7 @@ static void handleStatus(AsyncWebServerRequest *req) {
   doc["bc250Mac"]    = config.bc250Mac;
   doc["hostname"]    = config.hostname.isEmpty() ? "bc250-switch" : config.hostname;
   doc["boardState"]  = getBoardStateName();
+  doc["gracefulShutdown"] = config.gracefulShutdown;
 #if defined(BOARD_ESP32CAM)
   doc["isCam"]       = true;
   doc["flashOnWake"] = config.flashOnWake;
@@ -375,6 +376,32 @@ static void handleSettings(AsyncWebServerRequest *req, JsonVariant &json) {
   req->send(200, "application/json", "{\"ok\":true}");
 }
 
+// Persist the optional graceful-shutdown (PWR_BTN# mirroring) setting.
+static void handlePower(AsyncWebServerRequest *req, JsonVariant &json) {
+  if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
+  JsonObject o = json.as<JsonObject>();
+  if (!o["gracefulShutdown"].is<bool>()) {
+    sendJsonError(req, 400, "gracefulShutdown (boolean) required");
+    return;
+  }
+  setGracefulShutdown(o["gracefulShutdown"].as<bool>());
+  Serial.printf("[PORTAL] gracefulShutdown=%d\n", config.gracefulShutdown ? 1 : 0);
+  req->send(200, "application/json", "{\"ok\":true}");
+}
+
+// Send a 300 ms PWR_BTN# pulse so the board shuts down as if its button were tapped.
+static void handleShutdown(AsyncWebServerRequest *req) {
+  if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
+  if (!requestGracefulShutdown()) {
+    sendJsonError(req, 409, config.gracefulShutdown
+                              ? "board is not ON"
+                              : "graceful shutdown is disabled");
+    return;
+  }
+  Serial.println("[PORTAL] graceful shutdown requested");
+  req->send(200, "application/json", "{\"ok\":true}");
+}
+
 static void handleNetwork(AsyncWebServerRequest *req, JsonVariant &json) {
   if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
   if (isBoardPowered()) {
@@ -507,6 +534,7 @@ static void handleUpdateUpload(AsyncWebServerRequest *req, String filename, size
     server.on("/api/ble/devices", HTTP_GET, handleDevices);
     server.on("/api/finish", HTTP_POST, handleFinish);
     server.on("/api/reset", HTTP_POST, handleReset);
+    server.on("/api/shutdown", HTTP_POST, handleShutdown);
     server.on("/api/update", HTTP_POST, handleUpdateResponse, handleUpdateUpload);
     server.on("/api/listener/start", HTTP_POST, handleListenerStart);
     server.on("/api/listener/stop", HTTP_POST, handleListenerStop);
@@ -523,6 +551,7 @@ static void handleUpdateUpload(AsyncWebServerRequest *req, String filename, size
     server.addHandler(new AsyncCallbackJsonWebHandler("/api/controllers/rename", handleControllersRename));
     server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", handleSettings));
     server.addHandler(new AsyncCallbackJsonWebHandler("/api/network", handleNetwork));
+    server.addHandler(new AsyncCallbackJsonWebHandler("/api/power", handlePower));
 
     server.on("/", HTTP_GET, serveIndex);
     server.on("/index.html", HTTP_GET, serveIndex);
