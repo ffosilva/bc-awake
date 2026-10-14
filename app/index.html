@@ -91,17 +91,18 @@
     <div class="sub" id="subtitle">Setup portal</div>
 
     <!-- Password screen (first-time create or unlock) -->
-    <div class="card hidden" id="screen-pass">
+    <form class="card hidden" id="screen-pass" action="/api/login" method="post" autocomplete="on">
+      <input type="text" name="username" value="" autocomplete="username" style="display:none" tabindex="-1" aria-hidden="true" />
       <div id="pass-title" style="font-size:15px;font-weight:bold"></div>
       <label for="pw">Password</label>
-      <input id="pw" type="password" autocomplete="new-password" />
+      <input id="pw" name="password" type="password" autocomplete="current-password" required />
       <div id="confirm-wrap">
         <label for="pw2">Confirm password</label>
-        <input id="pw2" type="password" autocomplete="new-password" />
+        <input id="pw2" name="new-password" type="password" autocomplete="new-password" />
       </div>
-      <button id="pass-btn">Continue</button>
+      <button type="submit" id="pass-btn">Continue</button>
       <div class="msg" id="pass-msg"></div>
-    </div>
+    </form>
 
     <!-- Tab navigation -->
     <div id="tabs-nav" class="tab-bar hidden">
@@ -682,6 +683,20 @@
       $("pass-title").textContent = creating ? "Create a portal password" : "Enter portal password";
       $("confirm-wrap").classList.toggle("hidden", !creating);
       $("pass-btn").textContent = creating ? "Create & continue" : "Unlock";
+      $("screen-pass").action = creating ? "/api/password" : "/api/login";
+      const pw = $("pw");
+      const pw2 = $("pw2");
+      if (creating) {
+        pw.name = "new-password";
+        pw.autocomplete = "new-password";
+        pw2.name = "new-password";
+        pw2.autocomplete = "new-password";
+        pw2.required = true;
+      } else {
+        pw.name = "password";
+        pw.autocomplete = "current-password";
+        pw2.required = false;
+      }
       $("screen-pass").classList.remove("hidden");
       $("tabs-nav").classList.add("hidden");
       $("panel-bt").classList.add("hidden");
@@ -689,7 +704,8 @@
       $("panel-sys").classList.add("hidden");
     }
 
-    $("pass-btn").onclick = async () => {
+    $("screen-pass").onsubmit = async (e) => {
+      e.preventDefault();
       const pw = $("pw").value;
       const msg = $("pass-msg");
       msg.className = "msg";
