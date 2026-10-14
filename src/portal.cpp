@@ -482,6 +482,13 @@ static void handleUpdateResponse(AsyncWebServerRequest *req) {
     sendJsonError(req, 401, "unauthorized");
     return;
   }
+  if (isBoardPowered()) {
+    if (Update.isRunning()) {
+      Update.abort();
+    }
+    sendJsonError(req, 409, "Firmware update disabled while host machine is powered on");
+    return;
+  }
   if (Update.hasError() || !Update.isFinished()) {
     Update.abort();
     sendJsonError(req, 500, "firmware update failed");
@@ -494,6 +501,13 @@ static void handleUpdateResponse(AsyncWebServerRequest *req) {
 
 static void handleUpdateUpload(AsyncWebServerRequest *req, String filename, size_t index, uint8_t *data, size_t len, bool final) {
   if (!authed(req)) return;
+
+  if (isBoardPowered()) {
+    if (Update.isRunning()) {
+      Update.abort();
+    }
+    return;
+  }
 
   if (index == 0) {
     // Suspend Bluetooth discovery to free heap and avoid SPI cache contention

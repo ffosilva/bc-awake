@@ -534,6 +534,33 @@
           if (addCtrlHint) addCtrlHint.textContent = "";
         }
       }
+
+      const otaFile = $("ota-file");
+      const otaBtn = $("ota-btn");
+      const otaCard = $("card-ota");
+      if (otaFile && otaBtn && otaCard) {
+        let otaNotice = $("ota-readonly-notice");
+        if (isBoardOn) {
+          otaFile.disabled = true;
+          otaBtn.disabled = true;
+          if (!otaNotice) {
+            otaNotice = document.createElement("div");
+            otaNotice.id = "ota-readonly-notice";
+            otaNotice.className = "help";
+            otaNotice.style.color = "var(--accent)";
+            otaNotice.style.marginTop = "8px";
+            otaNotice.textContent = "Host machine is powered on. Firmware updates are only available while the machine is turned off.";
+            otaCard.appendChild(otaNotice);
+          }
+        } else {
+          otaFile.disabled = false;
+          const file = otaFile.files && otaFile.files[0];
+          otaBtn.disabled = !file || !file.name.endsWith(".bin");
+          if (otaNotice) {
+            otaNotice.remove();
+          }
+        }
+      }
     }
 
     async function api(path, method = "GET", body = null) {
@@ -1179,12 +1206,15 @@
     // OTA Firmware Update
     $("ota-file").onchange = () => {
       const file = $("ota-file").files[0];
-      $("ota-btn").disabled = !file || !file.name.endsWith(".bin");
+      const isBoardOn = (currentBoardState === "ON" || currentBoardState === "BOOTING");
+      $("ota-btn").disabled = isBoardOn || !file || !file.name.endsWith(".bin");
       $("ota-msg").className = "msg";
       $("ota-msg").textContent = "";
     };
 
     $("ota-btn").onclick = () => {
+      const isBoardOn = (currentBoardState === "ON" || currentBoardState === "BOOTING");
+      if (isBoardOn) return;
       const file = $("ota-file").files[0];
       if (!file) return;
 
