@@ -104,19 +104,18 @@ receive Wake-on-LAN packets natively. When **Enable Wake-on-LAN** is configured:
 Hold the button ≥ 8 s while off (or on first use) to start the portal:
 
 1. Connect to the open WiFi network **`BC250 Switch Setup`** and open `http://192.168.4.1`.
-2. Create a password.
-3. Enter the BC250's Bluetooth adapter MAC (Classic BT targets).
-4. Manage controllers:
-   - Click **`+ Add controller`** to enter the interactive listener mode.
-   - Press the **PS / Xbox / Home button** on your gamepad; the switch instantly detects it.
-   - Review or customize the friendly name (e.g. *Living Room DualSense*) and save.
-   - Bind up to 8 controllers, or rename/remove existing ones anytime.
-5. (Optional) Configure **Wake-on-LAN**:
-   - Check **Enable Wake-on-LAN (Wi-Fi)**.
-   - Enter your Wi-Fi network SSID and password (leave blank for open networks).
-   - Enter your BC250 Ethernet adapter's MAC address.
-6. (Optional) **Firmware update (OTA)**: Upload a compiled `.bin` firmware file directly in the browser.
-7. Finish — the device reboots into normal operation.
+2. Create a password (or enter your existing password). A password is the only mandatory requirement.
+3. Access the tabbed interface:
+   - **Bluetooth tab**:
+     - Enter and save the BC250 Bluetooth adapter MAC (Classic BT targets).
+     - Manage controllers: click **`+ Add controller`** to pair interactively (once the adapter MAC is saved), or add MACs manually. Bind up to 8 controllers.
+     - (ESP32-CAM) Toggle flash LED blink on wake.
+   - **Network tab**:
+     - (Optional) Configure Wake-on-LAN: check **Enable Wake-on-LAN (Wi-Fi)**, enter your Wi-Fi SSID, password, device hostname, and BC250 Ethernet MAC address, then click **Save Network Settings**.
+   - **System tab**:
+     - Firmware update (OTA): upload a compiled `.bin` binary wirelessly.
+     - Change portal password with confirmation.
+     - Click **Exit setup mode & reboot** to restart the device into normal operation mode.
 
 
 ## Build & flash

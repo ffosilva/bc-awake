@@ -30,6 +30,7 @@ static String          g_token;
 
 // Deferred restart (so the HTTP response can flush before we reboot).
 static unsigned long   g_restartAt = 0;
+static bool            g_portalSetupMode = false;
 
 // --- Helpers ---
 
@@ -84,6 +85,7 @@ static void handleStatus(AsyncWebServerRequest *req) {
   doc["wakeAddr"]    = config.wakeAddr;
   doc["hostAddr"]    = config.hostAddr;
   doc["configured"]  = isConfigured();
+  doc["setupMode"]   = g_portalSetupMode;
   doc["mode"]        = wakeModeName();
   doc["needsHost"]   = wakeNeedsHostAddr();
   doc["wolEnabled"]  = config.wolEnabled;
@@ -432,7 +434,7 @@ static void handleNetwork(AsyncWebServerRequest *req, JsonVariant &json) {
 
 static void handleFinish(AsyncWebServerRequest *req) {
   if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
-  if (!isConfigured()) { sendJsonError(req, 400, "not fully configured"); return; }
+  if (config.passHash.isEmpty()) { sendJsonError(req, 400, "password not set"); return; }
   setForceSetup(false);
   req->send(200, "application/json", "{\"ok\":true}");
   Serial.println("[PORTAL] setup complete, restarting into normal mode");
@@ -538,6 +540,7 @@ static void handleUpdateUpload(AsyncWebServerRequest *req, String filename, size
   }
 
   void portalBegin() {
+    g_portalSetupMode = true;
     Serial.println("=== BC250 PSU controller : SETUP MODE ===");
 
     // Keep the PSU off and the button readable while configuring.
