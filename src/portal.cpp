@@ -402,6 +402,26 @@ static void handleShutdown(AsyncWebServerRequest *req) {
   req->send(200, "application/json", "{\"ok\":true}");
 }
 
+static void handlePowerOn(AsyncWebServerRequest *req) {
+  if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
+  if (!requestPowerOn()) {
+    sendJsonError(req, 409, "board is not OFF");
+    return;
+  }
+  Serial.println("[PORTAL] power on requested");
+  req->send(200, "application/json", "{\"ok\":true}");
+}
+
+static void handlePowerOff(AsyncWebServerRequest *req) {
+  if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
+  if (!requestPowerOff()) {
+    sendJsonError(req, 409, "board is already OFF");
+    return;
+  }
+  Serial.println("[PORTAL] force power off requested");
+  req->send(200, "application/json", "{\"ok\":true}");
+}
+
 static void handleNetwork(AsyncWebServerRequest *req, JsonVariant &json) {
   if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
   if (isBoardPowered()) {
@@ -549,6 +569,8 @@ static void handleUpdateUpload(AsyncWebServerRequest *req, String filename, size
     server.on("/api/finish", HTTP_POST, handleFinish);
     server.on("/api/reset", HTTP_POST, handleReset);
     server.on("/api/shutdown", HTTP_POST, handleShutdown);
+    server.on("/api/power/on", HTTP_POST, handlePowerOn);
+    server.on("/api/power/off", HTTP_POST, handlePowerOff);
     server.on("/api/update", HTTP_POST, handleUpdateResponse, handleUpdateUpload);
     server.on("/api/listener/start", HTTP_POST, handleListenerStart);
     server.on("/api/listener/stop", HTTP_POST, handleListenerStop);

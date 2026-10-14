@@ -64,15 +64,14 @@ The button is the primary control and always works, even with no controller conf
 
 By default the only way the ESP can turn the board off is to cut the PSU (`PS_ON#`), which
 is a hard power-off. If you also wire the motherboard's front-panel **`PWR_BTN#`** pin to the
-ESP32 (GPIO27 on DevKitC, GPIO2 on ESP32-CAM, GPIO7 on ESP32-C3) and enable **Graceful
-shutdown** in the portal's **System** tab, the ESP behaves like a real power button:
+ESP32 (GPIO27 on DevKitC, GPIO2 on ESP32-CAM, GPIO7 on ESP32-C3) and enable the feature in the portal's **Power** tab, the ESP behaves like a real power button:
 
 | Action (feature enabled, machine **on**) | Result |
 |------------------------------------------|--------|
 | Short press | Mirrored to the board: OS gets an ACPI power-button event and shuts down cleanly |
 | Hold the button | Mirrored to the board for as long as you hold it, so the board's own long-press override can apply |
 | Hold ≥ 5 s | Unchanged backstop: the PSU is cut immediately |
-| Portal **Shut down now** | Sends a 300 ms press to the board |
+| Portal **Shut Down OS** | Sends a 300 ms press to the board |
 
 When the board powers down, `TPMS1` goes low and the existing logic releases `PS_ON#`
 automatically. There is no timeout: if the OS hangs, you decide (hold the button 5 s to cut
@@ -134,9 +133,12 @@ Hold the button ≥ 8 s while off (or on first use) to start the portal:
      - (ESP32-CAM) Toggle flash LED blink on wake.
    - **Network tab**:
      - (Optional) Configure Wake-on-LAN: check **Enable Wake-on-LAN (Wi-Fi)**, enter your Wi-Fi SSID, password, device hostname, and BC250 Ethernet MAC address, then click **Save Network Settings**.
+   - **Power tab**:
+     - View real-time power status and motherboard `TPMS1` signal state.
+     - ATX power supply controls: remotely **Power On** the machine (when off), or **Force Cut Power** (with in-page modal confirmation to prevent accidental data loss).
+     - Motherboard power button: toggle the optional `PWR_BTN#` feature and trigger a clean ACPI shutdown via **Shut Down OS**.
    - **System tab**:
      - Firmware update (OTA): upload a compiled `.bin` binary wirelessly.
-     - (Optional) Graceful shutdown: enable it if `PWR_BTN#` is wired, and use **Shut down now** to send a power-button press.
      - Change portal password with confirmation.
      - Reset configuration: wipe all custom settings (Wi-Fi credentials, paired controllers, host adapter MAC, portal password) back to factory defaults with in-page confirmation, and reboot into setup mode.
      - Click **Exit setup mode & reboot** to restart the device into normal operation mode.

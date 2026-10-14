@@ -51,6 +51,8 @@ static bool          pwrBtnDriven      = false;  // pin currently driven LOW
 static bool          pwrPulseActive    = false;  // portal-triggered pulse running
 static unsigned long pwrPulseUntil     = 0;
 static volatile bool shutdownRequested = false; // set by the portal task
+static volatile bool powerOnRequested  = false; // set by the portal task
+static volatile bool powerOffRequested = false; // set by the portal task
 
 // --- Board-sense debounce ---
 static bool          boardSenseStable  = false;  // debounced TPMS1 HIGH
@@ -193,6 +195,20 @@ static void pwrBtnRelease(const char *why) {
   pinMode(PWR_BTN_PIN, INPUT);
   pwrBtnDriven = false;
   Serial.printf("[PWR ] PWR_BTN# released (%s)\n", why);
+}
+
+// Called from the portal task: flags a remote power-on. Returns false if not in STATE_OFF.
+bool requestPowerOn() {
+  if (state != STATE_OFF) return false;
+  powerOnRequested = true;
+  return true;
+}
+
+// Called from the portal task: flags an immediate power cut. Returns false if already in STATE_OFF.
+bool requestPowerOff() {
+  if (state == STATE_OFF) return false;
+  powerOffRequested = true;
+  return true;
 }
 
 // Called from the portal task: only flags the request. All pin handling stays in
@@ -401,6 +417,21 @@ static void normalLoop() {
     char c = Serial.read();
     if (c == 's' || c == 'S') {
       enterSetupMode("serial 's' command");
+    }
+  }
+
+  // --- Portal power requests ---
+  if (powerOnRequested) {
+    powerOnRequested = false;
+    if (state == STATE_OFF) {
+      portalPairingStop();
+      powerOn("web portal", now);
+    }
+  }
+  if (powerOffRequested) {
+    powerOffRequested = false;
+    if (state != STATE_OFF) {
+      powerOff("web portal force off", now);
     }
   }
 
