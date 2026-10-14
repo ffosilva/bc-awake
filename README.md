@@ -115,6 +115,7 @@ Hold the button ≥ 8 s while off (or on first use) to start the portal:
    - **System tab**:
      - Firmware update (OTA): upload a compiled `.bin` binary wirelessly.
      - Change portal password with confirmation.
+     - Reset configuration: wipe all custom settings (Wi-Fi credentials, paired controllers, host adapter MAC, portal password) back to factory defaults with in-page confirmation, and reboot into setup mode.
      - Click **Exit setup mode & reboot** to restart the device into normal operation mode.
 
 

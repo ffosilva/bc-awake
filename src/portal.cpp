@@ -441,6 +441,15 @@ static void handleFinish(AsyncWebServerRequest *req) {
   g_restartAt = millis() + 800;
 }
 
+static void handleReset(AsyncWebServerRequest *req) {
+  if (!authed(req)) { sendJsonError(req, 401, "unauthorized"); return; }
+  g_token = "";
+  resetConfig();
+  req->send(200, "application/json", "{\"ok\":true}");
+  Serial.println("[PORTAL] configuration reset to defaults, restarting into setup mode");
+  g_restartAt = millis() + 800;
+}
+
 static void handleUpdateResponse(AsyncWebServerRequest *req) {
   if (!authed(req)) {
     sendJsonError(req, 401, "unauthorized");
@@ -497,6 +506,7 @@ static void handleUpdateUpload(AsyncWebServerRequest *req, String filename, size
     server.on("/api/bt/devices", HTTP_GET, handleDevices);
     server.on("/api/ble/devices", HTTP_GET, handleDevices);
     server.on("/api/finish", HTTP_POST, handleFinish);
+    server.on("/api/reset", HTTP_POST, handleReset);
     server.on("/api/update", HTTP_POST, handleUpdateResponse, handleUpdateUpload);
     server.on("/api/listener/start", HTTP_POST, handleListenerStart);
     server.on("/api/listener/stop", HTTP_POST, handleListenerStop);

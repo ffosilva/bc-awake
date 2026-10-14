@@ -257,3 +257,13 @@ bool isConfigured() {
          config.hostAddr.length() > 0;
 #endif
 }
+
+void resetConfig() {
+  prefs.begin(NS, false);
+  prefs.clear();
+  prefs.putBool("forceSetup", true);
+  prefs.end();
+
+  config = {{}, "", "", "", true, true, false, "", "", "", "bc250-switch"};
+}
+

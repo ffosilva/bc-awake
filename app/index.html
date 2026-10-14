@@ -57,8 +57,8 @@
     .ctrl-info small { color:var(--muted); font-size:12px; }
     .ctrl-actions { display:flex; gap:6px; }
     .btn-sm { padding:6px 10px; font-size:12px; margin:0; width:auto; border-radius:6px; }
-    .btn-danger { background:transparent; color:var(--err); border:1px solid #552222; }
-    .btn-danger:hover { background:var(--err); color:#fff; }
+    .btn-danger, button.btn-danger { background:transparent; color:var(--err); border:1px solid #552222; }
+    .btn-danger:hover, button.btn-danger:hover { background:var(--err); color:#fff; }
     .btn-edit { background:transparent; color:var(--fg); border:1px solid #444; }
     .btn-edit:hover { border-color:var(--accent); color:var(--accent); }
     .ctrl-item.editing { border-color:var(--accent); background:#201e14; }
@@ -258,6 +258,26 @@
         <input id="new-pw2" type="password" autocomplete="new-password" />
         <button id="btn-change-pw" class="secondary" style="margin-top:14px">Change password</button>
         <div class="msg" id="change-pw-msg"></div>
+      </div>
+
+      <!-- Reset Configuration Card -->
+      <div class="card" id="card-reset">
+        <div style="font-size:15px;font-weight:bold">Reset configuration</div>
+        <div class="sub" style="margin:6px 0 12px">
+          Wipe all custom settings (Wi-Fi credentials, paired controllers, host adapter address, and portal password) back to factory defaults.
+        </div>
+        <button id="btn-reset-init" class="btn-danger" style="margin-top:4px">Reset to factory defaults</button>
+        <div id="reset-confirm-wrap" class="hidden" style="margin-top:14px;padding:12px;border-radius:8px;background:#2a1414;border:1px solid #552222">
+          <div style="color:var(--err);font-weight:bold;font-size:13px;margin-bottom:6px">Are you sure?</div>
+          <div style="color:var(--fg);font-size:12px;line-height:1.4;margin-bottom:12px">
+            This will permanently remove all custom configuration. The device will restart into setup mode (<code>BC250_XXXXXX</code>) so you can set it up from scratch.
+          </div>
+          <div class="row">
+            <button id="btn-reset-confirm" style="margin:0;padding:10px;background:var(--err);color:#fff">Yes, reset configuration</button>
+            <button id="btn-reset-cancel" class="secondary" style="margin:0;padding:10px">Cancel</button>
+          </div>
+        </div>
+        <div class="msg" id="reset-msg"></div>
       </div>
 
       <!-- Exit Setup Card (shown only if setupMode is true) -->
@@ -1026,6 +1046,44 @@
         msg.textContent = e.message;
       } finally {
         $("btn-change-pw").disabled = false;
+      }
+    };
+
+    // Reset configuration
+    $("btn-reset-init").onclick = () => {
+      $("btn-reset-init").classList.add("hidden");
+      $("reset-confirm-wrap").classList.remove("hidden");
+      const msg = $("reset-msg");
+      msg.className = "msg";
+      msg.textContent = "";
+    };
+
+    $("btn-reset-cancel").onclick = () => {
+      $("reset-confirm-wrap").classList.add("hidden");
+      $("btn-reset-init").classList.remove("hidden");
+      const msg = $("reset-msg");
+      msg.className = "msg";
+      msg.textContent = "";
+    };
+
+    $("btn-reset-confirm").onclick = async () => {
+      const msg = $("reset-msg");
+      msg.className = "msg";
+      try {
+        $("btn-reset-confirm").disabled = true;
+        $("btn-reset-cancel").disabled = true;
+        await api("/api/reset", "POST", {});
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+        if (listenTimer) { clearInterval(listenTimer); listenTimer = null; }
+        token = "";
+        $("reset-confirm-wrap").classList.add("hidden");
+        msg.className = "msg ok";
+        msg.textContent = "Configuration reset! Rebooting into setup mode… Please connect to the BC250 Wi-Fi access point.";
+      } catch (e) {
+        msg.className = "msg err";
+        msg.textContent = "Error: " + e.message;
+        $("btn-reset-confirm").disabled = false;
+        $("btn-reset-cancel").disabled = false;
       }
     };
 

@@ -62,3 +62,6 @@ void setHostname(const String &hostname);
 // Fully provisioned: a password and controller(s) are set (plus host adapter if Classic BT).
 bool isConfigured();
 
+// Reset all configuration in NVS and in-memory back to defaults, setting forceSetup to true.
+void resetConfig();
+
