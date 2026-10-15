@@ -4,10 +4,8 @@ schema: spec-driven
 # Add only constraints that should guide OpenSpec artifacts and workflows.
 # Include constraints an agent cannot infer by reading the code.
 # Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
+context: |
+  All NVS keys and namespaces in Preferences must be 15 characters or fewer due to the ESP-IDF NVS_KEY_NAME_MAX_SIZE limit (16 bytes including null-terminator).
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.

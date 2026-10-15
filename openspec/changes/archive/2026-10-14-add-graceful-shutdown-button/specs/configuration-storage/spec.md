@@ -3,15 +3,15 @@
 ## MODIFIED Requirements
 
 ### Requirement: Persistent Storage of Configuration Parameters
-The system SHALL store and retrieve configuration keys from non-volatile storage under the 'bc250' namespace.
+The system SHALL store and retrieve configuration keys from non-volatile storage under the 'bc250' namespace. All NVS namespace and key names SHALL NOT exceed 15 characters to adhere to ESP-IDF NVS limits.
 
 #### Scenario: Loading configuration at startup
 - **WHEN** the firmware boots
-- **THEN** the system reads controllers list, hostAddr, passHash, forceSetup, flashOnWake, wolEnabled, wifiSsid, wifiPassword, bc250Mac, and gracefulShutdown from NVS Preferences, treating an absent gracefulShutdown key as disabled
+- **THEN** the system reads controllers list, hostAddr, passHash, forceSetup, flashOnWake, wolEnabled, wifiSsid, wifiPassword, bc250Mac, and gracefulShutdown (using the 8-character NVS key 'graceful') from NVS Preferences, treating an absent key as disabled
 
 #### Scenario: Updating configuration values
 - **WHEN** any configuration setter is called
-- **THEN** the system writes the updated value to NVS immediately
+- **THEN** the system writes the updated value to NVS immediately using a key of 15 characters or fewer
 
 #### Scenario: Migrating legacy single controller configuration
 - **WHEN** the firmware boots, the controllers key is absent in NVS, but a legacy wakeAddr key exists

@@ -3,7 +3,7 @@
 ## 1. Pin definitions and configuration flag
 
 - [x] 1.1 Add `PWR_BTN_PIN` to [include/board.h](../../../include/board.h) for each target (CAM GPIO2, DevKitC GPIO27, C3 GPIO7) with wiring comments; verify `pio run -e esp32cam -e esp32dev -e esp32-c3-devkitm-1` still compiles
-- [x] 1.2 Add `gracefulShutdown` to `Config` in [include/config.h](../../../include/config.h) with `setGracefulShutdown(bool)`; load it in `loadConfig()` (default false when the key is absent) and persist it immediately in the setter in [src/config.cpp](../../../src/config.cpp); verify via serial log that the value survives a reboot after being set
+- [x] 1.2 Store `gracefulShutdown` in NVS using the 8-character key `"graceful"` (<= 15 chars limit) in [src/config.cpp](../../../src/config.cpp) and [include/config.h](../../../include/config.h); verify via serial log that the value survives a reboot after being set
 - [x] 1.3 Reset `gracefulShutdown` to false in `resetConfig()`; verify via serial log (or `/api/status`) that it is false after `/api/reset`
 
 ## 2. Power button mirroring and shutdown pulse

@@ -35,7 +35,7 @@ void loadConfig() {
   config.forceSetup   = prefs.getBool("forceSetup", false);
   config.flashOnWake  = prefs.getBool("flashOnWake", true);
   config.wolEnabled   = prefs.getBool("wolEnabled", false);
-  config.gracefulShutdown = prefs.getBool("gracefulShutdown", false);
+  config.gracefulShutdown = prefs.getBool("graceful", false);
   config.wifiSsid     = prefs.getString("wifiSsid", "");
   config.wifiPassword = prefs.getString("wifiPassword", "");
   config.bc250Mac     = prefs.getString("bc250Mac", "");
@@ -203,7 +203,7 @@ void setWolEnabled(bool enable) {
 void setGracefulShutdown(bool enable) {
   config.gracefulShutdown = enable;
   prefs.begin(NS, false);
-  prefs.putBool("gracefulShutdown", enable);
+  prefs.putBool("graceful", enable);
   prefs.end();
 }
 

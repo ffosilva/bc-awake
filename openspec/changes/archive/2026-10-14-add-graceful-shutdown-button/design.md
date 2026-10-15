@@ -34,7 +34,7 @@ The BC250 `PWR_BTN#` line idles at ~3.4 V (measured), pulled up by the motherboa
 
 **Non-blocking API pulse.** The 300 ms portal-triggered pulse is timed from the loop's cached `now` rather than `delay()`, so debouncing, wake loops, and the web server keep running. A pulse-until timestamp returns the pin to `INPUT`. A request during an active pulse is neither extended nor queued. Alternative: `delay(300)`, rejected since it stalls the loop.
 
-**Config and API.** One persisted boolean `gracefulShutdown` (default false) next to `flashOnWake`/`wolEnabled`. `POST /api/power` saves it. `POST /api/shutdown` triggers the pulse, returning 409 when the feature is off or the machine is not ON. `GET /api/status` exposes the flag and power state for the UI. The UI lives in the System tab; the tab count stays at three.
+**Config and API.** One persisted boolean `gracefulShutdown` (default false) next to `flashOnWake`/`wolEnabled`. Due to the ESP-IDF 15-character NVS key limit (`NVS_KEY_NAME_MAX_SIZE`), the internal NVS storage key is named `graceful` (8 characters), keeping `gracefulShutdown` in the public JSON API and in-memory `Config` struct. `POST /api/power` saves it. `POST /api/shutdown` triggers the pulse, returning 409 when the feature is off or the machine is not ON. `GET /api/status` exposes the flag and power state for the UI. The UI lives in the System tab; the tab count stays at three.
 
 ## Risks / Trade-offs
 

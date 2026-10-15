@@ -28,7 +28,7 @@ const size_t MAX_CONTROLLERS = 8;
 //   hostname    - device mDNS and DHCP hostname (default: "bc250-switch").
 //   gracefulShutdown - optional: mirror the power button to the motherboard
 //                      PWR_BTN# line while ON and allow portal-triggered
-//                      shutdown pulses (default: disabled).
+//                      shutdown pulses (default: disabled; NVS key: "graceful").
 struct Config {
   std::vector<BoundController> controllers;
   String wakeAddr;

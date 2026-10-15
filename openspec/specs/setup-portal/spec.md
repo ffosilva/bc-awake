@@ -388,6 +388,40 @@ The portal SHALL provide authenticated HTTP POST endpoints at `/api/power/on` an
 - **WHEN** a POST request is sent to `/api/power/on` or `/api/power/off` without a valid X-Auth-Token header
 - **THEN** the system rejects the request with HTTP status 401 Unauthorized without modifying power state
 
+### Requirement: Graceful Shutdown Setting Endpoint
+The portal SHALL provide authenticated endpoints to read and persist the optional graceful shutdown setting, which is disabled by default.
+
+#### Scenario: Reporting the setting
+- **WHEN** an authenticated client performs a GET request to /api/status
+- **THEN** the JSON response includes gracefulShutdown set to the persisted value and the current power state
+
+#### Scenario: Saving the setting
+- **WHEN** an authenticated POST request to /api/power carries a valid gracefulShutdown value
+- **THEN** the system persists the value immediately and returns HTTP 200 with `{"ok":true}`
+
+#### Scenario: Saving rejected without authentication
+- **WHEN** a POST request is sent to /api/power without a valid X-Auth-Token header
+- **THEN** the system rejects the request with HTTP status 401 Unauthorized without modifying stored configuration
+
+### Requirement: Graceful Shutdown Action Endpoint
+The portal SHALL provide an authenticated POST endpoint at /api/shutdown that triggers a graceful shutdown pulse only when the feature is enabled and the system is in STATE_ON.
+
+#### Scenario: Shutdown while ON with feature enabled
+- **WHEN** an authenticated POST request is sent to /api/shutdown while gracefulShutdown is enabled and the system is in STATE_ON
+- **THEN** the system sends the 300 ms power-button pulse and returns HTTP 200 with `{"ok":true}`
+
+#### Scenario: Shutdown with feature disabled
+- **WHEN** an authenticated POST request is sent to /api/shutdown while gracefulShutdown is disabled
+- **THEN** the system returns HTTP 409 and does not pulse the power-button line
+
+#### Scenario: Shutdown while not ON
+- **WHEN** an authenticated POST request is sent to /api/shutdown while the system is in STATE_OFF or STATE_BOOTING
+- **THEN** the system returns HTTP 409 and does not pulse the power-button line
+
+#### Scenario: Shutdown rejected without authentication
+- **WHEN** a POST request is sent to /api/shutdown without a valid X-Auth-Token header
+- **THEN** the system rejects the request with HTTP status 401 Unauthorized and does not pulse the power-button line
+
 ### Requirement: Power Tab User Interface
 The portal web interface SHALL provide a Power tab displaying live power state telemetry, ATX power supply controls with an in-page confirmed force-cut dialog, and optional motherboard power button controls.
 
