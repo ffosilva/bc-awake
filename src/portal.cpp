@@ -212,6 +212,7 @@ static void handleSelect(AsyncWebServerRequest *req, JsonVariant &json) {
   String addr;
   if (!readMac(req, json, addr)) return;
   setWakeAddr(addr);
+  wakeUpdateControllers();
   Serial.printf("[PORTAL] bound controller %s\n", addr.c_str());
   req->send(200, "application/json", "{\"ok\":true}");
 }
@@ -323,6 +324,7 @@ static void handleControllersAdd(AsyncWebServerRequest *req, JsonVariant &json) 
     sendJsonError(req, 400, "could not add controller");
     return;
   }
+  wakeUpdateControllers();
   portalPairingStop();
   armWakeCooldown(WAKE_WAKE_COOLDOWN_MS);
   Serial.printf("[PORTAL] added controller %s (%s)\n", mac.c_str(), name.c_str());
@@ -339,6 +341,7 @@ static void handleControllersRemove(AsyncWebServerRequest *req, JsonVariant &jso
     sendJsonError(req, 404, "controller not found");
     return;
   }
+  wakeUpdateControllers();
   Serial.printf("[PORTAL] removed controller %s\n", mac.c_str());
   req->send(200, "application/json", "{\"ok\":true}");
 }

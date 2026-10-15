@@ -15,6 +15,11 @@ static volatile bool          bleSeenEver = false;
 static volatile unsigned long bleLastSeen = 0;
 static bool                   bleInitialized = false;
 
+static const int MAX_BLE_WAKE_ADDRS = 8;
+static char      bleWakeAddrs[MAX_BLE_WAKE_ADDRS][18];
+static int       bleWakeAddrCount = 0;
+static portMUX_TYPE bleWakeMux = portMUX_INITIALIZER_UNLOCKED;
+
 static void ensureBleInit() {
   if (!bleInitialized) {
     NimBLEDevice::init("");
@@ -24,30 +29,58 @@ static void ensureBleInit() {
 
 class WakeScanCallbacks : public NimBLEScanCallbacks {
   void onResult(const NimBLEAdvertisedDevice *dev) override {
-    // Compare address case-insensitively
-    if (strcasecmp(dev->getAddress().toString().c_str(), config.wakeAddr.c_str()) == 0) {
-      bleLastSeen = millis();
-      bleSeenEver = true;
+    std::string addrStr = dev->getAddress().toString();
+    const char *devAddr = addrStr.c_str();
+
+    portENTER_CRITICAL(&bleWakeMux);
+    for (int i = 0; i < bleWakeAddrCount; i++) {
+      if (strcasecmp(devAddr, bleWakeAddrs[i]) == 0) {
+        bleLastSeen = millis();
+        bleSeenEver = true;
+        break;
+      }
     }
+    portEXIT_CRITICAL(&bleWakeMux);
   }
 };
 
 static WakeScanCallbacks wakeScanCallbacks;
 
+void wakeUpdateControllers() {
+  portENTER_CRITICAL(&bleWakeMux);
+  bleWakeAddrCount = 0;
+  for (const auto &c : config.controllers) {
+    if (bleWakeAddrCount >= MAX_BLE_WAKE_ADDRS) break;
+    if (wakeValidMac(c.mac)) {
+      strncpy(bleWakeAddrs[bleWakeAddrCount], c.mac.c_str(), sizeof(bleWakeAddrs[0]) - 1);
+      bleWakeAddrs[bleWakeAddrCount][sizeof(bleWakeAddrs[0]) - 1] = 0;
+      bleWakeAddrCount++;
+    }
+  }
+  if (bleWakeAddrCount == 0 && !config.wakeAddr.isEmpty() && wakeValidMac(config.wakeAddr)) {
+    strncpy(bleWakeAddrs[0], config.wakeAddr.c_str(), sizeof(bleWakeAddrs[0]) - 1);
+    bleWakeAddrs[0][sizeof(bleWakeAddrs[0]) - 1] = 0;
+    bleWakeAddrCount = 1;
+  }
+  portEXIT_CRITICAL(&bleWakeMux);
+  Serial.printf("[BLE ] updated wake controller(s): %d active\n", bleWakeAddrCount);
+}
+
 bool wakeBegin() {
-  if (config.wakeAddr.isEmpty()) {
+  if (config.controllers.empty() && config.wakeAddr.isEmpty()) {
     Serial.println("[BLE ] no controller bound; BLE wake disabled "
                    "(hold button 8s while OFF to configure)");
     return false;
   }
   ensureBleInit();
+  wakeUpdateControllers();
   NimBLEScan *scan = NimBLEDevice::getScan();
   scan->setScanCallbacks(&wakeScanCallbacks, true);  // true = report duplicates
   scan->setActiveScan(false);  // passive: we only need the address, saves power
   scan->setInterval(160);      // ms
   scan->setWindow(80);         // ms (<= interval; ~50% duty)
   scan->start(0, false);       // 0 = scan continuously
-  Serial.printf("[BLE ] scanning for controller %s\n", config.wakeAddr.c_str());
+  Serial.printf("[BLE ] scanning for %d controller(s)\n", bleWakeAddrCount);
   return true;
 }
 

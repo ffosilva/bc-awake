@@ -35,10 +35,10 @@ The system SHALL run page listening under the host PC's adapter MAC address and 
 - **THEN** the system disables page scan to allow the controller to connect to the real host adapter
 
 ### Requirement: Bluetooth Low Energy Scanning
-The system SHALL continuously scan for advertising packets matching the bound controller MAC address on BLE targets.
+The system SHALL continuously scan for advertising packets matching any controller in the bound controllers list (up to 8) on BLE targets.
 
 #### Scenario: BLE advertisement detected
-- **WHEN** an advertisement matching the bound controller MAC is received while in STATE_OFF
+- **WHEN** an advertisement matching any controller present in the bound controllers list is received while in STATE_OFF
 - **THEN** the system updates the last-seen timestamp and initiates power-on if cooldown has expired
 
 ### Requirement: ESP32-CAM Flash LED Wake Pulse
@@ -62,4 +62,15 @@ The system SHALL inhibit controller wake triggers and network wake triggers whil
 #### Scenario: Controller saved arms post-pairing cooldown
 - **WHEN** a controller is successfully saved via the setup portal
 - **THEN** the system terminates pairing mode and arms the wake cooldown inhibitor for 15000 ms to suppress immediate wake from lingering controller paging packets
+
+### Requirement: Dynamic Runtime Controller List Synchronization
+The system SHALL synchronize the active in-memory wake detection address list immediately upon any runtime modification of the bound controllers list without requiring a system reboot.
+
+#### Scenario: Controller added at runtime
+- **WHEN** a controller is successfully added via the setup portal or REST API while the system is running
+- **THEN** the system immediately updates the active wake filter so that wake attempts from the new controller are recognized without rebooting the controller
+
+#### Scenario: Controller removed at runtime
+- **WHEN** a controller is removed via the setup portal or REST API while the system is running
+- **THEN** the system immediately updates the active wake filter so that wake attempts from the removed controller are rejected without rebooting the controller
 

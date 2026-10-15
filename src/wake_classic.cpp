@@ -24,6 +24,13 @@ bool wakeBegin() {
     Serial.println("[BT  ] init failed; BT wake disabled");
     return false;
   }
+  wakeUpdateControllers();
+  Serial.printf("[BT  ] waiting for %d controller(s) (as host %s)\n",
+                (int)config.controllers.size(), config.hostAddr.c_str());
+  return true;
+}
+
+void wakeUpdateControllers() {
   std::vector<String> addrs;
   for (const auto &c : config.controllers) {
     addrs.push_back(c.mac);
@@ -32,9 +39,7 @@ bool wakeBegin() {
     addrs.push_back(config.wakeAddr);
   }
   btSetWakeAddrs(addrs);
-  Serial.printf("[BT  ] waiting for %d controller(s) (as host %s)\n",
-                (int)addrs.size(), config.hostAddr.c_str());
-  return true;
+  Serial.printf("[BT  ] updated wake controller(s): %d active\n", (int)addrs.size());
 }
 
 void wakeLoop() {

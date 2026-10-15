@@ -19,6 +19,7 @@ bool wakeBegin();
 void wakeLoop();
 void wakeSetConnectable(bool on);
 bool wakeSeen(unsigned long *lastSeenMs);
+void wakeUpdateControllers();
 
 // Setup portal
 void wakeSetDiscovery(bool on);
