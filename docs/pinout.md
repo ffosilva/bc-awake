@@ -16,7 +16,7 @@ active PlatformIO environment (`esp32dev`, `esp32cam`, or `esp32-c3-devkitm-1`).
 | `BUTTON_GND` | **GPIO26** | **GND** | **GPIO6** | Momentary switch, terminal B | DevKitC/C3 drives LOW; CAM wires to header GND |
 | `PS_ON_PIN` | **GPIO32** | **GPIO14** | **GPIO4** | ATX `PS_ON#` (green wire) | **Open-drain**, active LOW: LOW = PSU on, released = off |
 | `BOARD_SENSE` | **GPIO34** | **GPIO13** | **GPIO3** | BC250 `TPMS1` pin 9 | ~3.3 V when up, 0 when off (DevKitC/C3: ADC with hysteresis; CAM: digital INPUT_PULLDOWN) |
-| `PWR_BTN_PIN` | **GPIO27** | **GPIO2** | **GPIO7** | Motherboard `PWR_BTN#` (optional) | Direct wire, idles ~3.4 V. High-Z input; pulled LOW only while mirroring the button or sending a 300 ms shutdown pulse; never driven HIGH |
+| `PWR_BTN_PIN` | **GPIO27** | **GPIO2** | **GPIO7** | Motherboard `PWR_BTN#` (optional) | Direct wire, idles ~3.4 V when ON. `INPUT_PULLUP` in `STATE_OFF` (powers on from native button); high-Z input when ON/BOOTING; pulled LOW only while mirroring or sending a 300 ms shutdown pulse; never driven HIGH |
 | `FLASH_LED` | — | **GPIO4** | — | Onboard white LED | Flashes 500 ms when controller wakes the PC (configurable in portal) |
 | `5V` / `VIN` | **5V** | **5V** | **5V** | PSU `+5VSB` | Permanent power for the ESP |
 | `GND` | **GND** | **GND** | **GND** | PSU GND + board GND | Common ground |
@@ -166,32 +166,35 @@ IO3 (ADC1) │ ◄─ TPMS1 pin 9              │ IO9  (BOOT)
   Motherboard PWR_BTN# (optional) ──► DevKitC: GPIO27 | CAM: GPIO2  | C3: GPIO7  (direct wire, high-Z / LOW only)
 ```
 
-### Optional `PWR_BTN#` (graceful shutdown) wiring
+### Optional `PWR_BTN#` (native power button & graceful shutdown) wiring
 
 Connect the motherboard's front-panel power-button pin (the one that idles high, **not**
 the ground pin) directly to `PWR_BTN_PIN`. Ground is already shared through the ATX
-connector. Measure it first: on the BC250 board it idles at **~3.4 V**, just under the
-ESP32's ~3.6 V limit. If your board's pin idles at 5 V, do not wire it directly.
+connector. Measure it first: on the BC250 board it idles at **~3.4 V** when powered on, just under the
+ESP32's ~3.6 V limit. When unpowered, the line presents high impedance (> 2 MΩ) to ground.
 
 ```
  Motherboard FPANEL                      ESP32
  +------------------+                    +----------------------+
- | PWR_BTN# (~3.4V) |------------------->| PWR_BTN_PIN (INPUT)  |
+ | PWR_BTN# (~3.4V) |------------------->| PWR_BTN_PIN          |
  | GND              |--[common GND]------| GND                  |
  +------------------+                    +----------------------+
 ```
 
-- **Never driven HIGH.** The pin is a high-impedance input and is pulled LOW only while the
-  feature is enabled and the machine is ON: either mirroring your button press or for the
+- **Power on from native button.** In `STATE_OFF`, when the feature is enabled in the portal,
+  the ESP32 configures the pin with an internal pull-up (`INPUT_PULLUP`), reading ~3.3 V.
+  Tapping the native button shorts `PWR_BTN#` to GND and boots the machine (asserts `PS_ON#`).
+  Holding for ≥ 8 s enters the WiFi setup portal.
+- **Never driven HIGH.** The pin is a high-impedance input while the machine is booting or running,
+  and is pulled LOW only while mirroring an external button press or sending the
   300 ms portal "Shut down now" pulse.
-- **Long press and backstop.** Mirroring lets the motherboard apply its own short-press and
-  long-press behavior. The firmware's 5 s hold-to-cut-PSU still releases `PS_ON#`
-  regardless, so power is cut even if the board has no hardware override.
+- **Native shutdown and backstop.** When running, pressing the native button directly shorts the
+  motherboard's line to trigger a clean ACPI OS shutdown. The firmware's 5 s hold-to-cut-PSU still
+  releases `PS_ON#` as a backstop if the OS hangs.
 - **No timeout.** If the OS ignores the shutdown, nothing happens automatically.
-- **ESP32-CAM GPIO2 / UART flashing.** The board's pull-up holds GPIO2 HIGH, which can stop
-  the ESP32 entering download mode. **Unplug the `PWR_BTN#` wire before flashing over UART**;
-  OTA updates are unaffected. A normal boot is unaffected because GPIO2 is ignored when
-  GPIO0 is high, but verify once that the reset-time pull-down does not register as a press.
+- **ESP32-CAM GPIO2 / UART flashing.** The board's pull-up holds GPIO2 HIGH when energized.
+  **Unplug the `PWR_BTN#` wire before flashing over UART**; OTA updates are unaffected.
+  During normal boot, GPIO2 is ignored when GPIO0 is high.
 
 ### `PS_ON#` 5 V caution (recommended buffer)
 

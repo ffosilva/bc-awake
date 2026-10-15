@@ -26,6 +26,9 @@ bool requestPowerOff();
 // server task; returns false if the feature is disabled or the board is not ON.
 bool requestGracefulShutdown();
 
+// Synchronize PWR_BTN_PIN mode based on power state and configuration.
+void syncPwrBtnMode();
+
 // Interactive pairing mode state
 bool portalIsPairingActive();
 void portalPairingStop();

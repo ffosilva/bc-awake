@@ -80,10 +80,22 @@ const char *getBoardStateName() {
   return stateName(state);
 }
 
+void syncPwrBtnMode() {
+  if (pwrBtnDriven) return;
+  if (config.gracefulShutdown && state == STATE_OFF) {
+    pinMode(PWR_BTN_PIN, INPUT_PULLUP);
+    Serial.println("[PWR ] PWR_BTN# mode: INPUT_PULLUP (native power-on enabled)");
+  } else {
+    pinMode(PWR_BTN_PIN, INPUT);
+    Serial.println("[PWR ] PWR_BTN# mode: INPUT (high-Z)");
+  }
+}
+
 static void setState(PowerState next) {
   if (next == state) return;
   Serial.printf("[STATE] %s -> %s\n", stateName(state), stateName(next));
   state = next;
+  syncPwrBtnMode();
   // Only watch for wake while the machine is down.
   if (wakeActive) wakeSetConnectable(next == STATE_OFF);
   networkWakeOnStateChanged(next == STATE_OFF);
@@ -192,8 +204,8 @@ static void pwrBtnDrive(const char *why) {
 
 static void pwrBtnRelease(const char *why) {
   if (!pwrBtnDriven) return;
-  pinMode(PWR_BTN_PIN, INPUT);
   pwrBtnDriven = false;
+  syncPwrBtnMode();
   Serial.printf("[PWR ] PWR_BTN# released (%s)\n", why);
 }
 
@@ -221,6 +233,8 @@ bool requestGracefulShutdown() {
 
 // Drives PWR_BTN_PIN from the loop: services the 300 ms API pulse, otherwise
 // mirrors the physical button while ON for presses that began while ON.
+// Only external button presses (BUTTON_SENSE) are driven LOW; native button presses
+// are already physically pulling PWR_BTN# LOW on the motherboard.
 static void updatePwrBtn(unsigned long now) {
   if (!config.gracefulShutdown || state != STATE_ON) {
     shutdownRequested = false;
@@ -248,7 +262,8 @@ static void updatePwrBtn(unsigned long now) {
     return;  // the pulse owns the line; mirroring resumes afterwards
   }
 
-  if (buttonStable && pressStartedOn) {
+  bool driveMirror = buttonStable && pressStartedOn && (digitalRead(BUTTON_SENSE) == LOW);
+  if (driveMirror) {
     pwrBtnDrive("mirroring button press");
   } else {
     pwrBtnRelease("button released");
@@ -331,6 +346,18 @@ static bool debounce(bool raw, bool *stable, bool *lastRaw,
   return false;
 }
 
+// Sample combined raw button level from BUTTON_SENSE and optional native PWR_BTN_PIN.
+static bool readButtonRaw() {
+  bool extPressed = (digitalRead(BUTTON_SENSE) == LOW);
+  bool pwrBtnPressed = false;
+  if (config.gracefulShutdown && !pwrBtnDriven) {
+    if (state == STATE_OFF || state == STATE_ON) {
+      pwrBtnPressed = (digitalRead(PWR_BTN_PIN) == LOW);
+    }
+  }
+  return extPressed || pwrBtnPressed;
+}
+
 static void normalBegin() {
   Serial.printf("=== BC250 PSU controller v%s (%s) ===\n", FW_VERSION, FW_TARGET);
 
@@ -338,9 +365,8 @@ static void normalBegin() {
   pinMode(PS_ON_PIN, OUTPUT_OPEN_DRAIN);
   digitalWrite(PS_ON_PIN, PS_ON_RELEASE);
 
-  // Optional PWR_BTN#: always start as a high-Z input, never driven unless the
-  // graceful-shutdown feature is enabled and the board is ON.
-  pinMode(PWR_BTN_PIN, INPUT);
+  // Optional PWR_BTN#: mode synced with state and config (INPUT_PULLUP if enabled while OFF).
+  syncPwrBtnMode();
 
   // Switch: optional local ground pin, sensed input with pull-up.
   if (BUTTON_GND >= 0) {
@@ -361,7 +387,7 @@ static void normalBegin() {
 #endif
 
   // Seed debounced states from the current levels.
-  buttonStable = buttonLastRaw = (digitalRead(BUTTON_SENSE) == LOW);
+  buttonStable = buttonLastRaw = readButtonRaw();
   boardSenseStable = boardSenseLastRaw = readBoardSense();
 
   // If the board is already up when the ESP (re)boots, adopt the ON state
@@ -437,7 +463,7 @@ static void normalLoop() {
 
   // --- Sample & debounce inputs ---
   uint32_t senseMv;
-  bool buttonRaw = (digitalRead(BUTTON_SENSE) == LOW);   // pressed == LOW
+  bool buttonRaw = readButtonRaw();
   bool boardRaw  = readBoardSense(&senseMv);             // board up (hysteresis)
 
   if (debounce(buttonRaw, &buttonStable, &buttonLastRaw,
@@ -449,7 +475,8 @@ static void normalLoop() {
       pressStartedOn  = (state == STATE_ON);
       longPressFired = false;
       setupFired = false;
-      Serial.println("[BTN ] pressed");
+      bool isExternal = (digitalRead(BUTTON_SENSE) == LOW);
+      Serial.printf("[BTN ] pressed (%s)\n", isExternal ? "external" : "native");
     } else {
       // Released. A short tap that began while OFF powers on (power-on is on
       // release so that a long hold from OFF can mean "enter setup" instead).
