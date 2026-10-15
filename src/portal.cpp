@@ -388,7 +388,6 @@ static void handlePower(AsyncWebServerRequest *req, JsonVariant &json) {
     return;
   }
   setGracefulShutdown(o["gracefulShutdown"].as<bool>());
-  syncPwrBtnMode();
   Serial.printf("[PORTAL] gracefulShutdown=%d\n", config.gracefulShutdown ? 1 : 0);
   req->send(200, "application/json", "{\"ok\":true}");
 }

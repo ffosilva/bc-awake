@@ -14,7 +14,7 @@ Supports multiple targets from the same repository:
 
 - **Push-button power**: tap to turn on; hold 5 s while running to force off.
 - **Follows the board**: if the OS shuts the board down, the PSU is cut automatically.
-- **Motherboard power button & graceful shutdown** (optional): wire the motherboard's `PWR_BTN#` header to the ESP32 to power on from the native button when off, cleanly shut down the OS when on, or trigger a shutdown from the setup portal — see [Motherboard power button](#motherboard-power-button-optional).
+- **Graceful shutdown** (optional): wire the motherboard's `PWR_BTN#` header to the ESP32 and the button (and a portal "Shut down" action) acts like the real power button — see [Graceful shutdown](#graceful-shutdown-optional).
 - **Boot watchdog**: if the board doesn't come up within 10 s, the PSU is released.
 - **Bluetooth controller wake** (optional):
   - **Classic Bluetooth (BR/EDR)** on ESP32 / ESP32-CAM (PS4/PS5, Xbox, Switch Pro, 8BitDo in Classic mode).
@@ -36,7 +36,7 @@ between the ESP, the PSU, and the board.
 | GPIO26 | GND (header) | GPIO6 | Momentary switch, terminal B | DevKitC/C3 drives LOW; CAM wires directly to GND |
 | GPIO32 | GPIO14 | GPIO4 | ATX `PS_ON#` (green wire) | **Open-drain**, active LOW: LOW = PSU on, released = off |
 | GPIO34 | GPIO13 | GPIO3 | BC250 `TPMS1` (pin 9) | ~3.3 V when the board is up, 0 when off (ADC voltage) |
-| GPIO27 | GPIO2 | GPIO7 | Motherboard `PWR_BTN#` (optional) | Direct wire; `INPUT_PULLUP` when off (native power-on), high-Z when on. See [Motherboard power button](#motherboard-power-button-optional) |
+| GPIO27 | GPIO2 | GPIO7 | Motherboard `PWR_BTN#` (optional) | Direct wire; high-Z input, pulled LOW only to emulate a press. See [Graceful shutdown](#graceful-shutdown-optional) |
 | 5V / GND | 5V / GND | 5V / GND | PSU standby + common ground | Permanent power for the ESP |
 
 > **`PS_ON#` is 5 V.** It idles at ~5 V (pulled up inside the PSU), above the ESP32's
@@ -60,20 +60,24 @@ as an analog voltage with hysteresis rather than a digital pin (ADC1 on DevKitC 
 
 The button is the primary control and always works, even with no controller configured.
 
-## Motherboard power button (optional)
+## Graceful shutdown (optional)
 
-If you wire the motherboard's front-panel **`PWR_BTN#`** pin to the ESP32 (GPIO27 on DevKitC, GPIO2 on ESP32-CAM, GPIO7 on ESP32-C3) and enable the feature in the portal's **Power** tab, the native button on the BC250 (and any connected external button) behaves like a real PC power button:
+By default the only way the ESP can turn the board off is to cut the PSU (`PS_ON#`), which
+is a hard power-off. If you also wire the motherboard's front-panel **`PWR_BTN#`** pin to the
+ESP32 (GPIO27 on DevKitC, GPIO2 on ESP32-CAM, GPIO7 on ESP32-C3) and enable the feature in the portal's **Power** tab, the ESP behaves like a real power button:
 
-| State | Action (feature enabled) | Result |
-|-------|--------------------------|--------|
-| **Off** | Short tap | Powers on the machine (`PS_ON#` asserted) |
-| **Off** | Hold ≥ 8 s | Enters WiFi setup portal |
-| **On** | Short press | Clean OS ACPI shutdown (native signal / mirrored) |
-| **On** | Hold the button | Mirrored to the board for as long as you hold it |
-| **On** | Hold ≥ 5 s | Emergency backstop: cuts PSU power immediately |
-| **On** | Portal **Shut Down OS** | Sends a 300 ms shutdown pulse to the board |
+| Action (feature enabled, machine **on**) | Result |
+|------------------------------------------|--------|
+| Short press | Mirrored to the board: OS gets an ACPI power-button event and shuts down cleanly |
+| Hold the button | Mirrored to the board for as long as you hold it, so the board's own long-press override can apply |
+| Hold ≥ 5 s | Unchanged backstop: the PSU is cut immediately |
+| Portal **Shut Down OS** | Sends a 300 ms press to the board |
 
-When the board powers down, `TPMS1` goes low and the existing logic releases `PS_ON#` automatically. The `PWR_BTN#` line idles at ~3.4 V on the BC250 board when powered on, and is high-impedance (> 2 MΩ) when off, so it is wired directly and the ESP32 never drives it high. Wiring details: [docs/pinout.md](docs/pinout.md).
+When the board powers down, `TPMS1` goes low and the existing logic releases `PS_ON#`
+automatically. There is no timeout: if the OS hangs, you decide (hold the button 5 s to cut
+power). Presses made while the machine is off or booting behave exactly as before. The
+`PWR_BTN#` line idles at ~3.4 V on the BC250 board, so it is wired directly and the ESP32
+never drives it high. Wiring details: [docs/pinout.md](docs/pinout.md).
 
 ## Bluetooth controller wake
 

@@ -453,10 +453,6 @@ The portal web interface SHALL provide a Power tab displaying live power state t
 - **WHEN** motherboard power button support is disabled or the board is not in STATE_ON
 - **THEN** the "Shut Down OS" button is disabled or accompanied by an explanatory message
 
-#### Scenario: Motherboard power button feature description
-- **WHEN** the Power tab displays the motherboard power button toggle
-- **THEN** the accompanying description indicates that enabling the feature supports both powering on from the native power button when off and clean OS shutdown when on
-
 ### Requirement: Portal Password Form Submission and Credential Management
 The portal web interface SHALL present the initial password creation and unlock screen within a semantic form that supports keyboard submission via the Enter key and provides standard credential attributes enabling web browser password managers to offer password saving without requiring a username.
 
