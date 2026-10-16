@@ -7,14 +7,15 @@
   <title>BC Awake Setup</title>
   <style>
     :root {
-      --bg: #121212;
-      --card: #1e1e1e;
-      --fg: #eee;
-      --muted: #9e9e9e;
-      --accent: #ffd217;
-      --accent2: #2c6bfd;
+      --bg: #16171c;
+      --card: #1f222a;
+      --card-border: #2c323e;
+      --fg: #e6edf3;
+      --muted: #8b99a8;
+      --accent: #0e92f6;
+      --accent2: #38e1ed;
       --err: #ff5252;
-      --ok: #4caf50;
+      --ok: #2ed573;
     }
 
     * {
@@ -39,7 +40,7 @@
     }
 
     h1 {
-      color: var(--accent);
+      color: var(--fg);
       font-size: 20px;
       margin: 8px 0 4px;
     }
@@ -52,6 +53,7 @@
 
     .card {
       background: var(--card);
+      border: 1px solid var(--card-border);
       border-radius: 12px;
       padding: 18px;
       margin-bottom: 16px;
@@ -68,11 +70,18 @@
       width: 100%;
       padding: 11px;
       border-radius: 8px;
-      border: 1px solid #333;
-      background: #161616;
+      border: 1px solid var(--card-border);
+      background: #121317;
       color: var(--fg);
       font: inherit;
       font-size: 15px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(14, 146, 246, 0.25);
+      outline: none;
     }
 
     button {
@@ -81,23 +90,35 @@
       margin-top: 16px;
       border: none;
       border-radius: 8px;
-      background: var(--accent);
-      color: #000;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      color: #061019;
       font: inherit;
       font-weight: bold;
       font-size: 15px;
       cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:hover:not(:disabled) {
+      opacity: .95;
+      box-shadow: 0 0 12px rgba(56, 225, 237, 0.35);
     }
 
     button:disabled {
-      opacity: .5;
+      opacity: .45;
       cursor: default;
+      box-shadow: none;
     }
 
     button.secondary {
       background: transparent;
       color: var(--accent2);
       border: 1px solid var(--accent2);
+    }
+
+    button.secondary:hover:not(:disabled) {
+      background: rgba(56, 225, 237, 0.08);
+      box-shadow: 0 0 10px rgba(56, 225, 237, 0.2);
     }
 
     .msg {
@@ -124,15 +145,17 @@
       gap: 10px;
       padding: 11px;
       border-radius: 8px;
-      border: 1px solid #333;
+      border: 1px solid var(--card-border);
       margin-bottom: 8px;
       cursor: pointer;
-      background: #161616;
+      background: #181b22;
+      transition: border-color 0.15s, background 0.15s;
     }
 
     .dev.sel {
       border-color: var(--accent);
-      background: #2a2715;
+      background: #14263b;
+      box-shadow: 0 0 8px rgba(14, 146, 246, 0.2);
     }
 
     .dev .nm {
@@ -198,7 +221,7 @@
       display: flex;
       gap: 6px;
       margin-bottom: 16px;
-      border-bottom: 1px solid #333;
+      border-bottom: 1px solid var(--card-border);
       padding-bottom: 10px;
     }
 
@@ -209,7 +232,7 @@
       font-weight: bold;
       background: transparent;
       color: var(--muted);
-      border: 1px solid #333;
+      border: 1px solid var(--card-border);
       border-radius: 8px;
       cursor: pointer;
       margin-top: 0;
@@ -217,17 +240,20 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
+      transition: all 0.15s ease;
     }
 
     .tab-btn.active {
-      background: #252525;
-      color: var(--accent);
+      background: #14263b;
+      color: var(--accent2);
       border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(14, 146, 246, 0.25);
     }
 
     .tab-btn:hover:not(.active) {
       color: var(--fg);
-      border-color: #555;
+      border-color: #3d4554;
+      background: #191c24;
     }
 
     .tab-badge {
@@ -248,15 +274,15 @@
     }
 
     .notice.warn {
-      background: #2a2510;
-      border: 1px solid #665215;
-      color: #ffd217;
+      background: #231c0e;
+      border: 1px solid #543f16;
+      color: #e5b93b;
     }
 
     .notice.info {
-      background: #161d27;
-      border: 1px solid #1f385c;
-      color: #7aa2f7;
+      background: #132235;
+      border: 1px solid #1c3d63;
+      color: var(--accent2);
     }
 
     /* Multi-controller dashboard styles */
@@ -266,9 +292,9 @@
       justify-content: space-between;
       padding: 10px 12px;
       border-radius: 8px;
-      border: 1px solid #333;
+      border: 1px solid var(--card-border);
       margin-bottom: 8px;
-      background: #161616;
+      background: #181b22;
       gap: 8px;
     }
 
@@ -307,29 +333,30 @@
     button.btn-danger {
       background: transparent;
       color: var(--err);
-      border: 1px solid #552222;
+      border: 1px solid #662222;
     }
 
     .btn-danger:hover,
     button.btn-danger:hover {
       background: var(--err);
       color: #fff;
+      box-shadow: 0 0 10px rgba(255, 82, 82, 0.3);
     }
 
     .btn-edit {
       background: transparent;
       color: var(--fg);
-      border: 1px solid #444;
+      border: 1px solid #3d4554;
     }
 
     .btn-edit:hover {
       border-color: var(--accent);
-      color: var(--accent);
+      color: var(--accent2);
     }
 
     .ctrl-item.editing {
       border-color: var(--accent);
-      background: #201e14;
+      background: #14263b;
     }
 
     .ctrl-item .rename-input {
@@ -337,8 +364,8 @@
       padding: 5px 8px;
       font-size: 13px;
       border-radius: 6px;
-      border: 1px solid #444;
-      background: #111;
+      border: 1px solid var(--card-border);
+      background: #121317;
       color: var(--fg);
       margin-bottom: 4px;
     }
@@ -349,8 +376,8 @@
     }
 
     .btn-save {
-      background: var(--accent);
-      color: #000;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      color: #061019;
       font-weight: bold;
     }
 
@@ -361,12 +388,12 @@
     .btn-cancel {
       background: transparent;
       color: var(--muted);
-      border: 1px solid #444;
+      border: 1px solid #3d4554;
     }
 
     .btn-cancel:hover {
       color: var(--fg);
-      border-color: #666;
+      border-color: #556072;
     }
 
     /* Modal styles */
@@ -376,7 +403,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(12, 13, 17, 0.88);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -390,16 +417,18 @@
       background: var(--card);
       border-radius: 12px;
       padding: 20px;
-      border: 1px solid #333;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     }
 
     .pulse-dot {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: var(--accent);
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      box-shadow: 0 0 16px rgba(56, 225, 237, 0.6);
       margin: 14px auto;
-      opacity: 0.8;
+      opacity: 0.85;
       animation: pulse 1.4s infinite ease-in-out;
     }
 
@@ -425,7 +454,15 @@
 <body>
   <div class="wrap">
     <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px">
-      <h1 style="margin:0">BC Awake</h1>
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent2);filter:drop-shadow(0 0 6px rgba(56,225,237,0.5))">
+          <path d="M12 2v10"/>
+          <path d="M18.4 6.6a9 9 0 1 1-12.8 0"/>
+        </svg>
+        <h1 style="margin:0;font-size:20px;font-weight:bold;letter-spacing:-0.3px">
+          <span style="color:var(--accent)">bc</span> <span style="color:var(--fg)">awake</span>
+        </h1>
+      </div>
       <div style="display:flex;align-items:center;gap:6px">
         <span id="power-badge" class="tag"
           style="display:none;font-size:12px;padding:2px 8px;align-items:center;gap:6px">
@@ -433,7 +470,7 @@
           <span id="power-text">OFF</span>
         </span>
         <span id="fw-badge" class="tag"
-          style="display:none;border-color:#444;color:var(--muted);font-size:12px;padding:2px 8px"></span>
+          style="display:none;border-color:var(--card-border);color:var(--muted);font-size:12px;padding:2px 8px"></span>
       </div>
     </div>
     <div class="sub" id="subtitle">Setup portal</div>
@@ -508,9 +545,9 @@
           </div>
 
           <button id="btn-add-ctrl" style="margin-top:6px">+ Add controller</button>
-          <div id="add-ctrl-hint" class="help" style="color:var(--accent);margin-top:4px"></div>
+          <div id="add-ctrl-hint" class="help" style="color:var(--accent2);margin-top:4px"></div>
 
-          <div style="margin-top:16px;padding-top:12px;border-top:1px solid #333">
+          <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--card-border)">
             <label for="manual">Or enter MAC manually</label>
             <div style="display:flex;gap:8px;margin-top:4px">
               <input id="manual" placeholder="aa:bb:cc:dd:ee:ff" style="flex:1" />
@@ -648,8 +685,8 @@
             <span id="ota-status-label">Uploading…</span>
             <span id="ota-progress-pct">0%</span>
           </div>
-          <div style="width:100%;height:8px;background:#333;border-radius:4px;overflow:hidden">
-            <div id="ota-progress-bar" style="width:0%;height:100%;background:var(--accent);transition:width 0.2s">
+          <div style="width:100%;height:8px;background:var(--card-border);border-radius:4px;overflow:hidden">
+            <div id="ota-progress-bar" style="width:0%;height:100%;background:linear-gradient(90deg, var(--accent), var(--accent2));transition:width 0.2s">
             </div>
           </div>
         </div>
@@ -721,7 +758,7 @@
         </div>
 
         <div
-          style="margin-top:14px;padding:10px;border-radius:8px;background:#201e14;border:1px solid #443c16;font-size:12px;color:#ffd217;line-height:1.4;text-align:center">
+          style="margin-top:14px;padding:10px;border-radius:8px;background:#132235;border:1px solid #1c3d63;font-size:12px;color:var(--accent2);line-height:1.4;text-align:center">
           <b>Board power-on is paused</b> while pairing is active so your PC won't boot up.<br>
           <span style="color:var(--muted);font-size:11px">(Case power button remains active)</span>
         </div>
@@ -737,7 +774,7 @@
       <div id="modal-detected-state" class="hidden">
         <div style="font-weight:bold;font-size:16px;color:var(--ok);text-align:center">Controller detected!</div>
         <div style="text-align:center;margin-top:4px"><code id="detected-mac"
-            style="font-size:14px;color:var(--accent)"></code></div>
+            style="font-size:14px;color:var(--accent2)"></code></div>
 
         <div id="already-bound-alert" class="msg err hidden" style="text-align:center;margin-top:6px">This controller is
           already bound. (Power-on was prevented)</div>

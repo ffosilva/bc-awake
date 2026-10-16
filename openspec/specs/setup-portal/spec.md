@@ -467,3 +467,10 @@ The portal web interface SHALL present the initial password creation and unlock 
 #### Scenario: Browser credential manager password saving compatibility
 - **WHEN** a user successfully unlocks or creates a portal password
 - **THEN** the password form provides semantic autocomplete attributes (`current-password` when unlocking, `new-password` when creating) and signals successful form submission to the browser to prompt the browser credential manager to save the password without requiring a username
+
+### Requirement: Portal Branding and Visual Theme
+The portal web interface SHALL adhere to the BC Awake branding identity and color palette.
+
+#### Scenario: Visual styling adhering to branding palette
+- **WHEN** a client loads the setup web interface
+- **THEN** the interface renders the "BC Awake" brand identity using the official palette: background `#16171c`, card surface `#1f222a` (border `#2c323e`), electric blue primary accent `#0e92f6`, neon cyan secondary accent `#38e1ed`, and high-contrast foreground text `#e6edf3`

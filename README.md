@@ -1,4 +1,8 @@
-# BC250 ESP32 Power Switch
+<p align="center">
+  <img src="assets/logo.png" alt="BC Awake" width="480">
+</p>
+
+# BC Awake
 
 An ESP32 power controller for an AMD **BC250** board running as a desktop. The
 BC250 is fed from a PCI-E connector and has no ATX power button, so this firmware

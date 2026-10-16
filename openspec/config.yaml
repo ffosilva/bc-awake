@@ -5,7 +5,17 @@ schema: spec-driven
 # Include constraints an agent cannot infer by reading the code.
 # Keep general project documentation and discoverable codebase facts out.
 context: |
-  All NVS keys and namespaces in Preferences must be 15 characters or fewer due to the ESP-IDF NVS_KEY_NAME_MAX_SIZE limit (16 bytes including null-terminator).
+  Project identity and visual constraints:
+  - Project name: BC Awake (firmware, tooling, portal UI, and documentation must consistently use "BC Awake" and default hostname "bc-awake").
+  - Branding colors:
+    - Background: #16171c (dark charcoal / gunmetal slate matching assets/logo.jpg)
+    - Card surface: #1f222a (border: #2c323e)
+    - Electric Blue accent: #0e92f6 (primary brand accent from logo "bc")
+    - Neon Cyan accent: #38e1ed (secondary glow/accent from logo power symbol and circuit traces)
+    - Foreground text: #e6edf3 (muted: #8b99a8)
+
+  Firmware and hardware constraints:
+  - All NVS keys and namespaces in Preferences must be 15 characters or fewer due to the ESP-IDF NVS_KEY_NAME_MAX_SIZE limit (16 bytes including null-terminator).
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
