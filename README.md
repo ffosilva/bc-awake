@@ -17,6 +17,9 @@ Supports multiple targets from the same repository:
 - **AI-Thinker ESP32-CAM**: Classic Bluetooth wake with onboard flash LED wake indicator.
 - **ESP32-C3 (SuperMini / DevKitM-1)**: Bluetooth Low Energy (BLE) controller wake.
 
+> [!CAUTION]
+> **Hardware Disclaimer**: This project involves custom wiring, ATX power line manipulation, and bare-board hardware. The author is **not responsible** for any BC-250 damages, dead cards, fried components, or any kind of losses or damages resulting from using this firmware, schematics, or documentation. Proceed at your own risk!
+
 ## Features
 
 - **Push-button power**: tap to turn on; hold 5 s while running to force off.
