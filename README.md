@@ -194,6 +194,32 @@ Once the device has been flashed with the dual-bank partition table via USB, all
 - Serial debug runs at **115200** baud.
 - Pin assignments and all timing constants live in [include/board.h](include/board.h).
 
+## How to Contribute
+
+Contributions are what make open-source projects thrive! Whether you are an experienced embedded developer or just getting started with ESP32s, your help is welcome and deeply appreciated. Every contribution — from reporting a minor bug to adding support for new hardware — helps make BC Awake better for everyone.
+
+### Ways you can help
+
+- **Report bugs and issues**: Encountered unexpected behavior, boot watchdog resets, or connection issues? [Open an issue](https://github.com/ffosilva/bc-awake/issues) detailing your hardware board, controller model, and serial logs (`115200` baud).
+- **Suggest features & improvements**: Have ideas for additional controller modes, new hardware targets, or web portal enhancements? Open a feature request to start a discussion.
+- **Submit Pull Requests**: Bug fixes, code optimizations, web UI updates, and documentation improvements are all welcome.
+- **Test hardware & controllers**: BC Awake supports various ESP32 boards (DevKitC, ESP32-CAM, ESP32-C3) and countless Bluetooth/BLE controllers. Testing on your hardware and reporting what works helps expand our compatibility list.
+
+### Architectural Decisions & OpenSpec
+
+This project uses [OpenSpec](openspec/) to track architectural decisions, system specifications, and planned changes under the `openspec/` directory.
+
+- **Great to have**: If you're planning a larger architectural change or new subsystem, proposing or documenting it via OpenSpec is a fantastic bonus and helps maintain a clear history of design choices.
+- **Not a requirement**: You do **not** need to learn or use OpenSpec to contribute. Feel free to open a regular issue or pull request, and we will happily collaborate with you to help integrate your changes and document any specs needed.
+
+### Getting Started with PRs
+
+1. Fork the repository and clone your fork locally.
+2. Create a feature branch (`git checkout -b feature/my-feature`).
+3. Make your changes and test the build for relevant targets (e.g., `pio run -e esp32dev`).
+4. Commit your changes using clear commit messages.
+5. Push to your branch and open a Pull Request with a summary of what you did and why.
+
 ## Support
 
 If you find BC Awake useful and would like to support its ongoing development, consider buying me a coffee:
