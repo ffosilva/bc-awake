@@ -190,3 +190,7 @@ Once the device has been flashed with the dual-bank partition table via USB, all
   [include/board.h](include/board.h) (lowered automatically on ESP32-C3 to prevent the mini RF bug).
 - Serial debug runs at **115200** baud.
 - Pin assignments and all timing constants live in [include/board.h](include/board.h).
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
