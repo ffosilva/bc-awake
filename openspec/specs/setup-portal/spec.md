@@ -203,11 +203,15 @@ The portal web interface SHALL provide an in-page firmware update interface with
 - **THEN** the interface enables the firmware file input and clears any power lock notice
 
 ### Requirement: Persistent Web Portal and mDNS Service
-The system SHALL keep the HTTP web portal and REST API online in normal operation mode over Wi-Fi Station connectivity and SHALL advertise its presence via mDNS.
+The system SHALL keep the HTTP web portal and REST API online in normal operation mode over Wi-Fi Station connectivity, SHALL advertise its presence via mDNS, and SHALL defer starting the web server while Wi-Fi is disabled or disconnected.
 
 #### Scenario: Web server active in normal station mode
 - **WHEN** the system connects to a configured Wi-Fi network in normal operation mode
 - **THEN** the HTTP web server starts on port 80 and serves the portal UI and REST endpoints on the Station IP address
+
+#### Scenario: Web server deferred when Wi-Fi is disabled or disconnected
+- **WHEN** the system boots or operates in normal operation mode while Wi-Fi is disabled or not connected
+- **THEN** the HTTP web server does not attempt to bind or listen on port 80 and the system runs normal power control and Bluetooth wake without asserting or resetting
 
 #### Scenario: mDNS hostname advertised
 - **WHEN** the system establishes Wi-Fi Station connectivity

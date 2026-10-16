@@ -280,6 +280,7 @@ void networkWakeLoop() {
       Serial.println("[MDNS] Failed to start responder");
     }
     startUdpListeners();
+    portalServerBegin();
   } else if (!connected && g_wasConnected) {
     g_wasConnected = false;
     Serial.println("[WOL ] Wi-Fi disconnected");

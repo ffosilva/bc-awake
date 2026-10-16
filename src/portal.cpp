@@ -702,6 +702,9 @@ static void registerRoutes() {
 void portalServerBegin() {
   if (g_serverStarted)
     return;
+  if (WiFi.getMode() == WIFI_OFF) {
+    return;
+  }
   registerRoutes();
   server.begin();
   g_serverStarted = true;

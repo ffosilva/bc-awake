@@ -378,7 +378,6 @@ static void normalBegin() {
 
   startWake();
   networkWakeBegin(state == STATE_OFF);
-  portalServerBegin();
 }
 
 static bool g_setupMode = false;
