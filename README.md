@@ -7,10 +7,15 @@
 [![GitHub Release](https://img.shields.io/github/v/release/ffosilva/bc-awake)](https://github.com/ffosilva/bc-awake/releases)
 [![Donate](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-ffdd00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/ffosilva)
 
-An ESP32 power controller for an AMD **BC250** board running as a desktop. The
-BC250 is fed from a PCI-E connector and has no ATX power button, so this firmware
-drives the SFX PSU's `PS_ON#` line and senses board power, giving you a real power
-button — plus optional "turn on when I pick up my controller" via Bluetooth.
+### ESP32-based smart ATX PSU switch for AMD BC250 with Bluetooth & Wake-on-LAN
+
+The AMD **BC250** is a powerhouse for budget desktop conversions, living room gaming, and local AI workloads — but because it was designed for mining, it lacks an ATX power button and has **no low-power sleep states**, wasting power and generating heat if left idling 24/7.
+
+**BC Awake** solves this by turning an ESP32 into an intelligent power controller for your ATX/SFX PSU (`PS_ON#`). Instead of leaving the system running or fiddling with power cables, BC Awake keeps the machine completely off and brings it up on demand:
+
+- 🎮 **Living Room Console**: Pick up your Bluetooth gamepad (PS4/PS5, Xbox, Switch Pro, 8BitDo) and press the home button — the PC powers on right from your couch.
+- ⚡ **On-Demand AI & Game Streaming**: Wake the machine over Wi-Fi via Wake-on-LAN when connecting through Moonlight, Steam Link, or launching intermittent AI model inference and processing workflows.
+- 🔘 **Complete Power Management**: Provides a physical power button, automatic PSU shutoff when the OS halts, optional graceful ACPI shutdown, boot watchdog protection, and a captive Wi-Fi portal with OTA firmware updates.
 
 Supports multiple targets from the same repository:
 - **ESP32-WROOM (DevKitC)**: Classic Bluetooth (BR/EDR) controller wake.
