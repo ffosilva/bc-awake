@@ -990,22 +990,23 @@
 
     function applyBoardStateLocks() {
       const isBoardOn = (currentBoardState === "ON" || currentBoardState === "BOOTING");
+      const lockNetwork = isBoardOn && !isSetupMode;
 
-      if ($("wol-enabled")) $("wol-enabled").disabled = isBoardOn;
-      if ($("device-hostname")) $("device-hostname").disabled = isBoardOn;
-      if ($("wifi-ssid")) $("wifi-ssid").disabled = isBoardOn;
-      if ($("wifi-pass")) $("wifi-pass").disabled = isBoardOn;
-      if ($("bc250-mac")) $("bc250-mac").disabled = isBoardOn;
+      if ($("wol-enabled")) $("wol-enabled").disabled = lockNetwork;
+      if ($("device-hostname")) $("device-hostname").disabled = lockNetwork;
+      if ($("wifi-ssid")) $("wifi-ssid").disabled = lockNetwork;
+      if ($("wifi-pass")) $("wifi-pass").disabled = lockNetwork;
+      if ($("bc250-mac")) $("bc250-mac").disabled = lockNetwork;
       const saveWolBtn = $("btn-save-wol");
       if (saveWolBtn) {
-        saveWolBtn.disabled = isBoardOn;
-        saveWolBtn.classList.toggle("hidden", isBoardOn);
+        saveWolBtn.disabled = lockNetwork;
+        saveWolBtn.classList.toggle("hidden", lockNetwork);
       }
 
       let notice = $("wol-readonly-notice");
       const wolFields = $("wol-fields");
       if (wolFields) {
-        if (isBoardOn) {
+        if (lockNetwork) {
           if (!notice) {
             notice = document.createElement("div");
             notice.id = "wol-readonly-notice";

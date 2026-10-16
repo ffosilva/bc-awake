@@ -6,6 +6,7 @@
 // Setup mode (SoftAP + discovery)
 void portalBegin();
 void portalLoop();
+bool isPortalSetupMode();
 
 // Normal mode persistent web server
 void portalServerBegin();

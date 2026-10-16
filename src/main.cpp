@@ -393,14 +393,13 @@ void setup() {
 
   loadConfig();
 
-  // The portal only starts on an explicit request (8s button hold while OFF).
-  // Otherwise we ALWAYS run the normal controller so button control works even
-  // when no Bluetooth controller has been configured.
-  if (config.forceSetup) {
+  normalBegin();
+
+  // If the device is not yet provisioned, or if setup was explicitly requested
+  // (e.g. 8s button hold while OFF or serial 's' command), start the setup portal.
+  if (!isConfigured() || config.forceSetup) {
     g_setupMode = true;
     portalBegin();
-  } else {
-    normalBegin();
   }
 }
 
@@ -465,9 +464,16 @@ static void normalLoop() {
   // --- Button holds ---
   if (buttonStable && pressStartedOff && !setupFired &&
       (now - pressStart) >= SETUP_HOLD_MS) {
-    // Long hold from OFF -> reconfigure (does not power the machine on).
+    // Long hold from OFF -> toggle or enter setup mode (does not power the machine on).
     setupFired = true;
-    enterSetupMode("long hold (>8s) while OFF");
+    if (g_setupMode) {
+      Serial.println("[ACT ] button held (>8s) while OFF in setup mode -> leaving setup mode");
+      setForceSetup(false);
+      delay(50);
+      ESP.restart();
+    } else {
+      enterSetupMode("long hold (>8s) while OFF");
+    }
   }
   if (buttonStable && !pressStartedOff && !longPressFired && state == STATE_ON &&
       (now - pressStart) >= LONG_PRESS_MS) {
@@ -551,9 +557,5 @@ static void normalLoop() {
 }
 
 void loop() {
-  if (g_setupMode) {
-    portalLoop();
-    return;
-  }
   normalLoop();
 }

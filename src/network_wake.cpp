@@ -22,6 +22,9 @@ static volatile unsigned long g_wolLastSeen = 0;
 static unsigned long g_lastReconnectCheck = 0;
 static const unsigned long RECONNECT_INTERVAL_MS = 10000;
 static bool g_wasConnected = false;
+static unsigned long g_connectStart = 0;
+static bool g_fallbackApActive = false;
+static const unsigned long WIFI_FALLBACK_TIMEOUT_MS = 20000;
 
 static uint8_t g_defaultMac[6] = {0};
 static bool g_defaultMacCached = false;
@@ -203,6 +206,8 @@ bool networkWakeBegin(bool isOff) {
   }
 
   g_wasConnected = false;
+  g_connectStart = millis();
+  g_fallbackApActive = false;
   return true;
 }
 
@@ -256,6 +261,7 @@ void networkWakeOnStateChanged(bool isOff) {
     WiFi.begin(config.wifiSsid.c_str(), config.wifiPassword.c_str());
   }
   g_wasConnected = false;
+  g_connectStart = millis();
   g_lastReconnectCheck = millis();
 }
 
@@ -271,6 +277,11 @@ void networkWakeLoop() {
     g_wasConnected = true;
     Serial.printf("[WOL ] Wi-Fi connected! IP: %s\n",
                   WiFi.localIP().toString().c_str());
+    if (g_fallbackApActive && !config.forceSetup && isConfigured()) {
+      Serial.println("[WOL ] Wi-Fi connected to station; disabling fallback SoftAP");
+      WiFi.softAPdisconnect(true);
+      g_fallbackApActive = false;
+    }
     const char *host =
         config.hostname.isEmpty() ? "bc-awake" : config.hostname.c_str();
     if (MDNS.begin(host)) {
@@ -283,12 +294,18 @@ void networkWakeLoop() {
     portalServerBegin();
   } else if (!connected && g_wasConnected) {
     g_wasConnected = false;
+    g_connectStart = now;
     Serial.println("[WOL ] Wi-Fi disconnected");
     MDNS.end();
     stopUdpListeners();
   }
 
   if (!connected) {
+    if (!g_fallbackApActive && (now - g_connectStart >= WIFI_FALLBACK_TIMEOUT_MS)) {
+      g_fallbackApActive = true;
+      Serial.println("[WOL ] Wi-Fi connection timed out (20s); activating fallback SoftAP");
+      portalBegin();
+    }
     if (now - g_lastReconnectCheck >= RECONNECT_INTERVAL_MS) {
       g_lastReconnectCheck = now;
       if (WiFi.status() != WL_CONNECTED) {

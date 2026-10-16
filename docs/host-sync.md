@@ -4,6 +4,8 @@ The `bc250-sync` utility is a lightweight, zero-dependency Python 3 tool and sys
 
 Because the ESP32 disables over-the-air Bluetooth sensing while the BC250 host is powered on (to avoid RF and HCI collisions with the host's active Bluetooth adapter), `bc250-sync` bridges the host's paired devices directly to the switch while the system is running.
 
+> **Initial Setup vs. Ongoing Sync**: For initial device onboarding (setting password, Wi-Fi credentials, and initial controller bindings over the setup SoftAP), use the standalone [BC Awake Setup Wizard](../tools/bc250-setup/bc250-setup.py). `bc250-sync` is designed for ongoing background synchronization once the switch is on your home network.
+
 ---
 
 ## Features

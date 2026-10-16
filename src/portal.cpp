@@ -31,6 +31,10 @@ static String g_token;
 static unsigned long g_restartAt = 0;
 static bool g_portalSetupMode = false;
 
+bool isPortalSetupMode() {
+  return g_portalSetupMode;
+}
+
 // --- Helpers ---
 
 static String sha256hex(const String &s) {
@@ -491,7 +495,7 @@ static void handleNetwork(AsyncWebServerRequest *req, JsonVariant &json) {
     sendJsonError(req, 401, "unauthorized");
     return;
   }
-  if (isBoardPowered()) {
+  if (!g_portalSetupMode && isBoardPowered()) {
     sendJsonError(
         req, 403,
         "Network settings are read-only while host machine is powered on");
@@ -720,15 +724,6 @@ void portalCheckRestart() {
 void portalBegin() {
   g_portalSetupMode = true;
   Serial.println("=== BC250 PSU controller : SETUP MODE ===");
-
-  // Keep the PSU off and the button readable while configuring.
-  pinMode(PS_ON_PIN, OUTPUT_OPEN_DRAIN);
-  digitalWrite(PS_ON_PIN, PS_ON_RELEASE);
-  if (BUTTON_GND >= 0) {
-    pinMode(BUTTON_GND, OUTPUT);
-    digitalWrite(BUTTON_GND, LOW);
-  }
-  pinMode(BUTTON_SENSE, INPUT_PULLUP);
 
   uint8_t mac[6] = {0};
   esp_read_mac(mac, ESP_MAC_WIFI_STA);
