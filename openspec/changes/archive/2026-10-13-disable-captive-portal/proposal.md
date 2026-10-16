@@ -2,7 +2,7 @@
 
 ## Why
 
-When client devices connect to the setup SoftAP ("BC250 Switch Setup"), operating systems (iOS, Android, macOS, Windows) detect captive portal behavior due to wildcard DNS interception and catch-all HTTP routing. This automatically triggers captive network assistant modal popups or webviews, which provide a degraded user experience, lack full browser capabilities (such as password autofill or file upload reliability), and can prematurely disconnect from the Wi-Fi network if dismissed. Disabling captive network triggers allows clients to associate cleanly without popup prompts, enabling users to access the configuration portal through their full-featured web browser at `http://192.168.4.1`.
+When client devices connect to the setup SoftAP ("BC Awake Setup"), operating systems (iOS, Android, macOS, Windows) detect captive portal behavior due to wildcard DNS interception and catch-all HTTP routing. This automatically triggers captive network assistant modal popups or webviews, which provide a degraded user experience, lack full browser capabilities (such as password autofill or file upload reliability), and can prematurely disconnect from the Wi-Fi network if dismissed. Disabling captive network triggers allows clients to associate cleanly without popup prompts, enabling users to access the configuration portal through their full-featured web browser at `http://192.168.4.1`.
 
 ## What Changes
 
@@ -23,4 +23,4 @@ None.
 
 - **Firmware source**: `src/portal.cpp` and `include/portal.h` — remove `DNSServer` instantiation and polling from `portalBegin()` and `portalLoop()`; update `server.onNotFound` handler to return 404 for unknown URLs.
 - **Resource usage**: Reduces RAM consumption and CPU loop overhead by eliminating the DNS server daemon on port 53.
-- **User workflow**: Users connect to the "BC250 Switch Setup" Wi-Fi network and manually open their web browser to `http://192.168.4.1` rather than being forced into an OS captive webview popup.
+- **User workflow**: Users connect to the "BC Awake Setup" Wi-Fi network and manually open their web browser to `http://192.168.4.1` rather than being forced into an OS captive webview popup.

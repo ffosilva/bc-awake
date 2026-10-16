@@ -44,7 +44,7 @@ See `proposal.md` for motivation and scope boundaries.
 ### 2. Runtime State Reset and Session Invalidation
 - **Rationale**: When reset is invoked, `resetConfig()` resets the global `config` struct in memory:
   ```cpp
-  config = {{}, "", "", "", true, true, false, "", "", "", "bc250-switch"};
+  config = {{}, "", "", "", true, true, false, "", "", "", "bc-awake"};
   ```
   In `src/portal.cpp`, `g_token` is cleared to immediately invalidate the current session token so no further authenticated operations can be processed while waiting for reboot.
 - **Alternatives considered**: Leaving `config` in memory until reboot. Harmless due to the 800 ms reboot, but resetting immediately prevents any race conditions if status requests arrive during the reboot window.

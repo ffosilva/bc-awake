@@ -21,22 +21,22 @@
 // ADC2 cannot be sampled when Bluetooth or WiFi is active, and GPIO13 is shared
 // with SD DAT3 which floats HIGH unless pulled down.
 const int BUTTON_SENSE = 15;
-const int BUTTON_GND   = -1; // -1 means wired to physical GND header
+const int BUTTON_GND = -1; // -1 means wired to physical GND header
 
-const int PS_ON_PIN    = 14;
-const int BOARD_SENSE  = 13;
+const int PS_ON_PIN = 14;
+const int BOARD_SENSE = 13;
 
 // Optional: motherboard PWR_BTN# (front-panel power button) header pin, wired
-// directly. Idles ~3.4V (pulled up by the board), so it is kept as a high-Z INPUT
-// and only pulled LOW to emulate a button press; it is never driven HIGH.
+// directly. Idles ~3.4V (pulled up by the board), so it is kept as a high-Z
+// INPUT and only pulled LOW to emulate a button press; it is never driven HIGH.
 // GPIO2 is a strapping pin but is ignored at boot when GPIO0 is HIGH (normal
 // boot). Unplug this wire to flash over UART, since the board's pull-up would
 // hold GPIO2 HIGH during download-mode entry.
-const int PWR_BTN_PIN  = 2;
+const int PWR_BTN_PIN = 2;
 
 // Onboard white flashlight LED (GPIO 4). Pulsed as indicator when the
 // Bluetooth controller wakes the machine.
-const int FLASH_LED             = 4;
+const int FLASH_LED = 4;
 const unsigned long FLASH_DURATION_MS = 500;
 
 #elif defined(BOARD_ESP32C3)
@@ -53,13 +53,13 @@ const unsigned long FLASH_DURATION_MS = 500;
 // The switch bridges GPIO5 and GPIO6. GPIO6 is driven LOW to act as a local
 // ground, and GPIO5 is read with an internal pull-up: pressed reads LOW.
 const int BUTTON_SENSE = 5;
-const int BUTTON_GND   = 6;
-const int PS_ON_PIN    = 4;
-const int BOARD_SENSE  = 3;
+const int BUTTON_GND = 6;
+const int PS_ON_PIN = 4;
+const int BOARD_SENSE = 3;
 
 // Optional: motherboard PWR_BTN# header pin, wired directly. Idles ~3.4V (board
 // pull-up): kept as a high-Z INPUT, only pulled LOW to emulate a press.
-const int PWR_BTN_PIN  = 7;
+const int PWR_BTN_PIN = 7;
 
 #else
 // Standard ESP32-WROOM (DevKitC) wiring:
@@ -75,13 +75,13 @@ const int PWR_BTN_PIN  = 7;
 // The switch bridges GPIO25 and GPIO26. GPIO26 is driven LOW to act as a local
 // ground, and GPIO25 is read with an internal pull-up: pressed reads LOW.
 const int BUTTON_SENSE = 25;
-const int BUTTON_GND   = 26;
-const int PS_ON_PIN    = 32;
-const int BOARD_SENSE  = 34;
+const int BUTTON_GND = 26;
+const int PS_ON_PIN = 32;
+const int BOARD_SENSE = 34;
 
 // Optional: motherboard PWR_BTN# header pin, wired directly. Idles ~3.4V (board
 // pull-up): kept as a high-Z INPUT, only pulled LOW to emulate a press.
-const int PWR_BTN_PIN  = 27;
+const int PWR_BTN_PIN = 27;
 #endif
 
 // Hysteresis thresholds for the analog board-sense reading. The gap between
@@ -90,21 +90,22 @@ const int PWR_BTN_PIN  = 27;
 //   reading falls below LOW  -> treat as "board down"
 //   in between               -> hold previous state
 const int SENSE_HIGH_MV = 2000;
-const int SENSE_LOW_MV  = 800;
+const int SENSE_LOW_MV = 800;
 
-// TPMS1 is high-impedance and the ESP32 single-shot ADC is noisy, so an isolated
-// analogReadMilliVolts() can spike hundreds of mV above the true level. Once the
-// board powers off the line floats near 0V but still throws the occasional spike
-// past SENSE_HIGH_MV. A single such spike flips the hysteresis HIGH for one loop,
-// which restarts the BOARD_OFF_DEBOUNCE_MS countdown -> shutdown detection stalls
-// for an unbounded, random time. Averaging this many samples per reading is a
-// low-pass that keeps a lone spike from ever crossing a threshold.
+// TPMS1 is high-impedance and the ESP32 single-shot ADC is noisy, so an
+// isolated analogReadMilliVolts() can spike hundreds of mV above the true
+// level. Once the board powers off the line floats near 0V but still throws the
+// occasional spike past SENSE_HIGH_MV. A single such spike flips the hysteresis
+// HIGH for one loop, which restarts the BOARD_OFF_DEBOUNCE_MS countdown ->
+// shutdown detection stalls for an unbounded, random time. Averaging this many
+// samples per reading is a low-pass that keeps a lone spike from ever crossing
+// a threshold.
 const int SENSE_OVERSAMPLE = 16;
 
 //*******  Logic levels  ***************
 
-const int PS_ON_ASSERT  = LOW;   // PSU on
-const int PS_ON_RELEASE = HIGH;  // PSU off (open-drain -> high-Z)
+const int PS_ON_ASSERT = LOW;   // PSU on
+const int PS_ON_RELEASE = HIGH; // PSU off (open-drain -> high-Z)
 
 //*******  Timing (milliseconds)  ***************
 
@@ -138,12 +139,14 @@ const unsigned long HEARTBEAT_MS = 1000;
 
 //*******  WiFi setup portal  ***************
 
-// SoftAP prefix shown when the device is in setup mode (appended with last 3 MAC bytes).
+// SoftAP prefix shown when the device is in setup mode (appended with last 3
+// MAC bytes).
 const char *const AP_SSID_PREFIX = "BC250_";
 
 // WiFi TX power for the SoftAP.
 // ESP32-C3 mini boards have an RF/power design flaw (arduino-esp32 #6551):
-// at full power the AP emits no usable beacons. Lowering TX power makes it work.
+// at full power the AP emits no usable beacons. Lowering TX power makes it
+// work.
 #if defined(BOARD_ESP32C3)
 #define AP_TX_POWER WIFI_POWER_8_5dBm
 #else
@@ -153,16 +156,16 @@ const char *const AP_SSID_PREFIX = "BC250_";
 //*******  Wake timing & parameters  ***************
 
 const unsigned long WAKE_PRESENCE_TIMEOUT_MS = 4000;
-const unsigned long WAKE_WAKE_COOLDOWN_MS    = 15000;
+const unsigned long WAKE_WAKE_COOLDOWN_MS = 15000;
 
 // Classic Bluetooth parameters
-const char *const BT_LOCAL_NAME = "BC250 Switch";
-const uint32_t    BT_COD        = 0x000104;
-const unsigned long BT_INQUIRY_MS = 5000;   // inquiry length
-const unsigned long BT_IDLE_MS    = 10000;  // pause between inquiries
+const char *const BT_LOCAL_NAME = "BC Awake";
+const uint32_t BT_COD = 0x000104;
+const unsigned long BT_INQUIRY_MS = 5000; // inquiry length
+const unsigned long BT_IDLE_MS = 10000;   // pause between inquiries
 
 // Backward-compatibility aliases
-const unsigned long BT_PRESENCE_TIMEOUT_MS  = WAKE_PRESENCE_TIMEOUT_MS;
-const unsigned long BT_WAKE_COOLDOWN_MS     = WAKE_WAKE_COOLDOWN_MS;
+const unsigned long BT_PRESENCE_TIMEOUT_MS = WAKE_PRESENCE_TIMEOUT_MS;
+const unsigned long BT_WAKE_COOLDOWN_MS = WAKE_WAKE_COOLDOWN_MS;
 const unsigned long BLE_PRESENCE_TIMEOUT_MS = WAKE_PRESENCE_TIMEOUT_MS;
-const unsigned long BLE_WAKE_COOLDOWN_MS    = WAKE_WAKE_COOLDOWN_MS;
+const unsigned long BLE_WAKE_COOLDOWN_MS = WAKE_WAKE_COOLDOWN_MS;

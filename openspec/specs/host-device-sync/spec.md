@@ -20,7 +20,7 @@ The host sync tool SHALL discover the primary Bluetooth controller MAC address a
 The host sync tool SHALL authenticate with the ESP32 REST API, verify host adapter consistency, and synchronize the list of bound controllers using existing endpoints.
 
 #### Scenario: Successful controller list synchronization
-- **WHEN** the sync tool connects to http://bc250-switch.local and authenticates with the configured password
+- **WHEN** the sync tool connects to http://bc-awake.local and authenticates with the configured password
 - **THEN** it updates the host adapter address via /api/host if different, removes controllers no longer paired locally via /api/controllers/remove, and adds newly paired local controllers via /api/controllers/add
 
 #### Scenario: Automatic discovery via UDP broadcast

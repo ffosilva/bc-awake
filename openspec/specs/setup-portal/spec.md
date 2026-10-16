@@ -211,7 +211,7 @@ The system SHALL keep the HTTP web portal and REST API online in normal operatio
 
 #### Scenario: mDNS hostname advertised
 - **WHEN** the system establishes Wi-Fi Station connectivity
-- **THEN** the system registers the configured hostname (defaulting to bc250-switch.local) via mDNS and configures the DHCP client hostname
+- **THEN** the system registers the configured hostname (defaulting to bc-awake.local) via mDNS and configures the DHCP client hostname
 
 #### Scenario: Reporting host power state in status API
 - **WHEN** a client performs a GET request to /api/status

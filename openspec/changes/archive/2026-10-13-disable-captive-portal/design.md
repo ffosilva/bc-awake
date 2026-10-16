@@ -10,7 +10,7 @@ See `proposal.md` for motivation. Currently in `src/portal.cpp`:
 ## Goals / Non-Goals
 
 **Goals:**
-- Completely disable automatic captive portal / network assistant triggering when client devices connect to the "BC250 Switch Setup" SoftAP.
+- Completely disable automatic captive portal / network assistant triggering when client devices connect to the "BC Awake Setup" SoftAP.
 - Remove `DNSServer` usage from `src/portal.cpp` and `include/portal.h`.
 - Update `server.onNotFound()` to respond with HTTP 404 Not Found for any unknown routes rather than serving `index.html`.
 - Retain full functionality of the web UI and REST API at `http://192.168.4.1` on root `/` (and in station mode via station IP / mDNS).

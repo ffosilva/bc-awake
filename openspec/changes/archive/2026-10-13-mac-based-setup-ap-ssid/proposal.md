@@ -2,7 +2,7 @@
 
 ## Why
 
-Currently, the setup SoftAP uses a fixed, hardcoded SSID (`BC250 Switch Setup`). When multiple devices operate in the same vicinity, this leads to naming collisions and ambiguity regarding which board is in setup mode. Deriving the SoftAP SSID from the device's factory MAC address guarantees that every device broadcasts an unambiguous, unique network name without requiring extra configuration fields, UI complexity, or persistent NVS storage.
+Currently, the setup SoftAP uses a fixed, hardcoded SSID (`BC Awake Setup`). When multiple devices operate in the same vicinity, this leads to naming collisions and ambiguity regarding which board is in setup mode. Deriving the SoftAP SSID from the device's factory MAC address guarantees that every device broadcasts an unambiguous, unique network name without requiring extra configuration fields, UI complexity, or persistent NVS storage.
 
 ## What Changes
 

@@ -1,98 +1,447 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BC250 Switch Setup</title>
+  <title>BC Awake Setup</title>
   <style>
-    :root { --bg:#121212; --card:#1e1e1e; --fg:#eee; --muted:#9e9e9e;
-            --accent:#ffd217; --accent2:#2c6bfd; --err:#ff5252; --ok:#4caf50; }
-    * { box-sizing: border-box; }
-    body { margin:0; font-family:ui-monospace,Menlo,Consolas,monospace;
-           background:var(--bg); color:var(--fg); min-height:100vh;
-           display:flex; justify-content:center; align-items:flex-start; }
-    .wrap { width:100%; max-width:480px; padding:24px 16px; }
-    h1 { color:var(--accent); font-size:20px; margin:8px 0 4px; }
-    .sub { color:var(--muted); font-size:13px; margin-bottom:20px; }
-    .card { background:var(--card); border-radius:12px; padding:18px; margin-bottom:16px; }
-    label { display:block; font-size:12px; color:var(--muted); margin:10px 0 4px; }
-    input { width:100%; padding:11px; border-radius:8px; border:1px solid #333;
-            background:#161616; color:var(--fg); font:inherit; font-size:15px; }
-    button { width:100%; padding:12px; margin-top:16px; border:none; border-radius:8px;
-             background:var(--accent); color:#000; font:inherit; font-weight:bold;
-             font-size:15px; cursor:pointer; }
-    button:disabled { opacity:.5; cursor:default; }
-    button.secondary { background:transparent; color:var(--accent2); border:1px solid var(--accent2); }
-    .msg { font-size:13px; margin-top:12px; min-height:18px; }
-    .msg.err { color:var(--err); } .msg.ok { color:var(--ok); }
-    .hidden { display:none !important; }
-    .dev { display:flex; align-items:center; gap:10px; padding:11px; border-radius:8px;
-           border:1px solid #333; margin-bottom:8px; cursor:pointer; background:#161616; }
-    .dev.sel { border-color:var(--accent); background:#2a2715; }
-    .dev .nm { flex:1; min-width:0; }
-    .dev .nm b { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .dev .nm small { color:var(--muted); }
-    .dev .rssi { color:var(--muted); font-size:12px; white-space:nowrap; }
-    .row { display:flex; gap:10px; } .row > * { flex:1; }
-    .tag { font-size:11px; padding:1px 6px; border-radius:6px; margin-left:6px;
-           border:1px solid var(--ok); color:var(--ok); font-weight:normal; }
-    .help { color:var(--muted); font-size:12px; line-height:1.5; margin-top:10px; }
-    .help code { color:var(--fg); }
-    .scanning { color:var(--muted); font-size:12px; margin:6px 0; }
+    :root {
+      --bg: #121212;
+      --card: #1e1e1e;
+      --fg: #eee;
+      --muted: #9e9e9e;
+      --accent: #ffd217;
+      --accent2: #2c6bfd;
+      --err: #ff5252;
+      --ok: #4caf50;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 480px;
+      padding: 24px 16px;
+    }
+
+    h1 {
+      color: var(--accent);
+      font-size: 20px;
+      margin: 8px 0 4px;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin: 10px 0 4px;
+    }
+
+    input {
+      width: 100%;
+      padding: 11px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #161616;
+      color: var(--fg);
+      font: inherit;
+      font-size: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 16px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #000;
+      font: inherit;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: default;
+    }
+
+    button.secondary {
+      background: transparent;
+      color: var(--accent2);
+      border: 1px solid var(--accent2);
+    }
+
+    .msg {
+      font-size: 13px;
+      margin-top: 12px;
+      min-height: 18px;
+    }
+
+    .msg.err {
+      color: var(--err);
+    }
+
+    .msg.ok {
+      color: var(--ok);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .dev {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      margin-bottom: 8px;
+      cursor: pointer;
+      background: #161616;
+    }
+
+    .dev.sel {
+      border-color: var(--accent);
+      background: #2a2715;
+    }
+
+    .dev .nm {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .dev .nm b {
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dev .nm small {
+      color: var(--muted);
+    }
+
+    .dev .rssi {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .row>* {
+      flex: 1;
+    }
+
+    .tag {
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 6px;
+      margin-left: 6px;
+      border: 1px solid var(--ok);
+      color: var(--ok);
+      font-weight: normal;
+    }
+
+    .help {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      margin-top: 10px;
+    }
+
+    .help code {
+      color: var(--fg);
+    }
+
+    .scanning {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 6px 0;
+    }
 
     /* Tab bar styles */
-    .tab-bar { display:flex; gap:6px; margin-bottom:16px; border-bottom:1px solid #333; padding-bottom:10px; }
-    .tab-btn { flex:1; padding:10px 8px; font-size:13px; font-weight:bold; background:transparent; color:var(--muted); border:1px solid #333; border-radius:8px; cursor:pointer; margin-top:0; display:flex; align-items:center; justify-content:center; gap:6px; }
-    .tab-btn.active { background:#252525; color:var(--accent); border-color:var(--accent); }
-    .tab-btn:hover:not(.active) { color:var(--fg); border-color:#555; }
-    .tab-badge { font-size:10px; padding:1px 6px; border-radius:10px; background:var(--err); color:#fff; font-weight:bold; }
-    .notice { padding:10px 12px; border-radius:8px; margin-bottom:12px; font-size:12px; line-height:1.4; }
-    .notice.warn { background:#2a2510; border:1px solid #665215; color:#ffd217; }
-    .notice.info { background:#161d27; border:1px solid #1f385c; color:#7aa2f7; }
+    .tab-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 10px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 8px;
+      font-size: 13px;
+      font-weight: bold;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid #333;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .tab-btn.active {
+      background: #252525;
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .tab-btn:hover:not(.active) {
+      color: var(--fg);
+      border-color: #555;
+    }
+
+    .tab-badge {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: var(--err);
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .notice {
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .notice.warn {
+      background: #2a2510;
+      border: 1px solid #665215;
+      color: #ffd217;
+    }
+
+    .notice.info {
+      background: #161d27;
+      border: 1px solid #1f385c;
+      color: #7aa2f7;
+    }
 
     /* Multi-controller dashboard styles */
-    .ctrl-item { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:8px; border:1px solid #333; margin-bottom:8px; background:#161616; gap:8px; }
-    .ctrl-info { flex:1; min-width:0; }
-    .ctrl-info b { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:14px; }
-    .ctrl-info small { color:var(--muted); font-size:12px; }
-    .ctrl-actions { display:flex; gap:6px; }
-    .btn-sm { padding:6px 10px; font-size:12px; margin:0; width:auto; border-radius:6px; }
-    .btn-danger, button.btn-danger { background:transparent; color:var(--err); border:1px solid #552222; }
-    .btn-danger:hover, button.btn-danger:hover { background:var(--err); color:#fff; }
-    .btn-edit { background:transparent; color:var(--fg); border:1px solid #444; }
-    .btn-edit:hover { border-color:var(--accent); color:var(--accent); }
-    .ctrl-item.editing { border-color:var(--accent); background:#201e14; }
-    .ctrl-item .rename-input { width:100%; padding:5px 8px; font-size:13px; border-radius:6px; border:1px solid #444; background:#111; color:var(--fg); margin-bottom:4px; }
-    .ctrl-item .rename-input:focus { border-color:var(--accent); outline:none; }
-    .btn-save { background:var(--accent); color:#000; font-weight:bold; }
-    .btn-save:hover { opacity:.9; }
-    .btn-cancel { background:transparent; color:var(--muted); border:1px solid #444; }
-    .btn-cancel:hover { color:var(--fg); border-color:#666; }
+    .ctrl-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      margin-bottom: 8px;
+      background: #161616;
+      gap: 8px;
+    }
+
+    .ctrl-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ctrl-info b {
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 14px;
+    }
+
+    .ctrl-info small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .ctrl-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 12px;
+      margin: 0;
+      width: auto;
+      border-radius: 6px;
+    }
+
+    .btn-danger,
+    button.btn-danger {
+      background: transparent;
+      color: var(--err);
+      border: 1px solid #552222;
+    }
+
+    .btn-danger:hover,
+    button.btn-danger:hover {
+      background: var(--err);
+      color: #fff;
+    }
+
+    .btn-edit {
+      background: transparent;
+      color: var(--fg);
+      border: 1px solid #444;
+    }
+
+    .btn-edit:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .ctrl-item.editing {
+      border-color: var(--accent);
+      background: #201e14;
+    }
+
+    .ctrl-item .rename-input {
+      width: 100%;
+      padding: 5px 8px;
+      font-size: 13px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #111;
+      color: var(--fg);
+      margin-bottom: 4px;
+    }
+
+    .ctrl-item .rename-input:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .btn-save {
+      background: var(--accent);
+      color: #000;
+      font-weight: bold;
+    }
+
+    .btn-save:hover {
+      opacity: .9;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid #444;
+    }
+
+    .btn-cancel:hover {
+      color: var(--fg);
+      border-color: #666;
+    }
 
     /* Modal styles */
-    .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); display:flex; justify-content:center; align-items:center; z-index:100; padding:16px; }
-    .modal-card { width:100%; max-width:420px; background:var(--card); border-radius:12px; padding:20px; border:1px solid #333; }
-    .pulse-dot { width:40px; height:40px; border-radius:50%; background:var(--accent); margin:14px auto; opacity:0.8; animation:pulse 1.4s infinite ease-in-out; }
-    @keyframes pulse { 0%{transform:scale(0.8);opacity:0.3;} 50%{transform:scale(1.15);opacity:0.95;} 100%{transform:scale(0.8);opacity:0.3;} }
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #333;
+    }
+
+    .pulse-dot {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin: 14px auto;
+      opacity: 0.8;
+      animation: pulse 1.4s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(0.8);
+        opacity: 0.3;
+      }
+
+      50% {
+        transform: scale(1.15);
+        opacity: 0.95;
+      }
+
+      100% {
+        transform: scale(0.8);
+        opacity: 0.3;
+      }
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px">
-      <h1 style="margin:0">BC250 Switch</h1>
+      <h1 style="margin:0">BC Awake</h1>
       <div style="display:flex;align-items:center;gap:6px">
-        <span id="power-badge" class="tag" style="display:none;font-size:12px;padding:2px 8px;align-items:center;gap:6px">
+        <span id="power-badge" class="tag"
+          style="display:none;font-size:12px;padding:2px 8px;align-items:center;gap:6px">
           <span id="power-dot" style="width:8px;height:8px;border-radius:50%;display:inline-block"></span>
           <span id="power-text">OFF</span>
         </span>
-        <span id="fw-badge" class="tag" style="display:none;border-color:#444;color:var(--muted);font-size:12px;padding:2px 8px"></span>
+        <span id="fw-badge" class="tag"
+          style="display:none;border-color:#444;color:var(--muted);font-size:12px;padding:2px 8px"></span>
       </div>
     </div>
     <div class="sub" id="subtitle">Setup portal</div>
 
     <!-- Password screen (first-time create or unlock) -->
     <form class="card hidden" id="screen-pass" action="/api/login" method="post" autocomplete="on">
-      <input type="text" name="username" value="" autocomplete="username" style="display:none" tabindex="-1" aria-hidden="true" />
+      <input type="text" name="username" value="" autocomplete="username" style="display:none" tabindex="-1"
+        aria-hidden="true" />
       <div id="pass-title" style="font-size:15px;font-weight:bold"></div>
       <label for="pw">Password</label>
       <input id="pw" name="password" type="password" autocomplete="current-password" required />
@@ -129,7 +478,8 @@
       <div class="card hidden" id="card-adapter">
         <div style="font-size:15px;font-weight:bold">BC250 Bluetooth adapter</div>
         <div class="sub" style="margin:6px 0 0">
-          While the machine is off, this device answers as the BC250's Bluetooth adapter so your paired controller wakes it.
+          While the machine is off, this device answers as the BC250's Bluetooth adapter so your paired controller wakes
+          it.
         </div>
         <label for="host">Adapter MAC address</label>
         <div style="display:flex;gap:8px;margin-top:4px">
@@ -154,7 +504,8 @@
         <!-- Classic BT Bound Controllers list -->
         <div id="classic-controls">
           <div id="ctrl-list"></div>
-          <div id="ctrl-empty" class="help" style="margin-bottom:12px">No controllers bound yet. Click below to add one.</div>
+          <div id="ctrl-empty" class="help" style="margin-bottom:12px">No controllers bound yet. Click below to add one.
+          </div>
 
           <button id="btn-add-ctrl" style="margin-top:6px">+ Add controller</button>
           <div id="add-ctrl-hint" class="help" style="color:var(--accent);margin-top:4px"></div>
@@ -183,7 +534,8 @@
       <!-- ESP32-CAM Flash LED wake option (hidden on other boards) -->
       <div class="card hidden" id="cam-options">
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--fg);margin:0">
-          <input type="checkbox" id="flash-on-wake" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--accent)" />
+          <input type="checkbox" id="flash-on-wake"
+            style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--accent)" />
           <span>Blink flash LED on Bluetooth wake</span>
         </label>
         <div class="help" style="margin-top:6px;font-size:11px">
@@ -196,27 +548,32 @@
     <div id="panel-net" class="hidden">
       <!-- Network Wake (Wake-on-LAN) Card -->
       <div class="card" id="wol-options">
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--fg);margin:0 0 10px">
-          <input type="checkbox" id="wol-enabled" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--accent)" />
+        <label
+          style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--fg);margin:0 0 10px">
+          <input type="checkbox" id="wol-enabled"
+            style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--accent)" />
           <span><b>Enable Wake-on-LAN (Wi-Fi)</b></span>
         </label>
         <div id="wol-fields" class="hidden" style="margin-top:10px">
           <label for="device-hostname">Device Hostname / mDNS Name</label>
-          <input id="device-hostname" placeholder="bc250-switch" maxlength="32" autocomplete="off" autocapitalize="off" />
+          <input id="device-hostname" placeholder="bc-awake" maxlength="32" autocomplete="off" autocapitalize="off" />
           <div class="help" style="margin-top:6px;font-size:11px">
-            Network hostname (accessible at http://&lt;hostname&gt;.local). 1–32 lowercase letters, numbers, and hyphens.
+            Network hostname (accessible at http://&lt;hostname&gt;.local). 1–32 lowercase letters, numbers, and
+            hyphens.
           </div>
 
           <label for="wifi-ssid" style="margin-top:10px">Wi-Fi Network (SSID)</label>
           <input id="wifi-ssid" placeholder="HomeNetwork" autocomplete="off" />
 
           <label for="wifi-pass">Wi-Fi Password (leave empty for open networks)</label>
-          <input id="wifi-pass" type="password" placeholder="Leave empty for open networks" autocomplete="new-password" />
+          <input id="wifi-pass" type="password" placeholder="Leave empty for open networks"
+            autocomplete="new-password" />
 
           <label for="bc250-mac">BC250 Ethernet MAC address</label>
           <input id="bc250-mac" placeholder="aa:bb:cc:dd:ee:ff" autocapitalize="off" />
           <div class="help" style="margin-top:6px;font-size:11px">
-            When off, standard Wake-on-LAN tools (Moonlight, Steam Link) can wake your PC by sending magic packets to this Ethernet MAC address.
+            When off, standard Wake-on-LAN tools (Moonlight, Steam Link) can wake your PC by sending magic packets to
+            this Ethernet MAC address.
           </div>
           <button id="btn-save-wol" class="secondary" style="margin-top:12px">Save Network Settings</button>
           <div class="msg" id="wol-msg"></div>
@@ -253,7 +610,8 @@
 
       <!-- Motherboard Power Button Card (optional feature) -->
       <div class="card" id="card-graceful">
-        <div style="font-size:15px;font-weight:bold">Motherboard power button <span style="font-size:11px;font-weight:normal;color:var(--muted)">(optional)</span></div>
+        <div style="font-size:15px;font-weight:bold">Motherboard power button <span
+            style="font-size:11px;font-weight:normal;color:var(--muted)">(optional)</span></div>
         <div class="sub" style="margin:6px 0 12px">
           Mirrors the power button to the motherboard's power-button header while the machine is on,
           so a short press shuts the OS down cleanly and a long press uses the board's own override.
@@ -261,7 +619,8 @@
           Holding the case button for 5 s still cuts power immediately.
         </div>
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--fg);margin:0">
-          <input type="checkbox" id="graceful-enabled" style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--accent)" />
+          <input type="checkbox" id="graceful-enabled"
+            style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--accent)" />
           <span>Enable motherboard power button (PWR_BTN# wired)</span>
         </label>
         <button id="btn-save-graceful" class="secondary" style="margin-top:12px">Save</button>
@@ -290,7 +649,8 @@
             <span id="ota-progress-pct">0%</span>
           </div>
           <div style="width:100%;height:8px;background:#333;border-radius:4px;overflow:hidden">
-            <div id="ota-progress-bar" style="width:0%;height:100%;background:var(--accent);transition:width 0.2s"></div>
+            <div id="ota-progress-bar" style="width:0%;height:100%;background:var(--accent);transition:width 0.2s">
+            </div>
           </div>
         </div>
         <button id="ota-btn" class="secondary" disabled style="margin-top:14px">Upload &amp; flash</button>
@@ -315,16 +675,20 @@
       <div class="card" id="card-reset">
         <div style="font-size:15px;font-weight:bold">Reset configuration</div>
         <div class="sub" style="margin:6px 0 12px">
-          Wipe all custom settings (Wi-Fi credentials, paired controllers, host adapter address, and portal password) back to factory defaults.
+          Wipe all custom settings (Wi-Fi credentials, paired controllers, host adapter address, and portal password)
+          back to factory defaults.
         </div>
         <button id="btn-reset-init" class="btn-danger" style="margin-top:4px">Reset to factory defaults</button>
-        <div id="reset-confirm-wrap" class="hidden" style="margin-top:14px;padding:12px;border-radius:8px;background:#2a1414;border:1px solid #552222">
+        <div id="reset-confirm-wrap" class="hidden"
+          style="margin-top:14px;padding:12px;border-radius:8px;background:#2a1414;border:1px solid #552222">
           <div style="color:var(--err);font-weight:bold;font-size:13px;margin-bottom:6px">Are you sure?</div>
           <div style="color:var(--fg);font-size:12px;line-height:1.4;margin-bottom:12px">
-            This will permanently remove all custom configuration. The device will restart into setup mode (<code>BC250_XXXXXX</code>) so you can set it up from scratch.
+            This will permanently remove all custom configuration. The device will restart into setup mode
+            (<code>BC250_XXXXXX</code>) so you can set it up from scratch.
           </div>
           <div class="row">
-            <button id="btn-reset-confirm" style="margin:0;padding:10px;background:var(--err);color:#fff">Yes, reset configuration</button>
+            <button id="btn-reset-confirm" style="margin:0;padding:10px;background:var(--err);color:#fff">Yes, reset
+              configuration</button>
             <button id="btn-reset-cancel" class="secondary" style="margin:0;padding:10px">Cancel</button>
           </div>
         </div>
@@ -356,12 +720,14 @@
           (Make sure it was already paired to your computer's Bluetooth adapter!)
         </div>
 
-        <div style="margin-top:14px;padding:10px;border-radius:8px;background:#201e14;border:1px solid #443c16;font-size:12px;color:#ffd217;line-height:1.4;text-align:center">
+        <div
+          style="margin-top:14px;padding:10px;border-radius:8px;background:#201e14;border:1px solid #443c16;font-size:12px;color:#ffd217;line-height:1.4;text-align:center">
           <b>Board power-on is paused</b> while pairing is active so your PC won't boot up.<br>
           <span style="color:var(--muted);font-size:11px">(Case power button remains active)</span>
         </div>
 
-        <div id="listen-countdown" style="text-align:center;font-size:13px;color:var(--muted);margin-top:12px;font-weight:bold">
+        <div id="listen-countdown"
+          style="text-align:center;font-size:13px;color:var(--muted);margin-top:12px;font-weight:bold">
           Listening… 60s remaining
         </div>
 
@@ -370,9 +736,11 @@
 
       <div id="modal-detected-state" class="hidden">
         <div style="font-weight:bold;font-size:16px;color:var(--ok);text-align:center">Controller detected!</div>
-        <div style="text-align:center;margin-top:4px"><code id="detected-mac" style="font-size:14px;color:var(--accent)"></code></div>
+        <div style="text-align:center;margin-top:4px"><code id="detected-mac"
+            style="font-size:14px;color:var(--accent)"></code></div>
 
-        <div id="already-bound-alert" class="msg err hidden" style="text-align:center;margin-top:6px">This controller is already bound. (Power-on was prevented)</div>
+        <div id="already-bound-alert" class="msg err hidden" style="text-align:center;margin-top:6px">This controller is
+          already bound. (Power-on was prevented)</div>
 
         <label for="detected-name" style="margin-top:14px">Friendly name</label>
         <input id="detected-name" placeholder="e.g. Living Room DualSense" />
@@ -386,7 +754,8 @@
         <div style="text-align:center;font-size:13px;line-height:1.5;color:var(--muted);margin-top:10px">
           No controller was detected within 60 seconds.
         </div>
-        <div style="margin-top:14px;padding:10px;border-radius:8px;background:#1b231b;border:1px solid #2d462d;font-size:12px;color:var(--ok);line-height:1.4;text-align:center">
+        <div
+          style="margin-top:14px;padding:10px;border-radius:8px;background:#1b231b;border:1px solid #2d462d;font-size:12px;color:var(--ok);line-height:1.4;text-align:center">
           <b>Normal wake restored:</b> Any bound controller can now wake the computer again.
         </div>
         <button id="modal-timeout-retry-btn" style="margin-top:16px">Try again</button>
@@ -402,8 +771,10 @@
       <div style="font-size:13px;line-height:1.5;color:var(--fg);margin-top:12px;text-align:center">
         This immediately releases ATX <code>PS_ON#</code>, cutting main power to the motherboard.
       </div>
-      <div style="margin-top:12px;padding:10px;border-radius:8px;background:#2a1414;border:1px solid #552222;font-size:12px;color:var(--err);line-height:1.4">
-        <b>Warning:</b> Forcing power off while an operating system is running may cause unsaved data loss or filesystem corruption. If the OS is responsive, use <b>Shut Down OS</b> instead.
+      <div
+        style="margin-top:12px;padding:10px;border-radius:8px;background:#2a1414;border:1px solid #552222;font-size:12px;color:var(--err);line-height:1.4">
+        <b>Warning:</b> Forcing power off while an operating system is running may cause unsaved data loss or filesystem
+        corruption. If the OS is responsive, use <b>Shut Down OS</b> instead.
       </div>
       <button id="btn-force-off-confirm" class="btn-danger" style="margin-top:16px">Yes, Cut Power</button>
       <button id="btn-force-off-cancel" class="secondary" style="margin-top:8px">Cancel</button>
@@ -429,7 +800,7 @@
     let currentTab = "bt";
 
     const $ = (id) => document.getElementById(id);
-    const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     const MAC_RE = /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/;
 
     function showTab(name) {
@@ -499,7 +870,7 @@
       const on = currentBoardState === "ON";
       btn.disabled = !(gracefulSaved && on);
       hint.textContent = !gracefulSaved ? "Enable and save the feature to use Shut Down OS."
-                       : (on ? "" : "Available only while the machine is powered on.");
+        : (on ? "" : "Available only while the machine is powered on.");
     }
 
     function refreshPowerTab() {
@@ -966,7 +1337,7 @@
       if (listenCountdownTimer) { clearInterval(listenCountdownTimer); listenCountdownTimer = null; }
       if (listenTimer) { clearInterval(listenTimer); listenTimer = null; }
       $("listener-modal").classList.add("hidden");
-      api("/api/listener/stop", "POST", {}).catch(() => {});
+      api("/api/listener/stop", "POST", {}).catch(() => { });
     }
 
     function showTimeoutState() {
@@ -975,7 +1346,7 @@
       $("modal-listen-state").classList.add("hidden");
       $("modal-detected-state").classList.add("hidden");
       $("modal-timeout-state").classList.remove("hidden");
-      api("/api/listener/stop", "POST", {}).catch(() => {});
+      api("/api/listener/stop", "POST", {}).catch(() => { });
     }
 
     async function pollListener() {
@@ -1145,7 +1516,7 @@
       const msg = $("wol-msg");
       msg.className = "msg";
       const wolEnabled = $("wol-enabled").checked;
-      const hostname = ($("device-hostname").value.trim().toLowerCase()) || "bc250-switch";
+      const hostname = ($("device-hostname").value.trim().toLowerCase()) || "bc-awake";
       const wifiSsid = $("wifi-ssid").value.trim();
       const wifiPassword = $("wifi-pass").value;
       const bc250Mac = $("bc250-mac").value.trim().toLowerCase();
@@ -1485,4 +1856,5 @@
     }, 4000);
   </script>
 </body>
+
 </html>

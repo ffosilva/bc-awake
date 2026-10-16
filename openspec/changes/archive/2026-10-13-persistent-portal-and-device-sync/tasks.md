@@ -2,7 +2,7 @@
 
 ## 1. Web Portal & mDNS in Normal Mode
 
-- [x] 1.1 Integrate mDNS responder (`ESPmDNS.h`) in `src/network_wake.cpp` to advertise `bc250-switch.local` upon Wi-Fi Station connection and verify mDNS startup in build and logs.
+- [x] 1.1 Integrate mDNS responder (`ESPmDNS.h`) in `src/network_wake.cpp` to advertise `bc-awake.local` upon Wi-Fi Station connection and verify mDNS startup in build and logs.
 - [x] 1.2 Refactor web server initialization so `portal.cpp` endpoints run persistently over Wi-Fi Station mode in `normalBegin()`, verifying HTTP responses on port 80.
 - [x] 1.3 Add `boardState` string field (`"OFF"`, `"BOOTING"`, `"ON"`) to `/api/status` in `src/portal.cpp` and verify payload matches active power controller state.
 

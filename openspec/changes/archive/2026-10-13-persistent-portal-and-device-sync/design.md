@@ -15,7 +15,7 @@ When paired gamepads or host Bluetooth adapters change, the user is forced to en
 **Goals:**
 - Keep the HTTP web server and REST API permanently online in normal mode over Wi-Fi Station connectivity.
 - Dynamically toggle the Wi-Fi Station MAC address: spoof the Wi-Fi dongle's MAC while `STATE_OFF` (to capture WOL packets and maintain router presence), and restore the factory ESP32 MAC while `STATE_ON` (to avoid network collisions with the active host dongle).
-- Advertise `bc250-switch.local` via mDNS on Wi-Fi STA to enable stable addressing across MAC/IP changes.
+- Advertise `bc-awake.local` via mDNS on Wi-Fi STA to enable stable addressing across MAC/IP changes.
 - Provide a standalone, zero-dependency Python 3 Linux systemd service for Bazzite, SteamOS, Ubuntu, and Arch Linux to synchronize local paired gamepads and the host adapter MAC to the ESP32 REST API.
 - Prevent Bluetooth sensing and Wi-Fi reconfiguration while the host machine is in `STATE_ON`.
 
@@ -34,8 +34,8 @@ When paired gamepads or host Bluetooth adapters change, the user is forced to en
   - *Keep dongle MAC permanently*: Causes network collapse as soon as the host boots.
 
 ### 2. Persistent Web Server & mDNS in Normal Mode
-- **Approach**: Initialize `server.begin()` and `MDNS.begin("bc250-switch")` inside normal mode whenever Wi-Fi STA connects. SoftAP remains an onboarding mechanism when Wi-Fi is unconfigured or recovery is requested via button hold.
-- **Rationale**: Enables remote monitoring, configuration, OTA updates, and automated device synchronization without taking down the PC. mDNS ensures clients and background services can reach `http://bc250-switch.local` even if the DHCP-assigned IP changes between `STATE_OFF` and `STATE_ON`.
+- **Approach**: Initialize `server.begin()` and `MDNS.begin("bc-awake")` inside normal mode whenever Wi-Fi STA connects. SoftAP remains an onboarding mechanism when Wi-Fi is unconfigured or recovery is requested via button hold.
+- **Rationale**: Enables remote monitoring, configuration, OTA updates, and automated device synchronization without taking down the PC. mDNS ensures clients and background services can reach `http://bc-awake.local` even if the DHCP-assigned IP changes between `STATE_OFF` and `STATE_ON`.
 - **Alternatives Considered**:
   - *Static IP configuration*: Requires manual router or portal configuration and is brittle across different subnets.
 
@@ -51,7 +51,7 @@ When paired gamepads or host Bluetooth adapters change, the user is forced to en
 ### 4. Zero-Dependency Linux Host Sync Service (`bc250-sync`)
 - **Approach**: A Python 3 script using standard library modules (`urllib.request`, `json`, `subprocess`) paired with systemd service and timer units.
   - Inspects local Bluetooth state via `bluetoothctl list` and `bluetoothctl devices`.
-  - Authenticates with `POST /api/login` at `http://bc250-switch.local`.
+  - Authenticates with `POST /api/login` at `http://bc-awake.local`.
   - Compares local state against `GET /api/status`.
   - Synchronizes adapter MAC via `POST /api/host` and adds/removes controllers via `POST /api/controllers/add` and `POST /api/controllers/remove`.
 - **Rationale**: Bazzite and SteamOS are immutable distributions with read-only root filesystems where `pip install` is unavailable by default. A zero-dependency script ensures seamless operation out-of-the-box on all Linux distributions.

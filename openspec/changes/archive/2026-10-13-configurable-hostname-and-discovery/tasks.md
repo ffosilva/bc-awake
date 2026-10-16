@@ -2,7 +2,7 @@
 
 ## 1. Configurable Hostname & NVS Storage
 
-- [x] 1.1 Add `hostname` field to `Config` struct in `include/config.h`, default to `"bc250-switch"`, and implement load/save in `src/config.cpp` with NVS key `"hostname"`.
+- [x] 1.1 Add `hostname` field to `Config` struct in `include/config.h`, default to `"bc-awake"`, and implement load/save in `src/config.cpp` with NVS key `"hostname"`.
 - [x] 1.2 Implement RFC 1123 hostname validation helper (1–32 characters, lowercase alphanumeric and hyphens, no leading/trailing hyphens) and verify acceptance and rejection on test inputs.
 - [x] 1.3 Update `src/network_wake.cpp` to configure DHCP client name via `WiFi.setHostname(config.hostname.c_str())` and start mDNS via `MDNS.begin(config.hostname.c_str())`.
 

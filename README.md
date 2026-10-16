@@ -124,7 +124,7 @@ receive Wake-on-LAN packets natively. When **Enable Wake-on-LAN** is configured:
 
 Hold the button ≥ 8 s while off (or on first use) to start the portal:
 
-1. Connect to the open WiFi network **`BC250 Switch Setup`** and open `http://192.168.4.1`.
+1. Connect to the open WiFi network **`BC Awake Setup`** and open `http://192.168.4.1`.
 2. Create a password (or enter your existing password). A password is the only mandatory requirement.
 3. Access the tabbed interface:
    - **Bluetooth tab**:
@@ -173,7 +173,7 @@ Once the device has been flashed with the dual-bank partition table via USB, all
    pio run -e esp32dev   # binary generated at .pio/build/esp32dev/firmware.bin
    ```
 2. Hold the switch button ≥ 8 s while OFF to enter the setup portal.
-3. Connect to **`BC250 Switch Setup`** (`http://192.168.4.1`) and unlock.
+3. Connect to **`BC Awake Setup`** (`http://192.168.4.1`) and unlock.
 4. In the **Firmware update (OTA)** card, select your `.bin` file and click **Upload & flash**.
 5. The device flashes the inactive bank and automatically reboots into the updated firmware.
 

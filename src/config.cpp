@@ -1,8 +1,9 @@
 #include "config.h"
-#include <Preferences.h>
 #include <ArduinoJson.h>
+#include <Preferences.h>
 
-Config config{{}, "", "", "", false, true, false, "", "", "", "bc250-switch", false};
+Config config{{},    "", "", "", false,      true,
+              false, "", "", "", "bc-awake", false};
 
 static Preferences prefs;
 static const char *NS = "bc250";
@@ -29,22 +30,22 @@ static void saveControllersNvs() {
 }
 
 void loadConfig() {
-  prefs.begin(NS, true);  // read-only
-  config.hostAddr     = prefs.getString("hostAddr", "");
-  config.passHash     = prefs.getString("passHash", "");
-  config.forceSetup   = prefs.getBool("forceSetup", false);
-  config.flashOnWake  = prefs.getBool("flashOnWake", true);
-  config.wolEnabled   = prefs.getBool("wolEnabled", false);
+  prefs.begin(NS, true); // read-only
+  config.hostAddr = prefs.getString("hostAddr", "");
+  config.passHash = prefs.getString("passHash", "");
+  config.forceSetup = prefs.getBool("forceSetup", false);
+  config.flashOnWake = prefs.getBool("flashOnWake", true);
+  config.wolEnabled = prefs.getBool("wolEnabled", false);
   config.gracefulShutdown = prefs.getBool("graceful", false);
-  config.wifiSsid     = prefs.getString("wifiSsid", "");
+  config.wifiSsid = prefs.getString("wifiSsid", "");
   config.wifiPassword = prefs.getString("wifiPassword", "");
-  config.bc250Mac     = prefs.getString("bc250Mac", "");
-  config.hostname     = prefs.getString("hostname", "bc250-switch");
+  config.bc250Mac = prefs.getString("bc250Mac", "");
+  config.hostname = prefs.getString("hostname", "bc-awake");
   if (config.hostname.isEmpty()) {
-    config.hostname = "bc250-switch";
+    config.hostname = "bc-awake";
   }
   String controllersJson = prefs.getString("controllers", "");
-  String legacyWakeAddr  = prefs.getString("wakeAddr", "");
+  String legacyWakeAddr = prefs.getString("wakeAddr", "");
   prefs.end();
 
   config.controllers.clear();
@@ -60,13 +61,15 @@ void loadConfig() {
         c.mac.toLowerCase();
         if (!c.mac.isEmpty()) {
           config.controllers.push_back(c);
-          if (config.controllers.size() >= MAX_CONTROLLERS) break;
+          if (config.controllers.size() >= MAX_CONTROLLERS)
+            break;
         }
       }
     }
   }
 
-  // Automatic migration: if controllers array is empty and legacy wakeAddr exists
+  // Automatic migration: if controllers array is empty and legacy wakeAddr
+  // exists
   if (config.controllers.empty() && !legacyWakeAddr.isEmpty()) {
     legacyWakeAddr.trim();
     legacyWakeAddr.toLowerCase();
@@ -103,11 +106,13 @@ bool addController(const String &mac, const String &name) {
   String normMac = mac;
   normMac.trim();
   normMac.toLowerCase();
-  if (normMac.isEmpty()) return false;
+  if (normMac.isEmpty())
+    return false;
 
   String friendly = name;
   friendly.trim();
-  if (friendly.isEmpty()) friendly = "Wireless Controller";
+  if (friendly.isEmpty())
+    friendly = "Wireless Controller";
 
   for (auto &c : config.controllers) {
     if (c.mac.equalsIgnoreCase(normMac)) {
@@ -128,10 +133,12 @@ bool addController(const String &mac, const String &name) {
 }
 
 bool removeController(const String &mac) {
-  for (auto it = config.controllers.begin(); it != config.controllers.end(); ++it) {
+  for (auto it = config.controllers.begin(); it != config.controllers.end();
+       ++it) {
     if (it->mac.equalsIgnoreCase(mac)) {
       config.controllers.erase(it);
-      config.wakeAddr = config.controllers.empty() ? "" : config.controllers[0].mac;
+      config.wakeAddr =
+          config.controllers.empty() ? "" : config.controllers[0].mac;
       saveControllersNvs();
       return true;
     }
@@ -142,7 +149,8 @@ bool removeController(const String &mac) {
 bool renameController(const String &mac, const String &name) {
   String friendly = name;
   friendly.trim();
-  if (friendly.isEmpty()) friendly = "Wireless Controller";
+  if (friendly.isEmpty())
+    friendly = "Wireless Controller";
 
   for (auto &c : config.controllers) {
     if (c.mac.equalsIgnoreCase(mac)) {
@@ -207,7 +215,8 @@ void setGracefulShutdown(bool enable) {
   prefs.end();
 }
 
-void setWifiConfig(const String &ssid, const String &password, const String &bc250Mac, const String &hostname) {
+void setWifiConfig(const String &ssid, const String &password,
+                   const String &bc250Mac, const String &hostname) {
   config.wifiSsid = ssid;
   config.wifiPassword = password;
   String normMac = bc250Mac;
@@ -230,8 +239,10 @@ void setWifiConfig(const String &ssid, const String &password, const String &bc2
 }
 
 bool isValidHostname(const String &name) {
-  if (name.length() < 1 || name.length() > 32) return false;
-  if (name[0] == '-' || name[name.length() - 1] == '-') return false;
+  if (name.length() < 1 || name.length() > 32)
+    return false;
+  if (name[0] == '-' || name[name.length() - 1] == '-')
+    return false;
   for (unsigned int i = 0; i < name.length(); i++) {
     char c = name[i];
     bool isLowerAlpha = (c >= 'a' && c <= 'z');
@@ -249,7 +260,7 @@ void setHostname(const String &hostname) {
   norm.trim();
   norm.toLowerCase();
   if (norm.isEmpty()) {
-    norm = "bc250-switch";
+    norm = "bc-awake";
   }
   config.hostname = norm;
   prefs.begin(NS, false);
@@ -272,6 +283,5 @@ void resetConfig() {
   prefs.putBool("forceSetup", true);
   prefs.end();
 
-  config = {{}, "", "", "", true, true, false, "", "", "", "bc250-switch", false};
+  config = {{}, "", "", "", true, true, false, "", "", "", "bc-awake", false};
 }
-

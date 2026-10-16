@@ -2,14 +2,14 @@
 
 ## Why
 
-Today, the mDNS hostname is hardcoded to `bc250-switch.local`. When multiple BC250 controllers operate on the same local network, their mDNS names collide, causing name resolution failures and making individual devices inaccessible. Additionally, mDNS resolution is frequently unsupported, blocked by network equipment, or absent on clients without Zeroconf responders.
+Today, the mDNS hostname is hardcoded to `bc-awake.local`. When multiple BC250 controllers operate on the same local network, their mDNS names collide, causing name resolution failures and making individual devices inaccessible. Additionally, mDNS resolution is frequently unsupported, blocked by network equipment, or absent on clients without Zeroconf responders.
 
 To solve this, users need to configure a custom hostname for both DHCP and mDNS, and the firmware must provide an always-on, zero-dependency network discovery mechanism over UDP broadcast so clients and host tooling (like `bc250-sync`) can discover any switch on the LAN reliably without manual IP configuration.
 
 ## What Changes
 
 - **Configurable Hostname & mDNS Name**:
-  - Store a custom `hostname` in NVS configuration (defaulting to `"bc250-switch"` if empty).
+  - Store a custom `hostname` in NVS configuration (defaulting to `"bc-awake"` if empty).
   - Enforce RFC 1123 hostname validation (1–32 lowercase alphanumeric characters and hyphens, no leading/trailing hyphens).
   - Register the custom hostname with DHCP via `WiFi.setHostname()` and mDNS via `MDNS.begin()`.
   - Expose `hostname` in `/api/status` and allow updating it via `/api/network` (protected: rejected with `403 Forbidden` while host is powered on).
@@ -34,7 +34,7 @@ To solve this, users need to configure a custom hostname for both DHCP and mDNS,
 
 ## Impact
 
-- **Firmware (`include/config.h`, `src/config.cpp`)**: Add `hostname` field to `Config`, default to `"bc250-switch"`, with NVS persistence and validation.
+- **Firmware (`include/config.h`, `src/config.cpp`)**: Add `hostname` field to `Config`, default to `"bc-awake"`, with NVS persistence and validation.
 - **Firmware (`src/network_wake.cpp`, `include/network_wake.h`)**: Add UDP listener on port 25025 to process `"BC250_DISCOVER"` and send unicast JSON v1 response across power states; use configured hostname in `WiFi.setHostname()` and `MDNS.begin()`.
 - **Firmware (`src/portal.cpp`)**: Include `hostname` in `/api/status`, accept `hostname` in `/api/network`, and enforce validation.
 - **Web Interface (`app/index.html`, `include/portal_html.h`)**: Add hostname field in Network settings card and rebuild embedded HTML asset.

@@ -41,7 +41,7 @@ See [proposal.md](file:///Users/ffosilva/repos/ffosilva/bc250-esp32-switch/opens
 
 ### 2. Credential Identity & Empty Username
 - **Decision:** Use a single-password form structure with no pre-filled dummy username. An empty username input `<input type="text" name="username" value="" autocomplete="username" style="display:none" tabindex="-1" aria-hidden="true" />` or direct password-only form will be used to signal an empty/blank username identity.
-- **Rationale:** Modern password managers (iCloud Keychain, Chrome Password Manager, Bitwarden, 1Password) support single-password credentials scoped to the web origin (e.g. `bc250-switch.local` or `192.168.4.1`). If the browser prompts for a username, the field remains empty for the user to confirm or leave blank, per the user's explicit preference.
+- **Rationale:** Modern password managers (iCloud Keychain, Chrome Password Manager, Bitwarden, 1Password) support single-password credentials scoped to the web origin (e.g. `bc-awake.local` or `192.168.4.1`). If the browser prompts for a username, the field remains empty for the user to confirm or leave blank, per the user's explicit preference.
 - **Alternatives considered:** Hardcoding `value="admin"`. Rejected per user decision.
 
 ### 3. Dynamic Autocomplete & Name Configuration

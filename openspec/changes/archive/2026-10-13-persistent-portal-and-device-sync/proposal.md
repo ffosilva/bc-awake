@@ -9,7 +9,7 @@ To allow users to power down the BC250 without losing network wake or web manage
 ## What Changes
 
 - **Continuous Web Portal & REST API**: Run the HTTP web server (`AsyncWebServer`) 24/7 over Wi-Fi Station (STA) in normal mode, reserving SoftAP for unconfigured or recovery mode.
-- **mDNS Hostname Advertising**: Announce `bc250-switch.local` on the local network so clients and services can reliably reach the ESP32 across IP changes.
+- **mDNS Hostname Advertising**: Announce `bc-awake.local` on the local network so clients and services can reliably reach the ESP32 across IP changes.
 - **Dynamic Wi-Fi MAC Address Switching**:
   - While the board is in `STATE_OFF`, set the ESP32 Wi-Fi Station interface to the configured Wi-Fi dongle MAC (`bc250Mac`).
   - When the board transitions to `STATE_BOOTING` or `STATE_ON`, switch the ESP32 Wi-Fi Station interface back to the factory ESP32 MAC.
@@ -31,7 +31,7 @@ To allow users to power down the BC250 without losing network wake or web manage
 
 ### Modified Capabilities
 - `network-wake`: Add dynamic Wi-Fi Station MAC address switching based on power state (`STATE_OFF` vs `STATE_ON`).
-- `setup-portal`: Run the web portal and REST API continuously over Wi-Fi Station in normal mode, advertise `bc250-switch.local` via mDNS, expose board power state, and enforce read-only Wi-Fi and sensing lockouts while the host board is powered on.
+- `setup-portal`: Run the web portal and REST API continuously over Wi-Fi Station in normal mode, advertise `bc-awake.local` via mDNS, expose board power state, and enforce read-only Wi-Fi and sensing lockouts while the host board is powered on.
 
 ## Impact
 

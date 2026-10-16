@@ -4,7 +4,7 @@
 
 See `proposal.md` for motivation. Currently in `include/board.h`:
 ```cpp
-const char *const AP_SSID = "BC250 Switch Setup";
+const char *const AP_SSID = "BC Awake Setup";
 ```
 And in `src/portal.cpp`:
 ```cpp
@@ -41,4 +41,4 @@ All devices running the firmware broadcast this identical name when placed into 
 
 ## Risks / Trade-offs
 
-- **[Risk] Existing documentation referencing `BC250 Switch Setup` becomes outdated** → **Mitigation**: Update all specification files, and ensure the serial log explicitly outputs `[PORTAL] softAP ret=%d ssid='%s'` on boot.
+- **[Risk] Existing documentation referencing `BC Awake Setup` becomes outdated** → **Mitigation**: Update all specification files, and ensure the serial log explicitly outputs `[PORTAL] softAP ret=%d ssid='%s'` on boot.

@@ -34,10 +34,10 @@ def discover_esp32(timeout=2.0, port=DISCOVERY_PORT):
             try:
                 data, addr = s.recvfrom(1024)
                 info = json.loads(data.decode("utf-8"))
-                if info.get("device") == "bc250-switch":
+                if info.get("device") == "bc-awake":
                     ip = info.get("ip") or addr[0]
                     web_port = info.get("port", 80)
-                    hostname = info.get("hostname", "bc250-switch")
+                    hostname = info.get("hostname", "bc-awake")
                     print(f"[SYNC] Discovered {info.get('device')} ({hostname}) at {ip}:{web_port} (state: {info.get('boardState')})")
                     return f"http://{ip}:{web_port}"
             except (json.JSONDecodeError, UnicodeDecodeError):
@@ -101,7 +101,7 @@ def api_request(url, path, method="GET", body=None, token=None, timeout=10):
 
 def main():
     parser = argparse.ArgumentParser(description="Synchronize BlueZ Bluetooth devices to BC250 ESP32 switch")
-    parser.add_argument("--url", default=None, help="ESP32 URL (default: http://bc250-switch.local)")
+    parser.add_argument("--url", default=None, help="ESP32 URL (default: http://bc-awake.local)")
     parser.add_argument("--password", default=None, help="Portal password")
     parser.add_argument("--config", default=None, help="Path to config file")
     parser.add_argument("--dry-run", action="store_true", help="Inspect and display changes without applying")
@@ -131,8 +131,8 @@ def main():
         if discovered:
             url = discovered
         else:
-            print("[SYNC] Auto-discovery timed out; falling back to http://bc250-switch.local")
-            url = "http://bc250-switch.local"
+            print("[SYNC] Auto-discovery timed out; falling back to http://bc-awake.local")
+            url = "http://bc-awake.local"
 
     print(f"[SYNC] Connecting to ESP32 at {url}...")
 

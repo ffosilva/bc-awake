@@ -2,7 +2,7 @@
 
 ## Context
 
-See `proposal.md` for motivation. Currently, the ESP32 switch hardcodes `bc250-switch.local` for mDNS and only listens for UDP datagrams on ports 7 and 9 in `STATE_OFF` for Wake-on-LAN magic packets. The web server and REST API run continuously over Wi-Fi Station mode, but discovering the device requires either functional mDNS resolution or knowing its DHCP IP address.
+See `proposal.md` for motivation. Currently, the ESP32 switch hardcodes `bc-awake.local` for mDNS and only listens for UDP datagrams on ports 7 and 9 in `STATE_OFF` for Wake-on-LAN magic packets. The web server and REST API run continuously over Wi-Fi Station mode, but discovering the device requires either functional mDNS resolution or knowing its DHCP IP address.
 
 ## Goals / Non-Goals
 
@@ -34,8 +34,8 @@ See `proposal.md` for motivation. Currently, the ESP32 switch hardcodes `bc250-s
   ```json
   {
     "proto": "v1",
-    "device": "bc250-switch",
-    "hostname": "bc250-switch",
+    "device": "bc-awake",
+    "hostname": "bc-awake",
     "ip": "192.168.1.142",
     "mac": "24:6f:28:aa:bb:cc",
     "boardState": "OFF",
@@ -45,7 +45,7 @@ See `proposal.md` for motivation. Currently, the ESP32 switch hardcodes `bc250-s
   ```
 
 ### Decision 3: Hostname Validation and Storage
-- **Choice**: Persist `hostname` under key `"hostname"` in NVS namespace `"bc250"`, defaulting to `"bc250-switch"` if empty. Validate against RFC 1123 label rules: 1–32 characters, lowercase alphanumeric and hyphens, no consecutive or leading/trailing hyphens.
+- **Choice**: Persist `hostname` under key `"hostname"` in NVS namespace `"bc250"`, defaulting to `"bc-awake"` if empty. Validate against RFC 1123 label rules: 1–32 characters, lowercase alphanumeric and hyphens, no consecutive or leading/trailing hyphens.
 - **Rationale**: Prevents invalid mDNS / NetBIOS / DNS characters that could break local network resolution or router DHCP tables.
 - **API Enforcement**: Hostname is submitted via `/api/network`. If the host is in `STATE_ON` or `STATE_BOOTING`, the request is rejected with `403 Forbidden` (consistent with existing Wi-Fi settings lockouts). If invalid, rejected with `400 Bad Request`.
 

@@ -18,10 +18,10 @@ The system SHALL launch a WiFi SoftAP setup portal when explicitly requested by 
 - **THEN** the system clears forceSetup and restarts into normal operation mode
 
 ### Requirement: Captive Network and Web Serving
-The system SHALL broadcast an open WiFi SoftAP named 'BC250 Switch Setup' and serve the embedded setup interface from firmware memory without triggering captive network detection.
+The system SHALL broadcast an open WiFi SoftAP named 'BC Awake Setup' and serve the embedded setup interface from firmware memory without triggering captive network detection.
 
 #### Scenario: Client connects to setup network
-- **WHEN** a client associates with the BC250 Switch Setup access point
+- **WHEN** a client associates with the BC Awake Setup access point
 - **THEN** the system does not intercept DNS queries or trigger OS captive portal detection, and the web server serves embedded gzipped index.html directly from firmware memory with Content-Encoding: gzip at root path '/' without requiring a mounted filesystem
 
 #### Scenario: Unknown route handling
