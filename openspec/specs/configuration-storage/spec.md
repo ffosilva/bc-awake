@@ -10,7 +10,7 @@ The system SHALL store and retrieve configuration keys from non-volatile storage
 
 #### Scenario: Loading configuration at startup
 - **WHEN** the firmware boots
-- **THEN** the system reads controllers list, hostAddr, passHash, forceSetup, flashOnWake, wolEnabled, wifiSsid, wifiPassword, bc250Mac, and gracefulShutdown (using the 8-character NVS key 'graceful') from NVS Preferences, treating an absent key as disabled
+- **THEN** the system reads controllers list, hostAddr, passHash, forceSetup, flashOnWake, wolEnabled, wifiSsid, wifiPassword, bc250Mac, gracefulShutdown (using key 'graceful'), and provisioned (using key 'provisioned') from NVS Preferences, treating an absent key as disabled or false
 
 #### Scenario: Updating configuration values
 - **WHEN** any configuration setter is called
@@ -21,18 +21,18 @@ The system SHALL store and retrieve configuration keys from non-volatile storage
 - **THEN** the system imports the legacy address into the controllers list as a single bound controller and maintains wakeAddr mirroring
 
 ### Requirement: Provisioning Status Evaluation
-The system SHALL determine whether the device is fully provisioned based on required target-specific parameters.
+The system SHALL determine whether the device is fully provisioned based on explicit setup completion or required target-specific parameters.
 
 #### Scenario: Provisioned Classic Bluetooth device
-- **WHEN** passHash and hostAddr are non-empty strings and at least one bound controller exists in the controllers list on Classic BT targets
+- **WHEN** provisioned is true or (passHash and hostAddr are non-empty strings and at least one bound controller exists in the controllers list on Classic BT targets)
 - **THEN** isConfigured returns true
 
 #### Scenario: Provisioned BLE device
-- **WHEN** passHash and wakeAddr are both non-empty strings on BLE targets
+- **WHEN** provisioned is true or (passHash and wakeAddr are both non-empty strings on BLE targets)
 - **THEN** isConfigured returns true
 
 #### Scenario: Missing required parameters
-- **WHEN** any required parameter or the controller list is empty
+- **WHEN** provisioned is false and any required parameter or the controller list is empty
 - **THEN** isConfigured returns false
 
 ### Requirement: Configuration Reset to Factory Defaults
@@ -40,4 +40,4 @@ The system SHALL clear all persistent configuration keys in non-volatile storage
 
 #### Scenario: Resetting configuration to defaults
 - **WHEN** a configuration reset is triggered
-- **THEN** the system clears all stored keys in the 'bc250' NVS namespace, restores in-memory configuration to default values (empty controllers, empty hostAddr, empty passHash, empty wifiSsid, empty wifiPassword, empty bc250Mac, default hostname, flashOnWake enabled, wolEnabled disabled), sets forceSetup to true in NVS, and initiates a reboot into setup mode
+- **THEN** the system clears all stored keys in the 'bc250' NVS namespace, restores in-memory configuration to default values (empty controllers, empty hostAddr, empty passHash, empty wifiSsid, empty wifiPassword, empty bc250Mac, default hostname, flashOnWake enabled, wolEnabled disabled, provisioned disabled), sets forceSetup to true in NVS, and initiates a reboot into setup mode

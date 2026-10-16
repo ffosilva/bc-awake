@@ -26,7 +26,7 @@ The system SHALL launch a WiFi SoftAP setup portal automatically when unconfigur
 
 #### Scenario: Button held to exit setup portal
 - **WHEN** the momentary button is held continuously for 8000 ms while running in setup mode and in STATE_OFF
-- **THEN** the system clears forceSetup and transitions to normal operation mode
+- **THEN** the system clears forceSetup, sets provisioned to true, and transitions to normal operation mode
 
 ### Requirement: Captive Network and Web Serving
 The system SHALL broadcast an open WiFi SoftAP named 'BC250_<SUFFIX>', where <SUFFIX> is the 6-character uppercase hexadecimal representation of the last 3 bytes of the factory Wi-Fi MAC address, and serve the embedded setup interface from firmware memory without triggering captive network detection.
@@ -96,7 +96,7 @@ The system SHALL persist bound controller configurations and adapter addresses a
 - **THEN** the system saves the address to NVS and returns HTTP 200 OK
 
 #### Scenario: Adding bound controller
-- **WHEN** an authenticated POST request is sent to /api/controllers/add with a valid MAC address and non-empty friendly name
+- **WHEN** an authenticated POST request is sent to /api/controllers/add with a valid MAC address and non-empty name
 - **THEN** the system appends the controller to the bound list in NVS and returns HTTP 200 OK
 
 #### Scenario: Removing bound controller
@@ -113,11 +113,11 @@ The system SHALL persist bound controller configurations and adapter addresses a
 
 #### Scenario: Completing setup
 - **WHEN** an authenticated POST request is sent to /api/finish on a device with a portal password set
-- **THEN** the system clears forceSetup, returns HTTP 200 OK, and reboots into normal mode after 800 ms, regardless of whether an adapter address, bound controllers, or network wake settings are configured
+- **THEN** the system clears forceSetup, sets provisioned to true in NVS, returns HTTP 200 OK, and reboots into normal mode after 800 ms, regardless of whether an adapter address, bound controllers, or network wake settings are configured
 
 #### Scenario: Completing setup without authentication
 - **WHEN** a POST request is sent to /api/finish without a valid X-Auth-Token header
-- **THEN** the system rejects the request with HTTP status 401 Unauthorized and does not clear forceSetup
+- **THEN** the system rejects the request with HTTP status 401 Unauthorized and does not clear forceSetup or modify provisioned state
 
 ### Requirement: Captive Portal User Interface Resilience
 The setup web interface SHALL perform all user input entry, editing, and confirmations via in-page DOM elements without relying on browser-native dialog prompts (`window.prompt`, `window.alert`, `window.confirm`).

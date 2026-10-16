@@ -566,6 +566,7 @@ static void handleFinish(AsyncWebServerRequest *req) {
     return;
   }
   setForceSetup(false);
+  setProvisioned(true);
   req->send(200, "application/json", "{\"ok\":true}");
   Serial.println("[PORTAL] setup complete, restarting into normal mode");
   g_restartAt = millis() + 800;
@@ -757,6 +758,7 @@ void portalLoop() {
   } else if (down && (millis() - pressStart) >= SETUP_HOLD_MS) {
     Serial.println("[PORTAL] button held, leaving setup mode");
     setForceSetup(false);
+    setProvisioned(true);
     delay(50);
     ESP.restart();
   }

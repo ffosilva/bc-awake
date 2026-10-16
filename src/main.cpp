@@ -469,6 +469,7 @@ static void normalLoop() {
     if (g_setupMode) {
       Serial.println("[ACT ] button held (>8s) while OFF in setup mode -> leaving setup mode");
       setForceSetup(false);
+      setProvisioned(true);
       delay(50);
       ESP.restart();
     } else {

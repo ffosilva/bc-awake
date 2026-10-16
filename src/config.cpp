@@ -3,7 +3,7 @@
 #include <Preferences.h>
 
 Config config{{},    "", "", "", false,      true,
-              false, "", "", "", "bc-awake", false};
+              false, "", "", "", "bc-awake", false, false};
 
 static Preferences prefs;
 static const char *NS = "bc250";
@@ -37,6 +37,7 @@ void loadConfig() {
   config.flashOnWake = prefs.getBool("flashOnWake", true);
   config.wolEnabled = prefs.getBool("wolEnabled", false);
   config.gracefulShutdown = prefs.getBool("graceful", false);
+  config.provisioned = prefs.getBool("provisioned", false);
   config.wifiSsid = prefs.getString("wifiSsid", "");
   config.wifiPassword = prefs.getString("wifiPassword", "");
   config.bc250Mac = prefs.getString("bc250Mac", "");
@@ -84,6 +85,19 @@ void loadConfig() {
     config.wakeAddr = config.controllers[0].mac;
   } else {
     config.wakeAddr = legacyWakeAddr;
+  }
+
+  if (!config.provisioned) {
+#if defined(WAKE_BLE)
+    if (config.passHash.length() > 0 && config.wakeAddr.length() > 0) {
+      setProvisioned(true);
+    }
+#else
+    if (config.passHash.length() > 0 && !config.controllers.empty() &&
+        config.hostAddr.length() > 0) {
+      setProvisioned(true);
+    }
+#endif
   }
 }
 
@@ -194,6 +208,13 @@ void setForceSetup(bool force) {
   prefs.end();
 }
 
+void setProvisioned(bool provisioned) {
+  config.provisioned = provisioned;
+  prefs.begin(NS, false);
+  prefs.putBool("provisioned", provisioned);
+  prefs.end();
+}
+
 void setFlashOnWake(bool enable) {
   config.flashOnWake = enable;
   prefs.begin(NS, false);
@@ -269,6 +290,9 @@ void setHostname(const String &hostname) {
 }
 
 bool isConfigured() {
+  if (config.provisioned) {
+    return true;
+  }
 #if defined(WAKE_BLE)
   return config.passHash.length() > 0 && config.wakeAddr.length() > 0;
 #else
@@ -283,5 +307,5 @@ void resetConfig() {
   prefs.putBool("forceSetup", true);
   prefs.end();
 
-  config = {{}, "", "", "", true, true, false, "", "", "", "bc-awake", false};
+  config = {{}, "", "", "", true, true, false, "", "", "", "bc-awake", false, false};
 }

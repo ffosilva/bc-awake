@@ -42,6 +42,7 @@ struct Config {
   String bc250Mac;
   String hostname;
   bool gracefulShutdown;
+  bool provisioned;
 };
 
 extern Config config;
@@ -57,6 +58,7 @@ void setWakeAddr(const String &addr);
 void setHostAddr(const String &addr);
 void setPassHash(const String &hash);
 void setForceSetup(bool force);
+void setProvisioned(bool provisioned);
 void setFlashOnWake(bool enable);
 void setWolEnabled(bool enable);
 void setGracefulShutdown(bool enable);
