@@ -4,6 +4,9 @@
 
 # BC Awake
 
+[![GitHub Release](https://img.shields.io/github/v/release/ffosilva/bc-awake)](https://github.com/ffosilva/bc-awake/releases)
+[![Donate](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-ffdd00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/ffosilva)
+
 An ESP32 power controller for an AMD **BC250** board running as a desktop. The
 BC250 is fed from a PCI-E connector and has no ATX power button, so this firmware
 drives the SFX PSU's `PS_ON#` line and senses board power, giving you a real power
@@ -190,6 +193,14 @@ Once the device has been flashed with the dual-bank partition table via USB, all
   [include/board.h](include/board.h) (lowered automatically on ESP32-C3 to prevent the mini RF bug).
 - Serial debug runs at **115200** baud.
 - Pin assignments and all timing constants live in [include/board.h](include/board.h).
+
+## Support
+
+If you find BC Awake useful and would like to support its ongoing development, consider buying me a coffee:
+
+<a href="https://buymeacoffee.com/ffosilva" target="_blank">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="200">
+</a>
 
 ## License
 
