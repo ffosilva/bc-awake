@@ -250,24 +250,7 @@ static void applyStateMacChange(bool isOff) {
   WiFi.disconnect(true);
   delay(50);
 
-  esp_err_t err = esp_wifi_set_mac(WIFI_IF_STA, targetMac);
-  if (err != ESP_OK) {
-    Serial.printf("[WOL ] Failed to set MAC: %d\n", err);
-  }
-
-  WiFi.mode(WIFI_STA);
-  WiFi.setAutoReconnect(true);
-  const char *host =
-      config.hostname.isEmpty() ? "bc-awake" : config.hostname.c_str();
-  WiFi.setHostname(host);
-  if (config.wifiPassword.isEmpty()) {
-    WiFi.begin(config.wifiSsid.c_str());
-  } else {
-    WiFi.begin(config.wifiSsid.c_str(), config.wifiPassword.c_str());
-  }
-  WiFi.setTxPower(AP_TX_POWER);
-  g_wasConnected = false;
-  g_connectStart = millis();
+  networkWakeBegin(isOff);
   g_lastReconnectCheck = millis();
 }
 
