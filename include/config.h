@@ -19,7 +19,7 @@ const size_t MAX_CONTROLLERS = 8;
 //   controllers[0]). hostAddr    - BC250 Bluetooth adapter BD_ADDR (Classic BT
 //   only). passHash    - SHA-256 hex of the portal password ("" => not set
 //   yet). forceSetup  - request that the next boot enters the WiFi setup
-//   portal. flashOnWake - pulse ESP32-CAM flash LED upon controller wake.
+//   portal.
 //   wolEnabled  - enable Wake-on-LAN listener over Wi-Fi station mode.
 //   wifiSsid    - Wi-Fi network SSID to connect to in normal mode.
 //   wifiPassword- Wi-Fi network password (empty for open networks).
@@ -35,7 +35,6 @@ struct Config {
   String hostAddr;
   String passHash;
   bool forceSetup;
-  bool flashOnWake;
   bool wolEnabled;
   String wifiSsid;
   String wifiPassword;
@@ -59,7 +58,6 @@ void setHostAddr(const String &addr);
 void setPassHash(const String &hash);
 void setForceSetup(bool force);
 void setProvisioned(bool provisioned);
-void setFlashOnWake(bool enable);
 void setWolEnabled(bool enable);
 void setGracefulShutdown(bool enable);
 void setWifiConfig(const String &ssid, const String &password,

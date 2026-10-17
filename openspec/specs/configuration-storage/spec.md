@@ -10,7 +10,7 @@ The system SHALL store and retrieve configuration keys from non-volatile storage
 
 #### Scenario: Loading configuration at startup
 - **WHEN** the firmware boots
-- **THEN** the system reads controllers list, hostAddr, passHash, forceSetup, flashOnWake, wolEnabled, wifiSsid, wifiPassword, bc250Mac, gracefulShutdown (using key 'graceful'), and provisioned (using key 'provisioned') from NVS Preferences, treating an absent key as disabled or false
+- **THEN** the system reads controllers list, hostAddr, passHash, forceSetup, wolEnabled, wifiSsid, wifiPassword, bc250Mac, gracefulShutdown (using key 'graceful'), and provisioned (using key 'provisioned') from NVS Preferences, treating an absent key as disabled or false
 
 #### Scenario: Updating configuration values
 - **WHEN** any configuration setter is called
@@ -40,4 +40,4 @@ The system SHALL clear all persistent configuration keys in non-volatile storage
 
 #### Scenario: Resetting configuration to defaults
 - **WHEN** a configuration reset is triggered
-- **THEN** the system clears all stored keys in the 'bc250' NVS namespace, restores in-memory configuration to default values (empty controllers, empty hostAddr, empty passHash, empty wifiSsid, empty wifiPassword, empty bc250Mac, default hostname, flashOnWake enabled, wolEnabled disabled, provisioned disabled), sets forceSetup to true in NVS, and initiates a reboot into setup mode
+- **THEN** the system clears all stored keys in the 'bc250' NVS namespace, restores in-memory configuration to default values (empty controllers, empty hostAddr, empty passHash, empty wifiSsid, empty wifiPassword, empty bc250Mac, default hostname, wolEnabled disabled, provisioned disabled), sets forceSetup to true in NVS, and initiates a reboot into setup mode

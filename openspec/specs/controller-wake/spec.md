@@ -24,11 +24,15 @@ The system SHALL inhibit controller wake triggers for a defined cooldown duratio
 - **THEN** the system ignores the wake signal and remains in STATE_OFF
 
 ### Requirement: Classic Bluetooth Host Impersonation
-The system SHALL run page listening under the host PC's adapter MAC address and reject incoming connection requests on Classic Bluetooth targets.
+The system SHALL run page listening under the host PC's adapter MAC address and reject incoming connection requests on Classic Bluetooth targets, requesting the remote device name on incoming connection requests only while interactive controller pairing listener mode is active.
 
 #### Scenario: Controller pages the host adapter
-- **WHEN** a paired controller attempts a connection to the host adapter MAC while the machine is in STATE_OFF
-- **THEN** the system checks if the sender MAC matches any bound controller, marks presence if matched, immediately rejects the HCI connection request without link authentication, and powers on the machine if matched
+- **WHEN** a paired controller attempts a connection to the host adapter MAC while the machine is in STATE_OFF and interactive pairing mode is not active
+- **THEN** the system checks if the sender MAC matches any bound controller, marks presence if matched, immediately rejects the HCI connection request without link authentication or remote name request, and powers on the machine if matched
+
+#### Scenario: Controller pages during active pairing listener
+- **WHEN** a controller attempts a connection to the host adapter MAC while interactive controller pairing listener mode is active in STATE_OFF
+- **THEN** the system records the incoming controller details, requests the remote device name if not yet cached, and immediately rejects the HCI connection request
 
 #### Scenario: System transitions out of STATE_OFF
 - **WHEN** the system leaves STATE_OFF into STATE_BOOTING or STATE_ON
@@ -40,17 +44,6 @@ The system SHALL continuously scan for advertising packets matching any controll
 #### Scenario: BLE advertisement detected
 - **WHEN** an advertisement matching any controller present in the bound controllers list is received while in STATE_OFF
 - **THEN** the system updates the last-seen timestamp and initiates power-on if cooldown has expired
-
-### Requirement: ESP32-CAM Flash LED Wake Pulse
-The system SHALL pulse the onboard white flash LED (GPIO 4) specifically on the AI-Thinker ESP32-CAM board upon a controller wake event when flashOnWake is enabled.
-
-#### Scenario: Flash LED pulse on ESP32-CAM wake
-- **WHEN** a controller wake occurs on an ESP32-CAM target with flashOnWake enabled
-- **THEN** the system illuminates the onboard flash LED on GPIO 4 for 500 ms
-
-#### Scenario: Flash LED disabled or non-CAM hardware target
-- **WHEN** a controller wake occurs and the device is not an ESP32-CAM target or flashOnWake is disabled
-- **THEN** the system does not illuminate any flash indicator LED
 
 ### Requirement: Pairing Mode Wake Inhibitor
 The system SHALL inhibit controller wake triggers and network wake triggers while interactive controller pairing mode is active, even when a connection request is received from an already-bound controller.

@@ -2,7 +2,7 @@
 #include <ArduinoJson.h>
 #include <Preferences.h>
 
-Config config{{},    "", "", "", false,      true,
+Config config{{},    "", "", "", false,
               false, "", "", "", "bc-awake", false, false};
 
 static Preferences prefs;
@@ -34,7 +34,6 @@ void loadConfig() {
   config.hostAddr = prefs.getString("hostAddr", "");
   config.passHash = prefs.getString("passHash", "");
   config.forceSetup = prefs.getBool("forceSetup", false);
-  config.flashOnWake = prefs.getBool("flashOnWake", true);
   config.wolEnabled = prefs.getBool("wolEnabled", false);
   config.gracefulShutdown = prefs.getBool("graceful", false);
   config.provisioned = prefs.getBool("provisioned", false);
@@ -215,13 +214,6 @@ void setProvisioned(bool provisioned) {
   prefs.end();
 }
 
-void setFlashOnWake(bool enable) {
-  config.flashOnWake = enable;
-  prefs.begin(NS, false);
-  prefs.putBool("flashOnWake", enable);
-  prefs.end();
-}
-
 void setWolEnabled(bool enable) {
   config.wolEnabled = enable;
   prefs.begin(NS, false);
@@ -307,5 +299,5 @@ void resetConfig() {
   prefs.putBool("forceSetup", true);
   prefs.end();
 
-  config = {{}, "", "", "", true, true, false, "", "", "", "bc-awake", false, false};
+  config = {{}, "", "", "", true, false, "", "", "", "bc-awake", false, false};
 }

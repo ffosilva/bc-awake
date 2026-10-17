@@ -34,10 +34,9 @@ const int BOARD_SENSE = 13;
 // hold GPIO2 HIGH during download-mode entry.
 const int PWR_BTN_PIN = 2;
 
-// Onboard white flashlight LED (GPIO 4). Pulsed as indicator when the
-// Bluetooth controller wakes the machine.
+// Onboard white flashlight LED (GPIO 4). Clamped LOW so it never illuminates
+// or floats due to SD card trace leakage.
 const int FLASH_LED = 4;
-const unsigned long FLASH_DURATION_MS = 500;
 
 #elif defined(BOARD_ESP32C3)
 // ESP32-C3 DevKitM-1 wiring:
@@ -119,6 +118,11 @@ const unsigned long LONG_PRESS_MS = 5000;
 // bound controller / password). Longer than LONG_PRESS_MS and only armed for
 // presses that begin while OFF, so it never collides with force-off.
 const unsigned long SETUP_HOLD_MS = 8000;
+
+// TPMS1 must stay HIGH continuously for this long during boot before we
+// confirm the board is up (STATE_BOOTING -> STATE_ON). Rejects PSU turn-on
+// EMI spikes.
+const unsigned long BOARD_ON_DEBOUNCE_MS = 250;
 
 // TPMS1 must stay LOW continuously for this long before we treat the board as
 // having shut itself down. Filters out brief dips/transients during boot/reset.

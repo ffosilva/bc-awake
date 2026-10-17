@@ -104,12 +104,6 @@ static void handleStatus(AsyncWebServerRequest *req) {
   doc["hostname"] = config.hostname.isEmpty() ? "bc-awake" : config.hostname;
   doc["boardState"] = getBoardStateName();
   doc["gracefulShutdown"] = config.gracefulShutdown;
-#if defined(BOARD_ESP32CAM)
-  doc["isCam"] = true;
-  doc["flashOnWake"] = config.flashOnWake;
-#else
-  doc["isCam"] = false;
-#endif
 
   JsonArray arr = doc["controllers"].to<JsonArray>();
   for (const auto &c : config.controllers) {
@@ -286,11 +280,6 @@ static void handleListenerStart(AsyncWebServerRequest *req) {
 #if !defined(WAKE_BLE)
   btListenerStart();
 #endif
-#if defined(BOARD_ESP32CAM)
-  if (config.flashOnWake) {
-    triggerFlashBurst(3, 60, 60);
-  }
-#endif
   Serial.println("[PORTAL] pairing listener started (60s timeout)");
   req->send(200, "application/json", "{\"ok\":true}");
 }
@@ -412,21 +401,6 @@ static void handleControllersRename(AsyncWebServerRequest *req,
   }
   Serial.printf("[PORTAL] renamed controller %s to %s\n", mac.c_str(),
                 name.c_str());
-  req->send(200, "application/json", "{\"ok\":true}");
-}
-
-static void handleSettings(AsyncWebServerRequest *req, JsonVariant &json) {
-  if (!authed(req)) {
-    sendJsonError(req, 401, "unauthorized");
-    return;
-  }
-#if defined(BOARD_ESP32CAM)
-  JsonObject o = json.as<JsonObject>();
-  if (o["flashOnWake"].is<bool>()) {
-    setFlashOnWake(o["flashOnWake"].as<bool>());
-    Serial.printf("[PORTAL] flashOnWake=%d\n", config.flashOnWake ? 1 : 0);
-  }
-#endif
   req->send(200, "application/json", "{\"ok\":true}");
 }
 
@@ -687,8 +661,6 @@ static void registerRoutes() {
                                                     handleControllersRemove));
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/controllers/rename",
                                                     handleControllersRename));
-  server.addHandler(
-      new AsyncCallbackJsonWebHandler("/api/settings", handleSettings));
   server.addHandler(
       new AsyncCallbackJsonWebHandler("/api/network", handleNetwork));
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/power", handlePower));

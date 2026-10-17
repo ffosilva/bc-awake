@@ -351,8 +351,8 @@ static int onHostRecv(uint8_t *data, uint16_t len) {
 
         recordDevice(p, "", 0, cod, true);  // learn mode: paired controllers
 
-        // If listener doesn't have a name yet, immediately request remote name
-        if (listenerResult.name[0] == 0) {
+        // If listener is active and doesn't have a name yet, immediately request remote name
+        if (listenerActive && listenerResult.name[0] == 0) {
           uint8_t req[10] = {0};
           memcpy(req, p, 6);
           req[6] = 0x01;  // R1

@@ -567,18 +567,6 @@
         </div>
         <div class="msg" id="dev-msg"></div>
       </div>
-
-      <!-- ESP32-CAM Flash LED wake option (hidden on other boards) -->
-      <div class="card hidden" id="cam-options">
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--fg);margin:0">
-          <input type="checkbox" id="flash-on-wake"
-            style="width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--accent)" />
-          <span>Blink flash LED on Bluetooth wake</span>
-        </label>
-        <div class="help" style="margin-top:6px;font-size:11px">
-          Blinks the onboard white LED once (500 ms) when the machine is woken up by your controller.
-        </div>
-      </div>
     </div>
 
     <!-- Panel 2: Network -->
@@ -827,7 +815,6 @@
     let needsHost = true;
     let gracefulSaved = false;  // persisted graceful-shutdown setting
     let mode = "classic";
-    let isCam = false;
     let isSetupMode = false;
     let boundControllers = [];
     let detectedMac = "";
@@ -1515,12 +1502,6 @@
       }
     };
 
-    $("flash-on-wake").onchange = async () => {
-      try {
-        await api("/api/settings", "POST", { flashOnWake: $("flash-on-wake").checked });
-      } catch (e) { /* ignore */ }
-    };
-
     // --- Network tab ---
     let stHasSavedPass = false;
 
@@ -1869,11 +1850,6 @@
         if (st.wakeAddr) $("subtitle").textContent = "Configured: " + st.wakeAddr;
         if (st.needsHost !== undefined) needsHost = !!st.needsHost;
         if (st.mode) mode = st.mode;
-        isCam = !!st.isCam;
-        if (isCam) {
-          $("cam-options").classList.remove("hidden");
-          $("flash-on-wake").checked = st.flashOnWake !== false;
-        }
         if (st.setupMode !== undefined) isSetupMode = !!st.setupMode;
         initPassScreen(st.passwordSet);
       } catch (e) {

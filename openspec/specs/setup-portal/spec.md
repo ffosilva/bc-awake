@@ -81,8 +81,8 @@ The system SHALL capture incoming connection requests during setup to provide re
 - **THEN** the system automatically terminates the listener session, deactivates pairing wake inhibition, and returns timedOut as true in subsequent /api/listener/status queries
 
 #### Scenario: Rapid flash burst on ESP32-CAM pairing start
-- **WHEN** an authenticated POST request is sent to /api/listener/start on an ESP32-CAM target with flashOnWake enabled
-- **THEN** the system pulses the onboard flash LED (GPIO 4) with 3 rapid flashes of 60 ms on and 60 ms off
+- **WHEN** an authenticated POST request is sent to /api/listener/start on an ESP32-CAM target
+- **THEN** the system starts the listener session while keeping the onboard flash LED (GPIO 4) LOW without pulsing
 
 #### Scenario: Attempting to start listener while host machine is on
 - **WHEN** an authenticated POST request is sent to /api/listener/start while the host is in STATE_BOOTING or STATE_ON
@@ -285,7 +285,7 @@ After authentication, the portal web interface SHALL present its settings in fou
 
 #### Scenario: Tab contents
 - **WHEN** the tabbed view is displayed
-- **THEN** the Bluetooth tab contains the adapter address (Classic targets), bound controllers or BLE picker, and the ESP32-CAM flash option when applicable; the Network tab contains Wake-on-LAN, Wi-Fi, hostname, and BC250 Ethernet MAC settings; the Power tab contains live power state telemetry, ATX power supply controls (Power On and Force Cut Power with confirmation), and motherboard power button settings and pulse action; the System tab contains firmware information and update, password change, configuration reset, and the exit setup action
+- **THEN** the Bluetooth tab contains the adapter address (Classic targets) and bound controllers or BLE picker; the Network tab contains Wake-on-LAN, Wi-Fi, hostname, and BC250 Ethernet MAC settings; the Power tab contains live power state telemetry, ATX power supply controls (Power On and Force Cut Power with confirmation), and motherboard power button settings and pulse action; the System tab contains firmware information and update, password change, configuration reset, and the exit setup action
 
 ### Requirement: Non-Blocking Configuration Warnings
 The portal web interface SHALL indicate missing optional configuration as non-blocking warnings rather than preventing navigation or completion.

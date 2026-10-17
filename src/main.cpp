@@ -89,63 +89,30 @@ static void setState(PowerState next) {
   networkWakeOnStateChanged(next == STATE_OFF);
 }
 
+// Raw (pre-time-debounce) board-up level, filtered against transient spikes.
+static bool senseLevel = false;
+
 #if defined(BOARD_ESP32CAM)
 // ESP32-CAM: GPIO13 is on ADC2, which cannot be sampled while Bluetooth is
 // running. It is also shared with SD DAT3 which floats HIGH unless pulled down.
-// We configure GPIO13 with INPUT_PULLDOWN and read it digitally.
+// We configure GPIO13 with INPUT_PULLDOWN and require unanimous agreement
+// across SENSE_OVERSAMPLE consecutive digital reads before changing state.
 static bool readBoardSense(uint32_t *outMv = nullptr) {
-  bool high = (digitalRead(BOARD_SENSE) == HIGH);
-  if (outMv) *outMv = high ? 3300 : 0;
-  return high;
-}
-
-// Flash LED indicator pulse tracking (GPIO 4)
-static unsigned long flashUntil = 0;
-static int           flashBurstRemaining = 0;
-static unsigned long flashBurstNext = 0;
-static unsigned long flashBurstOnMs = 60;
-static unsigned long flashBurstOffMs = 60;
-static bool          flashBurstState = false;
-
-static void triggerFlash(unsigned long durationMs = FLASH_DURATION_MS) {
-  flashBurstRemaining = 0;
-  digitalWrite(FLASH_LED, HIGH);
-  flashUntil = millis() + durationMs;
-  Serial.println("[LED ] Flash LED ON (controller wake pulse)");
-}
-
-void triggerFlashBurst(int count, unsigned long onMs, unsigned long offMs) {
-  flashUntil = 0;
-  flashBurstRemaining = count * 2;
-  flashBurstOnMs = onMs;
-  flashBurstOffMs = offMs;
-  flashBurstState = true;
-  digitalWrite(FLASH_LED, HIGH);
-  flashBurstNext = millis() + onMs;
-  Serial.printf("[LED ] Flash LED burst started (%d pulses)\n", count);
-}
-
-static void updateFlash(unsigned long now) {
-  if (flashUntil && (long)(now - flashUntil) >= 0) {
-    digitalWrite(FLASH_LED, LOW);
-    flashUntil = 0;
-  }
-  if (flashBurstRemaining > 0 && (long)(now - flashBurstNext) >= 0) {
-    flashBurstRemaining--;
-    if (flashBurstRemaining == 0) {
-      digitalWrite(FLASH_LED, LOW);
-      flashBurstState = false;
-    } else {
-      flashBurstState = !flashBurstState;
-      digitalWrite(FLASH_LED, flashBurstState ? HIGH : LOW);
-      flashBurstNext = now + (flashBurstState ? flashBurstOnMs : flashBurstOffMs);
+  int highCount = 0;
+  for (int i = 0; i < SENSE_OVERSAMPLE; i++) {
+    if (digitalRead(BOARD_SENSE) == HIGH) {
+      highCount++;
     }
   }
+  if (highCount == SENSE_OVERSAMPLE) {
+    senseLevel = true;
+  } else if (highCount == 0) {
+    senseLevel = false;
+  }
+  if (outMv) *outMv = senseLevel ? 3300 : 0;
+  return senseLevel;
 }
 #else
-// Raw (pre-time-debounce) board-up level, derived from the TPMS1 voltage with
-// hysteresis so a signal hovering near the logic threshold doesn't chatter.
-static bool senseLevel = false;
 
 // One ADC sample in mV. The classic ESP32's analogReadMilliVolts() needs an eFuse
 // calibration (vref) that many modules never had burned; without it every read
@@ -286,11 +253,6 @@ static void powerOff(const char *reason, unsigned long now) {
   psuOff();
   pwrPulseActive = false;
   pwrBtnRelease("powering off");
-#if defined(BOARD_ESP32CAM)
-  digitalWrite(FLASH_LED, LOW);
-  flashUntil = 0;
-  flashBurstRemaining = 0;
-#endif
   wakeInhibitUntil = now + WAKE_WAKE_COOLDOWN_MS;
   setState(STATE_OFF);
 }
@@ -406,10 +368,6 @@ void setup() {
 static void normalLoop() {
   unsigned long now = millis();
 
-#if defined(BOARD_ESP32CAM)
-  updateFlash(now);
-#endif
-
   // --- Serial commands for debugging ---
   while (Serial.available()) {
     char c = Serial.read();
@@ -489,11 +447,6 @@ static void normalLoop() {
   bool wakePresent = wakeSeen(&wakeLast) && (now - wakeLast) < WAKE_PRESENCE_TIMEOUT_MS;
   bool wakeInhibited = ((int32_t)(wakeInhibitUntil - now) > 0) || portalIsPairingActive();
   if (state == STATE_OFF && wakePresent && !wakeInhibited) {
-#if defined(BOARD_ESP32CAM)
-    if (config.flashOnWake) {
-      triggerFlash();
-    }
-#endif
     powerOn("controller present", now);
   }
 
@@ -502,17 +455,12 @@ static void normalLoop() {
   unsigned long wolLast = 0;
   bool wolPresent = networkWakeSeen(&wolLast);
   if (state == STATE_OFF && wolPresent && !wakeInhibited) {
-#if defined(BOARD_ESP32CAM)
-    if (config.flashOnWake) {
-      triggerFlash();
-    }
-#endif
     powerOn("WOL magic packet", now);
   }
 
   bool boardChanged = debounce(boardRaw, &boardSenseStable, &boardSenseLastRaw,
                                &boardSenseChange, now,
-                               state == STATE_BOOTING ? DEBOUNCE_MS
+                               state == STATE_BOOTING ? BOARD_ON_DEBOUNCE_MS
                                                       : BOARD_OFF_DEBOUNCE_MS);
 
   // --- State-driven board-sense handling ---

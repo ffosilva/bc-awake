@@ -17,7 +17,7 @@ active PlatformIO environment (`esp32dev`, `esp32cam`, or `esp32-c3-devkitm-1`).
 | `PS_ON_PIN` | **GPIO32** | **GPIO14** | **GPIO4** | ATX `PS_ON#` (green wire) | **Open-drain**, active LOW: LOW = PSU on, released = off |
 | `BOARD_SENSE` | **GPIO34** | **GPIO13** | **GPIO3** | BC250 `TPMS1` pin 9 | ~3.3 V when up, 0 when off (DevKitC/C3: ADC with hysteresis; CAM: digital INPUT_PULLDOWN) |
 | `PWR_BTN_PIN` | **GPIO27** | **GPIO2** | **GPIO7** | Motherboard `PWR_BTN#` (optional) | Direct wire, idles ~3.4 V. High-Z input; pulled LOW only while mirroring the button or sending a 300 ms shutdown pulse; never driven HIGH |
-| `FLASH_LED` | — | **GPIO4** | — | Onboard white LED | Flashes 500 ms when controller wakes the PC (configurable in portal) |
+| `FLASH_LED` | — | **GPIO4** | — | Onboard white LED | Held permanently LOW so the onboard flash LED never illuminates |
 | `5V` / `VIN` | **5V** | **5V** | **5V** | PSU `+5VSB` | Permanent power for the ESP |
 | `GND` | **GND** | **GND** | **GND** | PSU GND + board GND | Common ground |
 
@@ -42,7 +42,7 @@ active PlatformIO environment (`esp32dev`, `esp32cam`, or `esp32-c3-devkitm-1`).
 - **GPIO14** is free from strapping functions and used as open-drain for `PS_ON#`.
 - **GPIO15** has an internal pull-up and is used for `BUTTON_SENSE`. Terminal B connects directly to the header `GND` pin (saving a GPIO pin).
 - **GPIO2** is the optional `PWR_BTN_PIN` (header-exposed; wired to SD DAT0, unused by this firmware). It is a strapping pin, but its value is ignored during a normal boot (GPIO0 high). See [`PWR_BTN#` wiring](#optional-pwr_btn-graceful-shutdown-wiring) for the UART-flashing caveat.
-- **GPIO4** drives the onboard high-power white LED (500 ms indicator pulse when controller wake is triggered; can be toggled via setup portal).
+- **GPIO4** is connected to the onboard high-power white flash LED transistor and is clamped permanently LOW at startup so it never illuminates or floats.
 - **Pins avoided on ESP32-CAM**:
   - `GPIO12`: Strapping pin MTDI (if pulled HIGH at boot by 3.3 V TPMS1, sets flash VDD to 1.8 V and prevents boot).
   - `GPIO16`: Connected to the external PSRAM chip CS line.
