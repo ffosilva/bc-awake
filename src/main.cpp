@@ -30,12 +30,6 @@
 //     advertisement). Detecting it counts as "controller present", which wakes the
 //     machine just like a button tap.
 
-enum PowerState {
-  STATE_OFF,      // PSU released, board down
-  STATE_BOOTING,  // PSU asserted, waiting for TPMS1 to go HIGH
-  STATE_ON,       // PSU asserted, board up (TPMS1 HIGH)
-};
-
 static PowerState state = STATE_OFF;
 
 // --- Button debounce / press tracking ---
@@ -94,7 +88,7 @@ static void setState(PowerState next) {
     wakeSetDiscovery(false);
     if (wakeActive) wakeSetConnectable(false);
   }
-  networkWakeOnStateChanged(next == STATE_OFF);
+  networkWakeOnStateChanged(next);
 }
 
 // Raw (pre-time-debounce) board-up level, filtered against transient spikes.

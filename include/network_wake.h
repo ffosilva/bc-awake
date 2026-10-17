@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "board.h"
 
 // Initializes network wake subsystem:
 // Starts Wi-Fi in STA mode and binds the WOL UDP listener if wolEnabled is true and wifiSsid is set.
@@ -8,7 +9,7 @@
 bool networkWakeBegin(bool isOff = true);
 
 // Power state change notification to swap Station MAC dynamically between dongle MAC (OFF) and factory MAC (ON).
-void networkWakeOnStateChanged(bool isOff);
+void networkWakeOnStateChanged(PowerState state);
 
 // Polling loop for non-blocking Wi-Fi station management and incoming WOL magic packet processing.
 void networkWakeLoop();

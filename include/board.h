@@ -106,6 +106,14 @@ const int SENSE_OVERSAMPLE = 16;
 const int PS_ON_ASSERT = LOW;   // PSU on
 const int PS_ON_RELEASE = HIGH; // PSU off (open-drain -> high-Z)
 
+//*******  Power states  ***************
+
+enum PowerState {
+  STATE_OFF,      // PSU released, board down
+  STATE_BOOTING,  // PSU asserted, waiting for TPMS1 to go HIGH
+  STATE_ON,       // PSU asserted, board up (TPMS1 HIGH)
+};
+
 //*******  Timing (milliseconds)  ***************
 
 // Switch debounce window.

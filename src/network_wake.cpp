@@ -30,7 +30,7 @@ static const unsigned long WIFI_FALLBACK_TIMEOUT_MS = 20000;
 static uint8_t g_defaultMac[6] = {0};
 static bool g_defaultMacCached = false;
 
-static const unsigned long MAC_SWAP_DEFER_MS = 500;
+static const unsigned long MAC_SWAP_DEFER_MS = 5000;
 static bool g_pendingMacSwap = false;
 static bool g_pendingMacSwapIsOff = false;
 static unsigned long g_pendingMacSwapAt = 0;
@@ -178,6 +178,7 @@ bool networkWakeBegin(bool isOff) {
   }
 
   WiFi.mode(WIFI_STA);
+  esp_wifi_set_max_tx_power((int8_t)AP_TX_POWER);
   WiFi.setAutoReconnect(true);
   const char *host =
       config.hostname.isEmpty() ? "bc-awake" : config.hostname.c_str();
@@ -254,12 +255,18 @@ static void applyStateMacChange(bool isOff) {
   g_lastReconnectCheck = millis();
 }
 
-void networkWakeOnStateChanged(bool isOff) {
+void networkWakeOnStateChanged(PowerState state) {
   if (!config.wolEnabled || config.wifiSsid.isEmpty()) {
     return;
   }
+  if (state == STATE_BOOTING) {
+    // Keep Wi-Fi completely quiet during ATX PSU turn-on and VRM inrush
+    return;
+  }
+
   cacheDefaultMac();
 
+  bool isOff = (state == STATE_OFF);
   uint8_t targetMac[6];
   memcpy(targetMac, g_defaultMac, 6);
   if (isOff && !config.bc250Mac.isEmpty() &&
@@ -276,7 +283,7 @@ void networkWakeOnStateChanged(bool isOff) {
     return;
   }
 
-  if (!isOff) {
+  if (state == STATE_ON) {
     if (!g_pendingMacSwap || g_pendingMacSwapIsOff) {
       g_pendingMacSwap = true;
       g_pendingMacSwapIsOff = false;

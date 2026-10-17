@@ -6,11 +6,11 @@ Provides Wi-Fi station connectivity and Wake-on-LAN (WOL) magic packet intercept
 ## Requirements
 
 ### Requirement: Wi-Fi Station Management for Network Wake
-The system SHALL manage Wi-Fi station (STA) connectivity in normal operation mode when network wake is enabled, applying target Wi-Fi TX power limits and dynamically assigning the station MAC address according to host power state without overlapping ATX PSU turn-on inrush.
+The system SHALL manage Wi-Fi station (STA) connectivity in normal operation mode when network wake is enabled, applying target Wi-Fi TX power limits before connection initiation and dynamically assigning the station MAC address according to host power state without overlapping ATX PSU turn-on inrush or transient boot states.
 
 #### Scenario: Network wake enabled with configured Wi-Fi credentials
 - **WHEN** the system enters normal operation mode in STATE_OFF with wolEnabled set to true and a non-empty wifiSsid configured
-- **THEN** the system sets the Wi-Fi Station MAC address to the configured bc250Mac, initiates a non-blocking Wi-Fi station connection to the configured access point, and applies the target's configured Wi-Fi TX power limit
+- **THEN** the system sets the Wi-Fi Station MAC address to the configured bc250Mac, clamps PHY TX power to the target's configured limit before initiating the connection, connects to the configured access point, and maintains the configured Wi-Fi TX power limit
 
 #### Scenario: Connecting to an open passwordless network
 - **WHEN** the system initiates a Wi-Fi station connection with wolEnabled set to true and wifiPassword is empty
@@ -30,11 +30,15 @@ The system SHALL manage Wi-Fi station (STA) connectivity in normal operation mod
 
 #### Scenario: Power state transitions to booting or on
 - **WHEN** the system transitions from STATE_OFF to STATE_BOOTING or STATE_ON
-- **THEN** the system staggers the Wi-Fi MAC transition after PSU turn-on, disconnects Wi-Fi, resets the Wi-Fi Station MAC address to the ESP32 factory default MAC, reconnects to the configured access point, and applies the target's configured Wi-Fi TX power limit
+- **THEN** the system maintains the existing Wi-Fi station connection untouched during STATE_BOOTING to avoid overlapping ATX PSU turn-on inrush, defers restoring the factory default MAC address across a 5000 ms stabilization window after entering STATE_ON, clamps PHY TX power to the target limit before connection initiation, and reconnects to the configured access point
+
+#### Scenario: Host boot aborts or times out before reaching STATE_ON
+- **WHEN** the system transitions from STATE_BOOTING back to STATE_OFF due to watchdog timeout or user cancellation
+- **THEN** the system cancels any pending MAC address swap without disconnecting Wi-Fi or changing station configuration
 
 #### Scenario: Power state transitions back to off
 - **WHEN** the system transitions from STATE_ON to STATE_OFF with a configured bc250Mac
-- **THEN** the system disconnects Wi-Fi, sets the Wi-Fi Station MAC address to bc250Mac, reconnects to the configured access point, and applies the target's configured Wi-Fi TX power limit
+- **THEN** the system disconnects Wi-Fi, sets the Wi-Fi Station MAC address to bc250Mac, clamps PHY TX power to the target limit before connection initiation, reconnects to the configured access point, and maintains target Wi-Fi TX power limits
 
 ### Requirement: Wake-on-LAN Magic Packet Detection
 The system SHALL inspect incoming UDP datagrams on WOL ports and trigger a power-on sequence upon receiving a valid magic packet targeting the configured BC250 Ethernet MAC address.
