@@ -147,12 +147,17 @@ const unsigned long HEARTBEAT_MS = 1000;
 // MAC bytes).
 const char *const AP_SSID_PREFIX = "BC250_";
 
-// WiFi TX power for the SoftAP.
+// WiFi TX power for SoftAP and Station mode.
 // ESP32-C3 mini boards have an RF/power design flaw (arduino-esp32 #6551):
 // at full power the AP emits no usable beacons. Lowering TX power makes it
 // work.
+// AI-Thinker ESP32-CAM uses an onboard AMS1117-3.3 LDO that can droop under
+// simultaneous Classic Bluetooth + 19.5 dBm Wi-Fi TX bursts; capping TX power
+// to 11 dBm prevents 3.3V brownout resets while running.
 #if defined(BOARD_ESP32C3)
 #define AP_TX_POWER WIFI_POWER_8_5dBm
+#elif defined(BOARD_ESP32CAM)
+#define AP_TX_POWER WIFI_POWER_11dBm
 #else
 #define AP_TX_POWER WIFI_POWER_19_5dBm
 #endif

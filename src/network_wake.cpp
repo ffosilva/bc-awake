@@ -1,5 +1,6 @@
 #include "network_wake.h"
 
+#include "board.h"
 #include "config.h"
 #include "portal.h"
 #include "version.h"
@@ -28,6 +29,11 @@ static const unsigned long WIFI_FALLBACK_TIMEOUT_MS = 20000;
 
 static uint8_t g_defaultMac[6] = {0};
 static bool g_defaultMacCached = false;
+
+static const unsigned long MAC_SWAP_DEFER_MS = 500;
+static bool g_pendingMacSwap = false;
+static bool g_pendingMacSwapIsOff = false;
+static unsigned long g_pendingMacSwapAt = 0;
 
 static void cacheDefaultMac() {
   if (!g_defaultMacCached) {
@@ -204,17 +210,16 @@ bool networkWakeBegin(bool isOff) {
   } else {
     WiFi.begin(config.wifiSsid.c_str(), config.wifiPassword.c_str());
   }
+  WiFi.setTxPower(AP_TX_POWER);
 
   g_wasConnected = false;
   g_connectStart = millis();
   g_fallbackApActive = false;
+  g_pendingMacSwap = false;
   return true;
 }
 
-void networkWakeOnStateChanged(bool isOff) {
-  if (!config.wolEnabled || config.wifiSsid.isEmpty()) {
-    return;
-  }
+static void applyStateMacChange(bool isOff) {
   cacheDefaultMac();
 
   uint8_t targetMac[6];
@@ -260,9 +265,48 @@ void networkWakeOnStateChanged(bool isOff) {
   } else {
     WiFi.begin(config.wifiSsid.c_str(), config.wifiPassword.c_str());
   }
+  WiFi.setTxPower(AP_TX_POWER);
   g_wasConnected = false;
   g_connectStart = millis();
   g_lastReconnectCheck = millis();
+}
+
+void networkWakeOnStateChanged(bool isOff) {
+  if (!config.wolEnabled || config.wifiSsid.isEmpty()) {
+    return;
+  }
+  cacheDefaultMac();
+
+  uint8_t targetMac[6];
+  memcpy(targetMac, g_defaultMac, 6);
+  if (isOff && !config.bc250Mac.isEmpty() &&
+      parseMac(config.bc250Mac, targetMac)) {
+    // targetMac is dongle MAC
+  }
+
+  uint8_t currentMac[6];
+  if (esp_wifi_get_mac(WIFI_IF_STA, currentMac) == ESP_OK &&
+      memcmp(currentMac, targetMac, 6) == 0) {
+    g_pendingMacSwap = false;
+    Serial.println(
+        "[WOL ] Wi-Fi Station MAC already matches target; no switch needed");
+    return;
+  }
+
+  if (!isOff) {
+    if (!g_pendingMacSwap || g_pendingMacSwapIsOff) {
+      g_pendingMacSwap = true;
+      g_pendingMacSwapIsOff = false;
+      g_pendingMacSwapAt = millis();
+      Serial.printf("[WOL ] Deferring Wi-Fi MAC restore by %lu ms to avoid PSU "
+                    "inrush overlap\n",
+                    MAC_SWAP_DEFER_MS);
+    }
+    return;
+  }
+
+  g_pendingMacSwap = false;
+  applyStateMacChange(true);
 }
 
 void networkWakeLoop() {
@@ -271,6 +315,12 @@ void networkWakeLoop() {
   }
 
   unsigned long now = millis();
+  if (g_pendingMacSwap && (now - g_pendingMacSwapAt >= MAC_SWAP_DEFER_MS)) {
+    g_pendingMacSwap = false;
+    applyStateMacChange(g_pendingMacSwapIsOff);
+    now = millis();
+  }
+
   bool connected = (WiFi.status() == WL_CONNECTED);
 
   if (connected && !g_wasConnected) {

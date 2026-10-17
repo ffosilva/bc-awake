@@ -449,6 +449,12 @@ bool btBegin(const String &hostMac) {
     Serial.println("[BT  ] invalid host MAC");
     return false;
   }
+  if (btUp) {
+    if (hostMac.equalsIgnoreCase(currentHostMac)) {
+      return true;
+    }
+    return btRestart(hostMac);
+  }
   static bool memReleased = false;
   if (!memReleased) {
     esp_bt_controller_mem_release(ESP_BT_MODE_BLE);  // Classic only

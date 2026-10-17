@@ -710,8 +710,12 @@ void portalBegin() {
   Serial.printf("[PORTAL] softAP ret=%d ssid='%s' ip=%s txpwr=%d\n", ok, apSsid,
                 WiFi.softAPIP().toString().c_str(), WiFi.getTxPower());
 
-  // Start device discovery for the picker
-  wakeSetDiscovery(true);
+  // Start device discovery for the picker only while the host is powered off
+  if (!isBoardPowered()) {
+    wakeSetDiscovery(true);
+  } else {
+    wakeSetDiscovery(false);
+  }
 
   portalServerBegin();
   Serial.println("[PORTAL] connect to AP and open http://192.168.4.1");

@@ -158,6 +158,7 @@ class SetupScanCallbacks : public NimBLEScanCallbacks {
 static SetupScanCallbacks setupScanCallbacks;
 
 void wakeSetDiscovery(bool on) {
+  if (!on && !bleInitialized) return;
   ensureBleInit();
   NimBLEScan *scan = NimBLEDevice::getScan();
   if (on) {
@@ -171,7 +172,9 @@ void wakeSetDiscovery(bool on) {
     scan->setWindow(45);     // ms (~9% duty, leaves radio free for SoftAP WiFi)
     scan->start(0, false);
   } else {
-    scan->stop();
+    if (scan->isScanning()) {
+      scan->stop();
+    }
   }
 }
 

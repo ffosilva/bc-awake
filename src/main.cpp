@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <esp_system.h>
 #include "wake.h"
 #include "network_wake.h"
 #include "board.h"
@@ -84,8 +85,14 @@ static void setState(PowerState next) {
   if (next == state) return;
   Serial.printf("[STATE] %s -> %s\n", stateName(state), stateName(next));
   state = next;
-  // Only watch for wake while the machine is down.
-  if (wakeActive) wakeSetConnectable(next == STATE_OFF);
+  // Only watch for wake or run Bluetooth discovery while the machine is down.
+  if (next == STATE_OFF) {
+    if (wakeActive) wakeSetConnectable(true);
+    if (isPortalSetupMode()) wakeSetDiscovery(true);
+  } else {
+    wakeSetDiscovery(false);
+    if (wakeActive) wakeSetConnectable(false);
+  }
   networkWakeOnStateChanged(next == STATE_OFF);
 }
 
@@ -100,6 +107,7 @@ static bool senseLevel = false;
 static bool readBoardSense(uint32_t *outMv = nullptr) {
   int highCount = 0;
   for (int i = 0; i < SENSE_OVERSAMPLE; i++) {
+    if (i > 0) delayMicroseconds(200);
     if (digitalRead(BOARD_SENSE) == HIGH) {
       highCount++;
     }
@@ -297,8 +305,10 @@ static void normalBegin() {
   Serial.printf("=== BC250 PSU controller v%s (%s) ===\n", FW_VERSION, FW_TARGET);
 
   // PS_ON# open-drain, released by default so the PSU stays off at boot.
-  pinMode(PS_ON_PIN, OUTPUT_OPEN_DRAIN);
+  // Pre-load the output latch HIGH before enabling the open-drain driver so
+  // PS_ON# never glitches LOW on startup.
   digitalWrite(PS_ON_PIN, PS_ON_RELEASE);
+  pinMode(PS_ON_PIN, OUTPUT_OPEN_DRAIN);
 
   // Optional PWR_BTN#: always start as a high-Z input, never driven unless the
   // graceful-shutdown feature is enabled and the board is ON.
@@ -324,14 +334,38 @@ static void normalBegin() {
 
   // Seed debounced states from the current levels.
   buttonStable = buttonLastRaw = (digitalRead(BUTTON_SENSE) == LOW);
-  boardSenseStable = boardSenseLastRaw = readBoardSense();
 
-  // If the board is already up when the ESP (re)boots, adopt the ON state
-  // rather than assuming OFF — keeps us in sync after an ESP-only reset.
-  if (boardSenseStable) {
-    psuOn();  // make sure PS_ON# matches reality
-    setState(STATE_ON);
+  esp_reset_reason_t rstReason = esp_reset_reason();
+  if (rstReason == ESP_RST_BROWNOUT) {
+    Serial.println("[INIT] WARNING: brownout reset detected; waiting 500 ms for rails to settle, skipping STATE_ON adoption");
+    delay(500);
+    senseLevel = false;
+    boardSenseStable = boardSenseLastRaw = false;
+  } else {
+    // Allow input pull-down / ADC input to settle before sampling.
+    delay(10);
+    bool sustainedHigh = readBoardSense();
+    if (sustainedHigh) {
+      unsigned long tStart = millis();
+      while (millis() - tStart < BOARD_ON_DEBOUNCE_MS) {
+        delay(10);
+        if (!readBoardSense()) {
+          sustainedHigh = false;
+          break;
+        }
+      }
+    }
+    boardSenseStable = boardSenseLastRaw = sustainedHigh;
+
+    // If the board is genuinely up across the full qualification window when
+    // the ESP (re)boots, adopt the ON state rather than assuming OFF.
+    if (boardSenseStable) {
+      psuOn();  // make sure PS_ON# matches reality
+      setState(STATE_ON);
+      delay(200);  // stagger PSU assertion before radio startup
+    }
   }
+  boardSenseChange = millis();
 
   Serial.printf("[INIT] state=%s board=%s bound=%s mode=%s\n",
                 stateName(state), boardSenseStable ? "UP" : "DOWN",
