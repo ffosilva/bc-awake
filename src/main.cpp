@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <driver/gpio.h>
 #include <esp_system.h>
 #include "wake.h"
 #include "network_wake.h"
@@ -305,10 +306,12 @@ static void normalBegin() {
   Serial.printf("=== BC250 PSU controller v%s (%s) ===\n", FW_VERSION, FW_TARGET);
 
   // PS_ON# open-drain, released by default so the PSU stays off at boot.
-  // Pre-load the output latch HIGH before enabling the open-drain driver so
-  // PS_ON# never glitches LOW on startup.
-  digitalWrite(PS_ON_PIN, PS_ON_RELEASE);
+  // Pre-load the hardware output latch HIGH via ESP-IDF before enabling the
+  // open-drain driver so PS_ON# never glitches LOW on startup, then sync the
+  // Arduino GPIO HAL after pinMode registers the pin.
+  gpio_set_level((gpio_num_t)PS_ON_PIN, PS_ON_RELEASE);
   pinMode(PS_ON_PIN, OUTPUT_OPEN_DRAIN);
+  digitalWrite(PS_ON_PIN, PS_ON_RELEASE);
 
   // Optional PWR_BTN#: always start as a high-Z input, never driven unless the
   // graceful-shutdown feature is enabled and the board is ON.
