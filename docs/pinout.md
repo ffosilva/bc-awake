@@ -100,6 +100,9 @@ The ESP32-CAM has two 8-pin headers (antenna at top):
          └─────────────────────────┘
 ```
 
+> [!TIP]
+> **ESP32-CAM Anti-Oscillation Circuit**: To avoid 3.3V AMS1117 brownout resets on radio bursts and overcome the 47 kΩ MicroSD pull-up on GPIO13, adding bulk decoupling, a 4.7 kΩ pull-down, and a MOSFET buffer is strongly recommended. See [AI-Thinker ESP32-CAM hardware resilience circuit](#ai-thinker-esp32-cam-hardware-resilience-circuit-anti-oscillation).
+
 ## ESP32-C3 SuperMini header (USB-C)
 
 ![ESP32-C3 SuperMini Pinout](images/esp32-c3-supermini-pinout.png)
@@ -230,6 +233,98 @@ and change `pinMode(PS_ON_PIN, OUTPUT_OPEN_DRAIN)` to `OUTPUT` in
 [src/main.cpp](../src/main.cpp) and [src/portal.cpp](../src/portal.cpp). If you skip the
 buffer, at minimum put a ~1 kΩ series resistor between `PS_ON#` and GPIO32 to limit
 the clamp-diode current.
+
+## AI-Thinker ESP32-CAM hardware resilience circuit (anti-oscillation)
+
+The **AI-Thinker ESP32-CAM** is particularly prone to infinite power-cycle reboot loops due to three hardware characteristics:
+1. **LDO brownout on radio bursts**: The onboard AMS1117-3.3 linear regulator has a high dropout voltage (~1.2 V). Wi-Fi and Bluetooth transmission bursts draw 400–500 mA pulses. Over typical ATX harness wires, lead resistance and inductance cause the 5 V rail to dip below 4.5 V, collapsing the 3.3 V rail and triggering an ESP32 brownout reset (`ESP_RST_BROWNOUT`).
+2. **MicroSD pull-up on GPIO 13 (`BOARD_SENSE`)**: GPIO 13 is shared with MicroSD `DAT3` and has a physical **47 kΩ SMD pull-up to 3.3 V** on the camera PCB. When TPMS1 goes low or disconnects, this pull-up fights the ESP32's internal ~45 kΩ pull-down, biasing GPIO 13 at **~1.61 V** (the digital meta-stable threshold). Noise easily trips this as `HIGH`, tricking the ESP into adopting `STATE_ON` right after a brownout reset.
+3. **GPIO 14 over-voltage & float**: `PS_ON#` idles at ~5 V, stressing the GPIO 14 pad and floating high-Z during resets.
+
+To make an ESP32-CAM build rock-solid for 24/7 long-term operation, add this passive conditioning circuit (on a small perfboard or inline harness):
+
+### ESP32-CAM Resilience Schematic
+
+```
+========================================================================================
+ 1. POWER CONDITIONING (Dual-Rail Bulk Decoupling)
+========================================================================================
+
+ ATX +5VSB (Pin 9) ─────────┬───────────────────────────────► ESP32-CAM "5V"
+                            │
+                          + │
+                       [ 470 µF ]  Electrolytic (10V–16V, Low ESR)
+                          - │
+                            ├───────[ 100 nF ] Ceramic (0.1 µF)
+                            │
+ ATX GND (Pin 15/17) ───────┴───────┬───────────────────────► ESP32-CAM "GND"
+                                    │
+                                  - │
+                               [ 47 µF - 100 µF ] Electrolytic or Tantalum (6.3V+)
+                                  + │
+                                    ├───────[ 100 nF ] Ceramic
+                                    │
+ ESP32-CAM "3V3" ───────────────────┴───────────────────────  (Stabilizes LDO output)
+
+
+========================================================================================
+ 2. INPUT CONDITIONING (TPMS1 / BOARD_SENSE -> GPIO 13)
+========================================================================================
+
+ Motherboard TPMS1 (Pin 9)
+         │
+         │
+         └───[ R1: 1 kΩ ]───┬───────────────────────────────► ESP32-CAM "IO13"
+                            │                                  (BOARD_SENSE)
+                          [ R2 ] 4.7 kΩ (Pull-Down to GND)
+                            │
+                          [ C1 ] 100 nF Ceramic (0.1 µF)
+                            │
+                           GND
+
+
+========================================================================================
+ 3. OUTPUT BUFFER & ISOLATION (PS_ON# -> GPIO 14)
+========================================================================================
+
+                                            ATX PS_ON# (Green Wire, Pin 16)
+                                                   │
+                                                   ├────────  (PSU ~5V internal pull-up)
+                                                   │
+                                                 ┌─┴─┐
+                             R3: 1 kΩ            │ D │  2N7000 / BSS138 N-MOSFET
+ ESP32-CAM "IO14" ───────────[ 1 kΩ ]──────┬─────┤ G │
+ (PS_ON_PIN)                               │     │ S │
+                                         [ C2 ]  └─┬─┘
+                                         [ R4 ]    │
+                                           │      GND
+                                          GND
+      (R4 = 100 kΩ pull-down to GND; C2 = 100 nF ceramic gate snubber)
+========================================================================================
+```
+
+### Bill of Materials (BOM)
+
+| Designator | Component | Value / Rating | Purpose |
+|------------|-----------|----------------|---------|
+| `C_PWR1` | Electrolytic Capacitor | **470 µF**, 10V–16V (Low ESR) | Bulk reservoir on `5V`/VIN rail to absorb Wi-Fi/BT transmission surges |
+| `C_PWR2` | Ceramic Capacitor | **100 nF** (0.1 µF), 25V X7R | High-frequency RF decoupling across `5V` and `GND` |
+| `C_PWR3` | Electrolytic / Tantalum | **47 µF – 100 µF**, 6.3V+ (Optional) | Buffers AMS1117 3.3V rail output against transient dips |
+| `C_PWR4` | Ceramic Capacitor | **100 nF** (0.1 µF), 25V X7R (Optional) | High-frequency RF decoupling across `3V3` and `GND` |
+| `R1` | Metal Film Resistor | **1 kΩ**, 1/4W | Series current limit & input filter resistor for TPMS1 |
+| `R2` | Metal Film Resistor | **4.7 kΩ**, 1/4W | Pull-down to GND: divides onboard 47 kΩ pull-up down to ~0.30 V when off |
+| `C1` | Ceramic Capacitor | **100 nF** (0.1 µF), 25V X7R | Low-pass filter ($f_c \approx 1.6\text{ kHz}$) with R1 against VRM noise |
+| `Q1` | N-Channel MOSFET | **2N7000** (TO-92) or **BSS138** (SOT-23) | Low-side buffer isolates GPIO 14 from PSU 5 V line |
+| `R3` | Metal Film Resistor | **1 kΩ**, 1/4W | Gate series protection resistor |
+| `R4` | Metal Film Resistor | **100 kΩ**, 1/4W | Gate bleed-down to GND: keeps MOSFET off when ESP32 resets |
+| `C2` | Ceramic Capacitor | **100 nF** (0.1 µF), 25V X7R | Gate snubber: absorbs bootloader microsecond output glitches |
+
+### Wiring & Assembly Notes
+
+- **Logic Inversion with MOSFET**: The N-MOSFET inverts logic. In [include/board.h](../include/board.h), set `PS_ON_ASSERT = HIGH` and `PS_ON_RELEASE = LOW`, and change `OUTPUT_OPEN_DRAIN` to `OUTPUT` in `initHardware()`.
+- **Wire Gauge**: Use 20–22 AWG wire for `5V` and `GND`. Avoid thin 28–30 AWG breadboard jumpers for power, as their resistance causes voltage drop under load.
+- **Capacitor Placement**: Solder the 470 µF electrolytic capacitor as close as physically possible to the ESP32-CAM's header pins.
+- **Never put raw capacitors directly on `PS_ON#`**: Always filter the MOSFET gate (`R3`/`R4`/`C2`), never the green wire directly to GND. Placing a large capacitor directly on `PS_ON#` discharges violently through the transistor and forces the PSU on during cold boot.
 
 ## Connector pinouts
 
