@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef FW_VERSION
-#define FW_VERSION "1.13.6"
+#define FW_VERSION "2.0.0"
 #endif
 
 #if defined(BOARD_ESP32CAM)
