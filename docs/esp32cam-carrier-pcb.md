@@ -26,66 +26,63 @@ For an exhaustive catalog including ratings, manufacturer part numbers (LCSC, Di
 
 | Designator | Component | Package | Value / Spec | Purpose |
 |------------|-----------|---------|--------------|---------|
-| `J_CAM_L` | 1×8 Female Socket Header | 2.54 mm THT | 8-pin 2.54mm pitch | ESP32-CAM Left Header (`IO12` to `5V`) |
-| `J_CAM_R` | 1×8 Female Socket Header | 2.54 mm THT | 8-pin 2.54mm pitch | ESP32-CAM Right Header (`3V3` to `VCC`) |
+| `J_CAM_L` | 1×8 Female Socket Header | 2.54 mm THT | 8-pin 2.54mm pitch | ESP32-CAM Left Header (`5V` to `IO4`) |
+| `J_CAM_R` | 1×8 Female Socket Header | 2.54 mm THT | 8-pin 2.54mm pitch | ESP32-CAM Right Header (`3V3` to `GND`, `IO16` floating) |
 | `J_EXT` | 1×6 Male Header / Screw Terminal | 2.54 mm THT | 6-pin 2.54mm pitch | External ATX and Motherboard Connections |
 | `C_PWR1` | Radial Electrolytic Capacitor | THT (D8.0mm, P3.5mm) | **470 µF**, 16V Low ESR | Bulk 5V rail reservoir against Wi-Fi/BT bursts |
 | `C_PWR2` | Ceramic Disc Capacitor | THT (D5.0mm, P2.5mm) | **100 nF** (0.1 µF), 25V X7R | High-frequency 5V decoupling |
 | `C_PWR3` | Radial Electrolytic / Tantalum | THT (D6.3mm, P2.5mm) | **47 µF**, 16V (Optional) | Buffers AMS1117 3.3V rail output |
 | `C_PWR4` | Ceramic Disc Capacitor | THT (D5.0mm, P2.5mm) | **100 nF** (0.1 µF), 25V X7R | High-frequency 3.3V decoupling |
 | `R1` | Metal Film Axial Resistor | THT (DIN0207, P7.62mm) | **1 kΩ**, 1/4W 1% | Series current limit & filter for TPMS1 |
-| `R2` | Metal Film Axial Resistor | THT (DIN0207, P7.62mm) | **4.7 kΩ**, 1/4W 1% | Pull-down for TPMS1 (divides 47 kΩ SD pull-up) |
-| `C1` | Ceramic Disc Capacitor | THT (D5.0mm, P2.5mm) | **100 nF** (0.1 µF), 25V X7R | TPMS1 low-pass filter ($f_c \approx 1.6\text{ kHz}$) |
-| `Q1` | N-Channel MOSFET | TO-92 Inline (2.54mm formed) | **2N7000** | Low-side buffer isolates GPIO 14 from PSU 5V line |
+| `R2` | Metal Film Axial Resistor | THT (DIN0207, P10.16mm) | **4.7 kΩ**, 1/4W 1% | Pull-down for TPMS1 (divides 47 kΩ SD pull-up) |
+| `C1` | Ceramic Disc Capacitor | THT (D5.0mm, P10.16mm) | **100 nF** (0.1 µF), 25V X7R | TPMS1 low-pass filter ($f_c \approx 1.6\text{ kHz}$) |
+| `Q1` | N-Channel MOSFET / NPN BJT | TO-92 Inline (2.54mm formed) | **2N7000 / BC547** | Low-side buffer isolates GPIO 14 from PSU 5V line |
 | `R3` | Metal Film Axial Resistor | THT (DIN0207, P7.62mm) | **1 kΩ**, 1/4W 1% | Gate protection resistor for Q1 |
-| `R4` | Metal Film Axial Resistor | THT (DIN0207, P7.62mm) | **100 kΩ**, 1/4W 1% | Gate pull-down (keeps PS_ON# off during ESP reset) |
-| `C2` | Ceramic Disc Capacitor | THT (D5.0mm, P2.5mm) | **100 nF** (0.1 µF), 25V X7R | Gate snubber (filters reset-time microsecond glitches) |
+| `R4` | Metal Film Axial Resistor | THT (DIN0207, P5.08mm) | **100 kΩ**, 1/4W 1% | Gate pull-down (keeps PS_ON# off during ESP reset) |
+| `C2` | Ceramic Disc Capacitor | THT (D5.0mm, P5.08mm) | **100 nF** (0.1 µF), 25V X7R | Gate snubber (filters reset-time microsecond glitches) |
 
 ---
 
 ## 3. External Terminal (`J_EXT`) Pinout
 
-The 1×6 external header is located on the left edge (Rows 4 through 9):
+The 1×6 external header is located on the left edge (Rows 3 through 8):
 
 | Pin | Row | Label | Connects to | Notes |
 |:---:|:---:|:------|:------------|:------|
-| **1** | Row 4 | `TPMS1` | Motherboard TPMS1 Header Pin 9 | Board-on power sense (~3.3V when ON, 0V when OFF) |
-| **2** | Row 5 | `BTN_A` | Front-panel momentary push button (Terminal A) | Terminal B connects to `GND` |
-| **3** | Row 6 | `PWR_BTN#` | Motherboard FPANEL Power Button (+) pin | Optional graceful shutdown mirror (idles ~3.4V) |
-| **4** | Row 7 | `PS_ON#` | ATX 24-pin Connector Pin 16 (Green Wire) | Pulled LOW by Q1 to start PSU |
-| **5** | Row 8 | `GND` | ATX 24-pin Pins 15/17 + Common Ground | Common ground rail |
-| **6** | Row 9 | `+5VSB` | ATX 24-pin Pin 9 (Purple Wire) | Permanent standby power (+5V) |
+| **1** | Row 3 | `+5VSB` | ATX 24-pin Pin 9 (Purple Wire) | Permanent standby power (+5V) |
+| **2** | Row 4 | `GND` | ATX 24-pin Pins 15/17 + Common Ground | Common ground rail |
+| **3** | Row 5 | `TPMS1` | Motherboard TPMS1 Header Pin 9 | Board-on power sense (~3.3V when ON, 0V when OFF) |
+| **4** | Row 6 | `BTN_A` | Front-panel momentary push button (Terminal A) | Terminal B connects to `GND` |
+| **5** | Row 7 | `PS_ON#` | ATX 24-pin Connector Pin 16 (Green Wire) | Pulled LOW by Q1 to start PSU |
+| **6** | Row 8 | `PWR_BTN#` | Motherboard FPANEL Power Button (+) pin | Optional graceful shutdown mirror (idles ~3.4V) |
 
 ---
 
 ## 4. Protoboard Grid & Pad Placement Map
 
-The layout is arranged on a standard dot-matrix protoboard coordinate grid (Columns 1–28, Rows 1–9).
+The layout is arranged on a standard dot-matrix protoboard coordinate grid (Columns 1–28, Rows 1–10).
 
 ### Top View (Component Side)
 
 ```
 Col:  01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27
 Row:
- 1   [GND-BUS───────────────────────────────────────]                    [GND-BUS───────]
- 2   .  .  .  [R1_1]--[R1_2] .  .  .  .  .  [CAM_L:IO12] .  .  .  .  .  . [CAM_R:3V3]-[C3+]-[C4+]
- 3   .  .  .  .  [R2_1]---[R2_2][C1_2] .  . [CAM_L:IO13] .  .  .  .  .  . [CAM_R:GND]-[C3-]-[C4-]
- 4   . [EXT:TPMS1]  .  .  .  .  .  .  .  .  [CAM_L:IO15] .  .  .  .  .  . [CAM_R:IO0] .  .  .
- 5   . [EXT:BTN_A]  .  .  .  .  .  .  .  [R3_1]-[CAM_L:IO14].  .  .  .  . [CAM_R:TX]  .  .  .
- 6   . [EXT:PWR_B]  .  .  .  .  .  .  .  .  [CAM_L:IO2] .  .  .  .  .  .  [CAM_R:RX]  .  .  .
- 7   . [EXT:PS_ON]  . [Q1:D][Q1:G] . [C2_1][R4_1][R3_2]  .  .  .  .  .  . [CAM_R:IO16].  .  .
- 8   . [EXT:GND] .  .  .  . [Q1:S][C2_2][R4_2][C1_2][C2_2] [CAM_L:GND]───[CAM_R:GND]────[GND]
- 9   . [EXT:5V]  .  .  .  .  .  .  .  . [C1_1][C2_1]  .  [CAM_L:5V]  .  . [CAM_R:VCC] .  .  .
+ 1   [GND-BUS─────────────────────────────────────────────────────────────]  [GND-BUS───────]
+ 2    .  .  .  .  .  .  .  .  .  . [5V-IN] . [CAM_L:5V] .  .  .  .  .  .  .  [CAM_R:3V3]-[C3+]-[C4+]
+ 3    . [EXT:5V]  .  .  .  .  .  . [C1_+] [C2_+] . [CAM_L:GND] . .  .  .  .  [CAM_R:IO16] .  .  .
+ 4    . [EXT:GND] .  .  .  .  .  .  .  .   .  .  . [CAM_L:IO12]. .  .  .  .  [CAM_R:IO0]  .  .  .
+ 5    . [EXT:TPMS1]  [R1_1]──────[R1_2][R2_2][C1_2] [CAM_L:IO13]. .  .  .  . [CAM_R:GND]─────────[GND]
+ 6    . [EXT:BTN_A]─────────────────────────────────[CAM_L:IO15]. .  .  .  . [CAM_R:VCC]  .  .  .
+ 7    . [EXT:PS_ON]  . [Q1:D][Q1:G] . [C2_1][R4_1][R3_1]-[R3_2]-[CAM_L:IO14] [CAM_R:RX]   .  .  .
+ 8    . [EXT:PWR_B]─────────────────────────────────[CAM_L:IO2] . .  .  .  . [CAM_R:TX]   .  .  .
+ 9    .  .  .  .  .  . [Q1:S][C2_2][R4_2]  .   .  . [CAM_L:IO4] . .  .  .  . [CAM_R:GND]─────────[GND]
+10    .  .  .  .  .  .  .  .  .  .  . [GND-BYPASS] . .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 ```
 
-### Component Placement Summary
-- **Columns 2–3**: External connection header `J_EXT` (1×6).
-- **Columns 4–11, Rows 1–3**: TPMS1 RC low-pass filter (`R1`, `R2`, `C1`).
-- **Columns 5–11, Rows 5–8**: 2N7000 MOSFET buffer (`Q1`, `R3`, `R4`, `C2`).
-- **Columns 10–11, Rows 8–9**: 5V bulk & ceramic decoupling capacitors (`C_PWR1`, `C_PWR2`).
-- **Column 13, Rows 2–9**: ESP32-CAM Left Header (`J_CAM_L`).
-- **Column 22, Rows 2–9**: ESP32-CAM Right Header (`J_CAM_R`), exactly 9 columns (22.86 mm) from `J_CAM_L`.
-- **Columns 24–26, Rows 2–3**: 3.3V bulk & ceramic decoupling capacitors (`C_PWR3`, `C_PWR4`).
+> [!IMPORTANT]
+> **Pin Safety Note**:
+> - `IO16` (Column 22, Row 3) is the ESP32-CAM **PSRAM line**. It has **zero connections and is left completely floating**.
+> - `IO12`, `IO4`, `IO0`, `VCC`, `U0RX`, and `U0TX` are likewise left completely unconnected.
 
 ---
 
@@ -94,27 +91,24 @@ Row:
 All traces run on the bottom copper foil (`B.Cu`). Since every track runs in its own dedicated lane or grid coordinate, there are **zero crossing tracks** and **zero jumper wires required**.
 
 ### Bottom Copper Routing Lanes
-1. **Row 9 (`+5VSB` Power Bus)**:
-   - Solder bridge / 20 AWG wire from `J_EXT` pin 6 (Col 2) → `C_PWR1` (+) (Col 10) → `C_PWR2` (Col 11) → `J_CAM_L` pin 8 (Col 13).
-2. **Row 8 (`GND` Main Bus)**:
-   - Solder bridge / 20 AWG wire from `J_EXT` pin 5 (Col 2) → `Q1` Source (Col 7) → `C2` (-) (Col 8) → `R4` (-) (Col 9) → `C_PWR1` (-) (Col 10) → `C_PWR2` (-) (Col 11) → `J_CAM_L` pin 7 (Col 13) → `J_CAM_R` pin 7 (Col 22) → Col 27.
-3. **Row 1 (`GND` Top Bus)**:
-   - Wire runs from `J_EXT` pin 5 (Col 2, Row 8) → Col 1 → Row 1 across to Col 9 (dropping to `R2` pin 1 and `C1` pin 1).
-   - Right GND loop runs from Col 27, Row 8 up to Row 3, tying `J_CAM_R` pin 2, `C_PWR3` (-), and `C_PWR4` (-).
-4. **Row 7 (`PS_ON#` & `NET_GATE`)**:
-   - `PS_ON#`: from `J_EXT` pin 4 (Col 2) straight to `Q1` Drain (Col 5).
-   - `NET_GATE`: from `Q1` Gate (Col 6) → `C2` (Col 8) → `R4` (Col 9) → `R3` pad 2 (Col 11).
-5. **Row 6 (`PWR_BTN#`)**:
-   - Straight trace from `J_EXT` pin 3 (Col 2) to `J_CAM_L` pin 5 (Col 13).
-6. **Row 5 (`NET_IO14`)**:
-   - Straight trace from `J_CAM_L` pin 4 (Col 13) to `R3` pad 1 (Col 11).
-7. **Row 4 (`BTN_A`)**:
-   - Straight trace from `J_EXT` pin 2 (Col 2) to `J_CAM_L` pin 3 (Col 13).
-8. **Row 2 & 3 (`TPMS1` / `NET_IO13`)**:
-   - `TPMS1` from `J_EXT` pin 1 (Col 2, Row 4) up to Row 2, then into `R1` pad 1 (Col 4).
-   - `NET_IO13` from `R1` pad 2 (Col 7, Row 2) into Row 3, connecting `R2` pad 2 (Col 8), `C1` pad 2 (Col 9), and `J_CAM_L` pin 2 (Col 13).
-9. **Row 2 (`+3V3` Power Rail)**:
-   - Straight trace from `J_CAM_R` pin 1 (Col 22) → `C_PWR3` (+) (Col 24) → `C_PWR4` (Col 26).
+1. **Row 1 & 9/10 (`GND` Ground Ring)**:
+   - Top bus (Row 1): Runs from `J_EXT` pin 2 (Col 2, Row 4) up Col 1 to Row 1, across to Col 27, dropping into `R2` pin 1, `C1` pin 1, `C_PWR1` (-), `C_PWR2` (-), `J_CAM_L` pin 2 (`GND`), `C_PWR3` (-), and `C_PWR4` (-).
+   - Right link: Runs down Col 27 to `J_CAM_R` pin 4 (`GND`) and `J_CAM_R` pin 8 (`GND`).
+   - Bottom bus (Row 9/10): Connects `J_CAM_R` pin 8 (`GND`), dips to Row 10 to bypass `IO4`, and connects `R4` (-), `C2` (-), and `Q1` Source/Emitter on Row 9.
+2. **Row 3 to Row 2 (`+5VSB` Power Bus)**:
+   - Solder bridge / 20 AWG wire from `J_EXT` pin 1 (Col 2, Row 3) → `C_PWR1` (+) (Col 10, Row 3) → `C_PWR2` (+) (Col 11, Row 3) → steps up to Row 2 → `J_CAM_L` pin 1 (Col 13, Row 2).
+3. **Row 2 (`+3V3` Power Rail)**:
+   - Straight trace from `J_CAM_R` pin 1 (Col 22, Row 2) → `C_PWR3` (+) (Col 24, Row 2) → `C_PWR4` (Col 26, Row 2).
+4. **Row 5 (`TPMS1` / `NET_IO13`)**:
+   - `TPMS1` enters at `J_EXT` pin 3 (Col 2, Row 5) → `R1` (Col 4..7) → `R2` (Col 8) → `C1` (Col 9) → straight into `J_CAM_L` pin 4 (Col 13, Row 5).
+5. **Row 6 (`BTN_A`)**:
+   - Straight trace from `J_EXT` pin 4 (Col 2, Row 6) to `J_CAM_L` pin 5 (Col 13, Row 6).
+6. **Row 7 (`PS_ON#` & `NET_IO14`)**:
+   - `PS_ON#` from `J_EXT` pin 5 (Col 2, Row 7) → `Q1` Drain (Col 5, Row 7).
+   - `NET_GATE` connects `Q1` Gate (Col 6) → `C2` (Col 8) → `R4` (Col 9) → `R3` (Col 10..12).
+   - `NET_IO14` from `R3` pad 2 (Col 12, Row 7) into `J_CAM_L` pin 6 (Col 13, Row 7).
+7. **Row 8 (`PWR_BTN#`)**:
+   - Straight trace from `J_EXT` pin 6 (Col 2, Row 8) to `J_CAM_L` pin 7 (Col 13, Row 8).
 
 ---
 

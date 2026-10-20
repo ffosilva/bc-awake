@@ -83,20 +83,20 @@ All four signals and power are on the **left** header (the side with `EN`, `VP`,
 
 ![AI-Thinker ESP32-CAM Pinout](images/esp32cam-pinout.png)
 
-The ESP32-CAM has two 8-pin headers (antenna at top):
+The ESP32-CAM has two 8-pin headers (looking at the camera side with the antenna at the top):
 
 ```
          ┌─────────────────────────┐
          │       [ Antenna ]       │
          │                         │
-         │ IO12               3V3  │
-         │ IO13 ◄─ TPMS1 pin 9 GND │
-         │ IO15 ◄─ switch A   IO0  │  (IO0 to GND to flash)
-         │ IO14 ──► PS_ON#    U0TX │
-         │ IO2  ──► PWR_BTN#  U0RX │  (optional, see below)
-         │ IO4  (flash LED)   IO16 │  (PSRAM)
-         │ GND  ◄─ common/swB GND  │
-         │ 5V   ◄─ PSU +5VSB  VCC  │
+         │ 5V   ◄─ PSU +5VSB  3V3  │  (3.3V rail out)
+         │ GND  ◄─ common gnd IO16 │  (PSRAM - LEAVE FLOATING!)
+         │ IO12 (strapping)   IO0  │  (IO0 to GND to flash)
+         │ IO13 ◄─ TPMS1 pin 9 GND │  (middle ground)
+         │ IO15 ◄─ switch A   VCC  │  (3.3V/5V out)
+         │ IO14 ──► PS_ON#    U0RX │  (GPIO3 / UART RX)
+         │ IO2  ──► PWR_BTN#  U0TX │  (GPIO1 / UART TX)
+         │ IO4  (flash LED)   GND  │  (bottom ground)
          └─────────────────────────┘
 ```
 

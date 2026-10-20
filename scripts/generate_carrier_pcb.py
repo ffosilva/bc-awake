@@ -235,23 +235,23 @@ schematic_symbols = [
 ]
 
 pin_net_map = {
-    ("J_EXT", "1"): "TPMS1",
-    ("J_EXT", "2"): "BTN_A",
-    ("J_EXT", "3"): "PWR_BTN#",
-    ("J_EXT", "4"): "PS_ON#",
-    ("J_EXT", "5"): "GND",
-    ("J_EXT", "6"): "+5VSB",
+    ("J_EXT", "1"): "+5VSB",
+    ("J_EXT", "2"): "GND",
+    ("J_EXT", "3"): "TPMS1",
+    ("J_EXT", "4"): "BTN_A",
+    ("J_EXT", "5"): "PS_ON#",
+    ("J_EXT", "6"): "PWR_BTN#",
 
-    ("J_CAM_L", "2"): "NET_IO13",
-    ("J_CAM_L", "3"): "BTN_A",
-    ("J_CAM_L", "4"): "NET_IO14",
-    ("J_CAM_L", "5"): "PWR_BTN#",
-    ("J_CAM_L", "7"): "GND",
-    ("J_CAM_L", "8"): "+5VSB",
+    ("J_CAM_L", "1"): "+5VSB",
+    ("J_CAM_L", "2"): "GND",
+    ("J_CAM_L", "4"): "NET_IO13",
+    ("J_CAM_L", "5"): "BTN_A",
+    ("J_CAM_L", "6"): "NET_IO14",
+    ("J_CAM_L", "7"): "PWR_BTN#",
 
     ("J_CAM_R", "1"): "+3V3",
-    ("J_CAM_R", "2"): "GND",
-    ("J_CAM_R", "7"): "GND",
+    ("J_CAM_R", "4"): "GND",
+    ("J_CAM_R", "8"): "GND",
 
     ("C_PWR1", "1"): "+5VSB",
     ("C_PWR1", "2"): "GND",
@@ -469,43 +469,43 @@ def pad_tht(num, px, py, net_id, net_name, is_rect=False, drill=0.9, size=1.6):
 
 pcb_footprints = []
 
-# 1. J_EXT (1x6 pin header) at Col 2, Rows 4..9
-# Pin 1 (Row 4): TPMS1
-# Pin 2 (Row 5): BTN_A
-# Pin 3 (Row 6): PWR_BTN#
-# Pin 4 (Row 7): PS_ON#
-# Pin 5 (Row 8): GND
-# Pin 6 (Row 9): +5VSB
+# 1. J_EXT (1x6 pin header) at Col 2, Rows 3..8
+# Pin 1 (Row 3): +5VSB
+# Pin 2 (Row 4): GND
+# Pin 3 (Row 5): TPMS1
+# Pin 4 (Row 6): BTN_A
+# Pin 5 (Row 7): PS_ON#
+# Pin 6 (Row 8): PWR_BTN#
 ext_pads = [
-    (1, gx(2), gy(4), 4, "TPMS1", True),
-    (2, gx(2), gy(5), 8, "BTN_A", False),
-    (3, gx(2), gy(6), 9, "PWR_BTN#", False),
-    (4, gx(2), gy(7), 6, "PS_ON#", False),
-    (5, gx(2), gy(8), 1, "GND", False),
-    (6, gx(2), gy(9), 2, "+5VSB", False)
+    (1, gx(2), gy(3), 2, "+5VSB", True),
+    (2, gx(2), gy(4), 1, "GND", False),
+    (3, gx(2), gy(5), 4, "TPMS1", False),
+    (4, gx(2), gy(6), 8, "BTN_A", False),
+    (5, gx(2), gy(7), 6, "PS_ON#", False),
+    (6, gx(2), gy(8), 9, "PWR_BTN#", False)
 ]
 ext_pads_str = "\n".join([pad_tht(p[0], p[1], p[2], p[3], p[4], p[5]) for p in ext_pads])
 pcb_footprints.append(f"""\t(footprint "Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical"
 \t\t(layer "F.Cu") (uuid "{u()}") (at 0 0)
-\t\t(property "Reference" "J_EXT" (at {gx(2)} {gy(3.1)} 0) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(property "Value" "Ext_Terminals" (at {gx(2)} {gy(9.9)} 0) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(fp_line (start {gx(1.4)} {gy(3.5)}) (end {gx(2.6)} {gy(3.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
-\t\t(fp_line (start {gx(2.6)} {gy(3.5)}) (end {gx(2.6)} {gy(9.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
-\t\t(fp_line (start {gx(2.6)} {gy(9.5)}) (end {gx(1.4)} {gy(9.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
-\t\t(fp_line (start {gx(1.4)} {gy(9.5)}) (end {gx(1.4)} {gy(3.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
+\t\t(property "Reference" "J_EXT" (at {gx(2)} {gy(2.1)} 0) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(property "Value" "Ext_Terminals" (at {gx(2)} {gy(8.9)} 0) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(fp_line (start {gx(1.4)} {gy(2.5)}) (end {gx(2.6)} {gy(2.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
+\t\t(fp_line (start {gx(2.6)} {gy(2.5)}) (end {gx(2.6)} {gy(8.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
+\t\t(fp_line (start {gx(2.6)} {gy(8.5)}) (end {gx(1.4)} {gy(8.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
+\t\t(fp_line (start {gx(1.4)} {gy(8.5)}) (end {gx(1.4)} {gy(2.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
 {ext_pads_str}
 \t)""")
 
 # 2. J_CAM_L (1x8 female pin socket) at Col 13, Rows 2..9
 cam_l_pads = [
-    (1, gx(13), gy(2), 0, "", True),         # IO12 (NC)
-    (2, gx(13), gy(3), 5, "NET_IO13", False),  # IO13
-    (3, gx(13), gy(4), 8, "BTN_A", False),     # IO15
-    (4, gx(13), gy(5), 10, "NET_IO14", False), # IO14
-    (5, gx(13), gy(6), 9, "PWR_BTN#", False),  # IO2
-    (6, gx(13), gy(7), 0, "", False),         # IO4 (NC)
-    (7, gx(13), gy(8), 1, "GND", False),      # GND
-    (8, gx(13), gy(9), 2, "+5VSB", False)     # 5V
+    (1, gx(13), gy(2), 2, "+5VSB", True),       # 5V (inlet)
+    (2, gx(13), gy(3), 1, "GND", False),        # GND
+    (3, gx(13), gy(4), 0, "", False),           # IO12 (NC)
+    (4, gx(13), gy(5), 5, "NET_IO13", False),   # IO13 (BOARD_SENSE)
+    (5, gx(13), gy(6), 8, "BTN_A", False),      # IO15 (BUTTON_SENSE)
+    (6, gx(13), gy(7), 10, "NET_IO14", False),  # IO14 (PS_ON_PIN)
+    (7, gx(13), gy(8), 9, "PWR_BTN#", False),   # IO2  (PWR_BTN_PIN)
+    (8, gx(13), gy(9), 0, "", False)            # IO4  (Flash LED - NC)
 ]
 cam_l_str = "\n".join([pad_tht(p[0], p[1], p[2], p[3], p[4], p[5]) for p in cam_l_pads])
 pcb_footprints.append(f"""\t(footprint "Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical"
@@ -521,14 +521,14 @@ pcb_footprints.append(f"""\t(footprint "Connector_PinSocket_2.54mm:PinSocket_1x0
 
 # 3. J_CAM_R (1x8 female pin socket) at Col 22, Rows 2..9 (spacing: 9 cols = 22.86 mm = 0.9 in)
 cam_r_pads = [
-    (1, gx(22), gy(2), 3, "+3V3", True),  # 3V3
-    (2, gx(22), gy(3), 1, "GND", False),  # GND
-    (3, gx(22), gy(4), 0, "", False),     # IO0 (NC)
-    (4, gx(22), gy(5), 0, "", False),     # U0TX (NC)
-    (5, gx(22), gy(6), 0, "", False),     # U0RX (NC)
-    (6, gx(22), gy(7), 0, "", False),     # IO16 (NC)
-    (7, gx(22), gy(8), 1, "GND", False),  # GND
-    (8, gx(22), gy(9), 0, "", False)      # VCC (NC)
+    (1, gx(22), gy(2), 3, "+3V3", True),        # 3V3 (output)
+    (2, gx(22), gy(3), 0, "", False),           # IO16 (PSRAM - NC!)
+    (3, gx(22), gy(4), 0, "", False),           # IO0  (Boot strap - NC)
+    (4, gx(22), gy(5), 1, "GND", False),        # GND (middle)
+    (5, gx(22), gy(6), 0, "", False),           # VCC  (NC)
+    (6, gx(22), gy(7), 0, "", False),           # U0RX (NC)
+    (7, gx(22), gy(8), 0, "", False),           # U0TX (NC)
+    (8, gx(22), gy(9), 1, "GND", False)         # GND (bottom)
 ]
 cam_r_str = "\n".join([pad_tht(p[0], p[1], p[2], p[3], p[4], p[5]) for p in cam_r_pads])
 pcb_footprints.append(f"""\t(footprint "Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical"
@@ -542,121 +542,114 @@ pcb_footprints.append(f"""\t(footprint "Connector_PinSocket_2.54mm:PinSocket_1x0
 {cam_r_str}
 \t)""")
 
-# 4. C_PWR1 (470uF radial electrolytic) at Col 10, Pad 1 at Row 9 (+5VSB), Pad 2 at Row 8 (GND)
+# 4. C_PWR1 (470uF radial electrolytic) at Col 10, Pad 1 at Row 3 (+5VSB), Pad 2 at Row 1 (GND)
 pcb_footprints.append(f"""\t(footprint "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm"
 \t\t(layer "F.Cu") (uuid "{u()}") (at 0 0)
-\t\t(property "Reference" "C_PWR1" (at {gx(10)} {gy(10.4)} 0) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(property "Value" "470uF" (at {gx(10)} {gy(6.8)} 0) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(fp_line (start {gx(9.4)} {gy(9)}) (end {gx(9.0)} {gy(9)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
-\t\t(fp_line (start {gx(9.2)} {gy(8.8)}) (end {gx(9.2)} {gy(9.2)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
-{pad_tht(1, gx(10), gy(9), 2, "+5VSB", True, size=1.6)}
-{pad_tht(2, gx(10), gy(8), 1, "GND", False, size=1.6)}
+\t\t(property "Reference" "C_PWR1" (at {gx(10)} {gy(4.2)} 0) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(property "Value" "470uF" (at {gx(10)} {gy(0.5)} 0) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(fp_line (start {gx(9.4)} {gy(3)}) (end {gx(9.0)} {gy(3)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
+\t\t(fp_line (start {gx(9.2)} {gy(2.8)}) (end {gx(9.2)} {gy(3.2)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
+{pad_tht(1, gx(10), gy(3), 2, "+5VSB", True, size=1.6)}
+{pad_tht(2, gx(10), gy(1), 1, "GND", False, size=1.6)}
 \t)""")
 
-# 5. C_PWR2 (100nF ceramic disc) at Col 11, Pad 1 at Row 9 (+5VSB), Pad 2 at Row 8 (GND)
+# 5. C_PWR2 (100nF ceramic disc) at Col 11, Pad 1 at Row 3 (+5VSB), Pad 2 at Row 1 (GND)
 pcb_footprints.append(f"""\t(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm"
 \t\t(layer "F.Cu") (uuid "{u()}") (at 0 0)
-\t\t(property "Reference" "C_PWR2" (at {gx(11.5)} {gy(10.4)} 0) (layer "F.SilkS") (effects (font (size 0.6 0.6) (thickness 0.1))))
-\t\t(property "Value" "100nF" (at {gx(11.5)} {gy(7.2)} 0) (layer "F.Fab") (effects (font (size 0.6 0.6) (thickness 0.1))))
-\t\t(fp_line (start {gx(10.7)} {gy(8.5)}) (end {gx(11.3)} {gy(8.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
-{pad_tht(1, gx(11), gy(9), 2, "+5VSB", False)}
-{pad_tht(2, gx(11), gy(8), 1, "GND", False)}
+\t\t(property "Reference" "C_PWR2" (at {gx(11.5)} {gy(4.2)} 0) (layer "F.SilkS") (effects (font (size 0.6 0.6) (thickness 0.1))))
+\t\t(property "Value" "100nF" (at {gx(11.5)} {gy(0.5)} 0) (layer "F.Fab") (effects (font (size 0.6 0.6) (thickness 0.1))))
+{pad_tht(1, gx(11), gy(3), 2, "+5VSB", False)}
+{pad_tht(2, gx(11), gy(1), 1, "GND", False)}
 \t)""")
 
-# 6. R1 (1k series TPMS1) horizontal on Row 2: Col 4..7
+# 6. R1 (1k series TPMS1) horizontal on Row 5: Col 4..7
 pcb_footprints.append(f"""\t(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal"
 \t\t(layer "F.Cu") (uuid "{u()}") (at 0 0)
-\t\t(property "Reference" "R1" (at {gx(5.5)} {gy(1.3)} 0) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(property "Value" "1k" (at {gx(5.5)} {gy(2.7)} 0) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(fp_rect (start {gx(4.7)} {gy(1.7)}) (end {gx(6.3)} {gy(2.3)}) (stroke (width 0.1) (type solid)) (fill none) (layer "F.SilkS"))
-{pad_tht(1, gx(4), gy(2), 4, "TPMS1", False)}
-{pad_tht(2, gx(7), gy(2), 5, "NET_IO13", False)}
+\t\t(property "Reference" "R1" (at {gx(5.5)} {gy(4.3)} 0) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(property "Value" "1k" (at {gx(5.5)} {gy(5.7)} 0) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(fp_rect (start {gx(4.7)} {gy(4.7)}) (end {gx(6.3)} {gy(5.3)}) (stroke (width 0.1) (type solid)) (fill none) (layer "F.SilkS"))
+{pad_tht(1, gx(4), gy(5), 4, "TPMS1", False)}
+{pad_tht(2, gx(7), gy(5), 5, "NET_IO13", False)}
 \t)""")
 
-# 7. R2 (4.7k pull-down TPMS1) horizontal on Row 3: Col 5..8
+# 7. R2 (4.7k pull-down TPMS1) vertical at Col 8: Row 1 (GND) to Row 5 (NET_IO13)
 pcb_footprints.append(f"""\t(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal"
 \t\t(layer "F.Cu") (uuid "{u()}") (at 0 0)
-\t\t(property "Reference" "R2" (at {gx(6.5)} {gy(3.7)} 0) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(property "Value" "4.7k" (at {gx(6.5)} {gy(2.3)} 0) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(fp_rect (start {gx(5.7)} {gy(2.7)}) (end {gx(7.3)} {gy(3.3)}) (stroke (width 0.1) (type solid)) (fill none) (layer "F.SilkS"))
-{pad_tht(1, gx(5), gy(3), 1, "GND", False)}
-{pad_tht(2, gx(8), gy(3), 5, "NET_IO13", False)}
+\t\t(property "Reference" "R2" (at {gx(8.6)} {gy(3)} 90) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(property "Value" "4.7k" (at {gx(7.4)} {gy(3)} 90) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(fp_rect (start {gx(7.7)} {gy(2.4)}) (end {gx(8.3)} {gy(3.6)}) (stroke (width 0.1) (type solid)) (fill none) (layer "F.SilkS"))
+{pad_tht(1, gx(8), gy(1), 1, "GND", False)}
+{pad_tht(2, gx(8), gy(5), 5, "NET_IO13", False)}
 \t)""")
 
-# 8. C1 (100nF filter TPMS1) vertical at Col 9: Row 2 (GND) to Row 3 (NET_IO13)
+# 8. C1 (100nF filter TPMS1) vertical at Col 9: Row 1 (GND) to Row 5 (NET_IO13)
 pcb_footprints.append(f"""\t(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm"
 \t\t(layer "F.Cu") (uuid "{u()}") (at 0 0)
-\t\t(property "Reference" "C1" (at {gx(9.6)} {gy(2.5)} 90) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(property "Value" "100nF" (at {gx(8.4)} {gy(2.5)} 90) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(fp_line (start {gx(8.8)} {gy(2.5)}) (end {gx(9.2)} {gy(2.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
-{pad_tht(1, gx(9), gy(2), 1, "GND", False)}
-{pad_tht(2, gx(9), gy(3), 5, "NET_IO13", False)}
+\t\t(property "Reference" "C1" (at {gx(9.6)} {gy(3)} 90) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(property "Value" "100nF" (at {gx(9.0)} {gy(3)} 90) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
+{pad_tht(1, gx(9), gy(1), 1, "GND", False)}
+{pad_tht(2, gx(9), gy(5), 5, "NET_IO13", False)}
 \t)""")
 
-# 9. Q1 (2N7000 N-MOSFET TO-92 Wide) horizontal on Row 7: Col 5..7
-# Pin 1 (Source) at (Col 7, Row 8) -> GND
-# Pin 2 (Gate)   at (Col 6, Row 7) -> NET_GATE
-# Pin 3 (Drain)  at (Col 5, Row 7) -> PS_ON#
+# 9. Q1 (2N7000 / BC547 N-Channel buffer) on Row 7: Col 5..7
+# Pad 3 (Drain/Collector) at (Col 5, Row 7) -> PS_ON#
+# Pad 2 (Gate/Base)       at (Col 6, Row 7) -> NET_GATE
+# Pad 1 (Source/Emitter)  at (Col 7, Row 9) -> GND
 pcb_footprints.append(f"""\t(footprint "Package_TO_SOT_THT:TO-92_Inline_Wide"
 \t\t(layer "F.Cu") (uuid "{u()}") (at 0 0)
-\t\t(property "Reference" "Q1" (at {gx(6)} {gy(5.5)} 0) (layer "F.SilkS") (effects (font (size 0.6 0.6) (thickness 0.1))))
-\t\t(property "Value" "2N7000" (at {gx(6)} {gy(8.9)} 0) (layer "F.Fab") (effects (font (size 0.6 0.6) (thickness 0.1))))
-\t\t(fp_line (start {gx(4.2)} {gy(6.3)}) (end {gx(6.8)} {gy(6.3)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
-\t\t(fp_line (start {gx(6.8)} {gy(6.3)}) (end {gx(7.8)} {gy(7.3)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
-{pad_tht(1, gx(7), gy(8), 1, "GND", False)}
+\t\t(property "Reference" "Q1" (at {gx(6)} {gy(6.2)} 0) (layer "F.SilkS") (effects (font (size 0.6 0.6) (thickness 0.1))))
+\t\t(property "Value" "2N7000" (at {gx(6)} {gy(8.0)} 0) (layer "F.Fab") (effects (font (size 0.6 0.6) (thickness 0.1))))
+\t\t(fp_line (start {gx(4.2)} {gy(6.5)}) (end {gx(6.8)} {gy(6.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
+{pad_tht(1, gx(7), gy(9), 1, "GND", False)}
 {pad_tht(2, gx(6), gy(7), 7, "NET_GATE", False)}
 {pad_tht(3, gx(5), gy(7), 6, "PS_ON#", False)}
 \t)""")
 
-# 10. R3 (1k series gate) vertical at Col 11: Row 5 (NET_IO14) to Row 7 (NET_GATE)
+# 10. R3 (1k series gate) horizontal on Row 7: Col 10 to Col 12
 pcb_footprints.append(f"""\t(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal"
 \t\t(layer "F.Cu") (uuid "{u()}") (at 0 0)
-\t\t(property "Reference" "R3" (at {gx(11.6)} {gy(6)} 90) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(property "Value" "1k" (at {gx(10.4)} {gy(6)} 90) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(fp_rect (start {gx(10.7)} {gy(5.4)}) (end {gx(11.3)} {gy(6.6)}) (stroke (width 0.1) (type solid)) (fill none) (layer "F.SilkS"))
-{pad_tht(1, gx(11), gy(5), 10, "NET_IO14", False)}
-{pad_tht(2, gx(11), gy(7), 7, "NET_GATE", False)}
+\t\t(property "Reference" "R3" (at {gx(11)} {gy(6.3)} 0) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(property "Value" "1k" (at {gx(11)} {gy(7.7)} 0) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(fp_rect (start {gx(10.5)} {gy(6.7)}) (end {gx(11.5)} {gy(7.3)}) (stroke (width 0.1) (type solid)) (fill none) (layer "F.SilkS"))
+{pad_tht(1, gx(10), gy(7), 7, "NET_GATE", False)}
+{pad_tht(2, gx(12), gy(7), 10, "NET_IO14", False)}
 \t)""")
 
-# 11. R4 (100k pull-down gate) vertical at Col 9: Row 7 (NET_GATE) to Row 8 (GND)
+# 11. R4 (100k pull-down gate) vertical at Col 9: Row 7 (NET_GATE) to Row 9 (GND)
 pcb_footprints.append(f"""\t(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal"
 \t\t(layer "F.Cu") (uuid "{u()}") (at 0 0)
-\t\t(property "Reference" "R4" (at {gx(9.6)} {gy(7.5)} 90) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(property "Value" "100k" (at {gx(8.4)} {gy(7.5)} 90) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(fp_line (start {gx(8.8)} {gy(7.5)}) (end {gx(9.2)} {gy(7.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
+\t\t(property "Reference" "R4" (at {gx(9.6)} {gy(8)} 90) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(property "Value" "100k" (at {gx(8.4)} {gy(8)} 90) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
 {pad_tht(1, gx(9), gy(7), 7, "NET_GATE", False)}
-{pad_tht(2, gx(9), gy(8), 1, "GND", False)}
+{pad_tht(2, gx(9), gy(9), 1, "GND", False)}
 \t)""")
 
-# 12. C2 (100nF gate snubber) vertical at Col 8: Row 7 (NET_GATE) to Row 8 (GND)
+# 12. C2 (100nF gate snubber) vertical at Col 8: Row 7 (NET_GATE) to Row 9 (GND)
 pcb_footprints.append(f"""\t(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm"
 \t\t(layer "F.Cu") (uuid "{u()}") (at 0 0)
-\t\t(property "Reference" "C2" (at {gx(8.4)} {gy(7.5)} 90) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(property "Value" "100nF" (at {gx(7.6)} {gy(7.5)} 90) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(fp_line (start {gx(7.8)} {gy(7.5)}) (end {gx(8.2)} {gy(7.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
+\t\t(property "Reference" "C2" (at {gx(8.4)} {gy(8)} 90) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(property "Value" "100nF" (at {gx(7.6)} {gy(8)} 90) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
 {pad_tht(1, gx(8), gy(7), 7, "NET_GATE", False)}
-{pad_tht(2, gx(8), gy(8), 1, "GND", False)}
+{pad_tht(2, gx(8), gy(9), 1, "GND", False)}
 \t)""")
 
-# 13. C_PWR3 (47uF 3.3V radial electrolytic) at Col 24: Row 2 (+3V3) to Row 3 (GND)
+# 13. C_PWR3 (47uF 3.3V radial electrolytic) at Col 24: Row 2 (+3V3) to Row 1 (GND)
 pcb_footprints.append(f"""\t(footprint "Capacitor_THT:CP_Radial_D6.3mm_P2.50mm"
 \t\t(layer "F.Cu") (uuid "{u()}") (at 0 0)
-\t\t(property "Reference" "C_PWR3" (at {gx(24)} {gy(1.1)} 0) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(property "Value" "47uF" (at {gx(24)} {gy(3.9)} 0) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(property "Reference" "C_PWR3" (at {gx(24)} {gy(2.8)} 0) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(property "Value" "47uF" (at {gx(24)} {gy(0.4)} 0) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
 \t\t(fp_line (start {gx(23.4)} {gy(2)}) (end {gx(23.0)} {gy(2)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
-\t\t(fp_line (start {gx(23.2)} {gy(1.8)}) (end {gx(23.2)} {gy(2.2)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
 {pad_tht(1, gx(24), gy(2), 3, "+3V3", True, size=1.6)}
-{pad_tht(2, gx(24), gy(3), 1, "GND", False, size=1.6)}
+{pad_tht(2, gx(24), gy(1), 1, "GND", False, size=1.6)}
 \t)""")
 
-# 14. C_PWR4 (100nF 3.3V ceramic disc) at Col 26: Row 2 (+3V3) to Row 3 (GND)
+# 14. C_PWR4 (100nF 3.3V ceramic disc) at Col 26: Row 2 (+3V3) to Row 1 (GND)
 pcb_footprints.append(f"""\t(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm"
 \t\t(layer "F.Cu") (uuid "{u()}") (at 0 0)
-\t\t(property "Reference" "C_PWR4" (at {gx(26)} {gy(1.1)} 0) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(property "Value" "100nF" (at {gx(26)} {gy(3.9)} 0) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
-\t\t(fp_line (start {gx(25.7)} {gy(2.5)}) (end {gx(26.3)} {gy(2.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
+\t\t(property "Reference" "C_PWR4" (at {gx(26)} {gy(2.8)} 0) (layer "F.SilkS") (effects (font (size 0.7 0.7) (thickness 0.12))))
+\t\t(property "Value" "100nF" (at {gx(26)} {gy(0.4)} 0) (layer "F.Fab") (effects (font (size 0.7 0.7) (thickness 0.12))))
 {pad_tht(1, gx(26), gy(2), 3, "+3V3", False)}
-{pad_tht(2, gx(26), gy(3), 1, "GND", False)}
+{pad_tht(2, gx(26), gy(1), 1, "GND", False)}
 \t)""")
 
 # ===========================================================================
@@ -668,81 +661,82 @@ def trk(x1, y1, x2, y2, net_id, w=0.8):
 
 tracks = []
 
-# --- Net 2 (+5VSB) along Row 9 ---
-# J_EXT pin 6 (2,9) -> C_PWR1 (10,9) -> C_PWR2 (11,9) -> J_CAM_L pin 8 (13,9)
-tracks.append(trk(gx(2), gy(9), gx(10), gy(9), 2, 1.2))
-tracks.append(trk(gx(10), gy(9), gx(11), gy(9), 2, 1.2))
-tracks.append(trk(gx(11), gy(9), gx(13), gy(9), 2, 1.2))
-
-# --- Net 1 (GND) Main Bus along Row 8 ---
-# (2,8) -> Q1 S (7,8) -> C2 (8,8) -> R4 (9,8) -> C_PWR1 (10,8) -> C_PWR2 (11,8) -> J_CAM_L pin 7 (13,8) -> J_CAM_R pin 7 (22,8)
-tracks.append(trk(gx(2), gy(8), gx(7), gy(8), 1, 1.2))
-tracks.append(trk(gx(7), gy(8), gx(8), gy(8), 1, 1.2))
-tracks.append(trk(gx(8), gy(8), gx(9), gy(8), 1, 1.2))
-tracks.append(trk(gx(9), gy(8), gx(10), gy(8), 1, 1.2))
-tracks.append(trk(gx(10), gy(8), gx(11), gy(8), 1, 1.2))
-tracks.append(trk(gx(11), gy(8), gx(13), gy(8), 1, 1.2))
-tracks.append(trk(gx(13), gy(8), gx(22), gy(8), 1, 1.2))
+# --- Net 2 (+5VSB) along Row 3 to Row 2 ---
+# J_EXT pin 1 (2,3) -> C_PWR1 (10,3) -> C_PWR2 (11,3) -> (11,2) -> J_CAM_L pin 1 (13,2)
+tracks.append(trk(gx(2), gy(3), gx(10), gy(3), 2, 1.2))
+tracks.append(trk(gx(10), gy(3), gx(11), gy(3), 2, 1.2))
+tracks.append(trk(gx(11), gy(3), gx(11), gy(2), 2, 1.2))
+tracks.append(trk(gx(11), gy(2), gx(13), gy(2), 2, 1.2))
 
 # --- Net 1 (GND) Top Bus along Row 1 ---
-# Col 1 links Row 8 to Row 1
-tracks.append(trk(gx(2), gy(8), gx(1), gy(8), 1, 0.8))
-tracks.append(trk(gx(1), gy(8), gx(1), gy(1), 1, 0.8))
-tracks.append(trk(gx(1), gy(1), gx(5), gy(1), 1, 0.8))
-tracks.append(trk(gx(5), gy(1), gx(9), gy(1), 1, 0.8))
+# J_EXT pin 2 (2,4) -> (1,4) -> (1,1) -> (27,1)
+tracks.append(trk(gx(2), gy(4), gx(1), gy(4), 1, 1.2))
+tracks.append(trk(gx(1), gy(4), gx(1), gy(1), 1, 1.2))
+tracks.append(trk(gx(1), gy(1), gx(8), gy(1), 1, 1.2))
+tracks.append(trk(gx(8), gy(1), gx(9), gy(1), 1, 1.2))
+tracks.append(trk(gx(9), gy(1), gx(10), gy(1), 1, 1.2))
+tracks.append(trk(gx(10), gy(1), gx(11), gy(1), 1, 1.2))
+tracks.append(trk(gx(11), gy(1), gx(14), gy(1), 1, 1.2))
+tracks.append(trk(gx(14), gy(1), gx(24), gy(1), 1, 1.2))
+tracks.append(trk(gx(24), gy(1), gx(26), gy(1), 1, 1.2))
+tracks.append(trk(gx(26), gy(1), gx(27), gy(1), 1, 1.2))
 
-# Drops from Row 1 to R2 (5,3) and C1 (9,2)
-tracks.append(trk(gx(5), gy(1), gx(5), gy(3), 1, 0.8))
-tracks.append(trk(gx(9), gy(1), gx(9), gy(2), 1, 0.8))
+# Drop from Row 1 to J_CAM_L pin 2 (13,3)
+tracks.append(trk(gx(14), gy(1), gx(14), gy(3), 1, 0.8))
+tracks.append(trk(gx(14), gy(3), gx(13), gy(3), 1, 0.8))
 
-# GND connection to 3.3V section via Col 27 around right edge:
-# From J_CAM_R pin 7 (22,8) -> (27,8) -> (27,3) -> C_PWR4 (26,3) -> C_PWR3 (24,3) -> J_CAM_R pin 2 (22,3)
-tracks.append(trk(gx(22), gy(8), gx(27), gy(8), 1, 0.8))
-tracks.append(trk(gx(27), gy(8), gx(27), gy(3), 1, 0.8))
-tracks.append(trk(gx(27), gy(3), gx(26), gy(3), 1, 0.8))
-tracks.append(trk(gx(26), gy(3), gx(24), gy(3), 1, 0.8))
-tracks.append(trk(gx(24), gy(3), gx(22), gy(3), 1, 0.8))
+# --- Net 1 (GND) Right Link and Bottom Bus ---
+# (27,1) -> (27,5) -> J_CAM_R pin 4 (22,5)
+tracks.append(trk(gx(27), gy(1), gx(27), gy(5), 1, 0.8))
+tracks.append(trk(gx(27), gy(5), gx(22), gy(5), 1, 0.8))
+
+# (27,5) -> (27,9) -> J_CAM_R pin 8 (22,9) -> bypass J_CAM_L pad 8 (13,9) via Row 10 -> (9,9) -> (8,9) -> (7,9)
+tracks.append(trk(gx(27), gy(5), gx(27), gy(9), 1, 1.2))
+tracks.append(trk(gx(27), gy(9), gx(22), gy(9), 1, 1.2))
+tracks.append(trk(gx(22), gy(9), gx(14), gy(9), 1, 1.2))
+tracks.append(trk(gx(14), gy(9), gx(14), gy(10), 1, 1.2))
+tracks.append(trk(gx(14), gy(10), gx(12), gy(10), 1, 1.2))
+tracks.append(trk(gx(12), gy(10), gx(12), gy(9), 1, 1.2))
+tracks.append(trk(gx(12), gy(9), gx(9), gy(9), 1, 1.2))
+tracks.append(trk(gx(9), gy(9), gx(8), gy(9), 1, 1.2))
+tracks.append(trk(gx(8), gy(9), gx(7), gy(9), 1, 1.2))
+
+# --- Net 4 (TPMS1) along Row 5 ---
+# J_EXT pin 3 (2,5) -> R1 pad 1 (4,5)
+tracks.append(trk(gx(2), gy(5), gx(4), gy(5), 4, 0.8))
+
+# --- Net 5 (NET_IO13) along Row 5 ---
+# R1 pad 2 (7,5) -> R2 (8,5) -> C1 (9,5) -> J_CAM_L pin 4 (13,5)
+tracks.append(trk(gx(7), gy(5), gx(8), gy(5), 5, 0.8))
+tracks.append(trk(gx(8), gy(5), gx(9), gy(5), 5, 0.8))
+tracks.append(trk(gx(9), gy(5), gx(13), gy(5), 5, 0.8))
+
+# --- Net 8 (BTN_A) along Row 6 ---
+# J_EXT pin 4 (2,6) -> J_CAM_L pin 5 (13,6)
+tracks.append(trk(gx(2), gy(6), gx(13), gy(6), 8, 0.8))
+
+# --- Net 6 (PS_ON#) on Row 7 ---
+# J_EXT pin 5 (2,7) -> Q1 Drain (5,7)
+tracks.append(trk(gx(2), gy(7), gx(5), gy(7), 6, 0.8))
+
+# --- Net 7 (NET_GATE) on Row 7 ---
+# Q1 Gate (6,7) -> C2 (8,7) -> R4 (9,7) -> R3 pad 1 (10,7)
+tracks.append(trk(gx(6), gy(7), gx(8), gy(7), 7, 0.8))
+tracks.append(trk(gx(8), gy(7), gx(9), gy(7), 7, 0.8))
+tracks.append(trk(gx(9), gy(7), gx(10), gy(7), 7, 0.8))
+
+# --- Net 10 (NET_IO14) on Row 7 ---
+# R3 pad 2 (12,7) -> J_CAM_L pin 6 (13,7)
+tracks.append(trk(gx(12), gy(7), gx(13), gy(7), 10, 0.8))
+
+# --- Net 9 (PWR_BTN#) along Row 8 ---
+# J_EXT pin 6 (2,8) -> J_CAM_L pin 7 (13,8)
+tracks.append(trk(gx(2), gy(8), gx(13), gy(8), 9, 0.8))
 
 # --- Net 3 (+3V3) along Row 2 ---
 # J_CAM_R pin 1 (22,2) -> C_PWR3 (24,2) -> C_PWR4 (26,2)
 tracks.append(trk(gx(22), gy(2), gx(24), gy(2), 3, 0.8))
 tracks.append(trk(gx(24), gy(2), gx(26), gy(2), 3, 0.8))
-
-# --- Net 4 (TPMS1) ---
-# J_EXT pin 1 (2,4) -> (2,2) -> R1 pad 1 (4,2)
-tracks.append(trk(gx(2), gy(4), gx(2), gy(2), 4, 0.8))
-tracks.append(trk(gx(2), gy(2), gx(4), gy(2), 4, 0.8))
-
-# --- Net 5 (NET_IO13) ---
-# R1 pad 2 (7,2) -> (8,2) -> R2 pad 2 (8,3) -> C1 pad 2 (9,3) -> J_CAM_L pin 2 (13,3)
-tracks.append(trk(gx(7), gy(2), gx(8), gy(2), 5, 0.8))
-tracks.append(trk(gx(8), gy(2), gx(8), gy(3), 5, 0.8))
-tracks.append(trk(gx(8), gy(3), gx(9), gy(3), 5, 0.8))
-tracks.append(trk(gx(9), gy(3), gx(13), gy(3), 5, 0.8))
-
-# --- Net 8 (BTN_A) along Row 4 ---
-# J_EXT pin 2 (2,5) -> (3,5) -> (3,4) -> J_CAM_L pin 3 (13,4)
-tracks.append(trk(gx(2), gy(5), gx(3), gy(5), 8, 0.8))
-tracks.append(trk(gx(3), gy(5), gx(3), gy(4), 8, 0.8))
-tracks.append(trk(gx(3), gy(4), gx(13), gy(4), 8, 0.8))
-
-# --- Net 9 (PWR_BTN#) along Row 6 ---
-# J_EXT pin 3 (2,6) -> J_CAM_L pin 5 (13,6)
-tracks.append(trk(gx(2), gy(6), gx(13), gy(6), 9, 0.8))
-
-# --- Net 6 (PS_ON#) on Row 7 ---
-# J_EXT pin 4 (2,7) -> Q1 Drain (5,7)
-tracks.append(trk(gx(2), gy(7), gx(5), gy(7), 6, 0.8))
-
-# --- Net 10 (NET_IO14) on Row 5 ---
-# J_CAM_L pin 4 (13,5) -> R3 pad 1 (11,5)
-tracks.append(trk(gx(13), gy(5), gx(11), gy(5), 10, 0.8))
-
-# --- Net 7 (NET_GATE) on Row 7 ---
-# Q1 Gate (6,7) -> C2 (8,7) -> R4 (9,7) -> R3 pad 2 (11,7)
-tracks.append(trk(gx(6), gy(7), gx(8), gy(7), 7, 0.8))
-tracks.append(trk(gx(8), gy(7), gx(9), gy(7), 7, 0.8))
-tracks.append(trk(gx(9), gy(7), gx(11), gy(7), 7, 0.8))
 
 pcb_full = pcb_header + "\n" + "\n".join(pcb_footprints) + "\n" + "\n".join(tracks) + "\n)\n"
 

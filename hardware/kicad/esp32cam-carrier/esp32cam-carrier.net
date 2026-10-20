@@ -2,7 +2,7 @@
 	(version "E")
 	(design
 		(source "/Users/ffosilva/repos/ffosilva/bc-awake/hardware/kicad/esp32cam-carrier/esp32cam-carrier.kicad_sch")
-		(date "2026-10-20T11:41:37")
+		(date "2026-10-20T18:46:56")
 		(tool "Eeschema 10.0.7")
 		(sheet
 			(number "1")
@@ -93,7 +93,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "579cdb5d-43be-4b58-b111-087948848161")
+			(tstamps "acc533ef-fa10-49e3-aa93-319a1467daf7")
 			(units
 				(unit
 					(name "A")
@@ -147,7 +147,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "7c81d9c9-aac0-47c1-8b0e-275839106f47")
+			(tstamps "917597bf-30b7-40f6-ad5e-6ad9292ce4ac")
 			(units
 				(unit
 					(name "A")
@@ -201,7 +201,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "5df064c8-f19e-4395-9776-7890e2bb0e9c")
+			(tstamps "13c57bc7-a1d4-4a56-90e3-beda0cbfee2b")
 			(units
 				(unit
 					(name "A")
@@ -255,7 +255,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "12208eaf-be5f-40cc-b43f-3fc09df86b28")
+			(tstamps "fa2e4f7f-54da-4e8d-aa28-011c4b527b1e")
 			(units
 				(unit
 					(name "A")
@@ -309,7 +309,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "fb62a407-604a-4827-8c28-4a96a9cd65cb")
+			(tstamps "d5372910-2b45-4b1a-a3ba-399553a0109f")
 			(units
 				(unit
 					(name "A")
@@ -363,7 +363,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "8db69a88-9cad-43c4-898c-94598eda5ba7")
+			(tstamps "da8b7660-5043-4658-970a-db9ca9a4f63c")
 			(units
 				(unit
 					(name "A")
@@ -417,7 +417,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "0ee195b9-2e88-44b1-9cb9-ee56a7818bbd")
+			(tstamps "2b7aa3e1-6631-4f0f-b4ca-fd0cae220bac")
 			(units
 				(unit
 					(name "A")
@@ -489,7 +489,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "f88489ca-5400-4db7-a2df-bf0566cf7cc5")
+			(tstamps "b9ee791d-749f-41ff-976e-8f9a3e2767c0")
 			(units
 				(unit
 					(name "A")
@@ -561,7 +561,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "8754d404-8068-448e-a0d0-d6417132a60f")
+			(tstamps "bc2a18ac-a3f4-4b90-804a-443c5cb24e4e")
 			(units
 				(unit
 					(name "A")
@@ -627,7 +627,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "8f5d5b65-83d9-4d7a-a983-cfffca22c487")
+			(tstamps "4315fcc8-49e1-4745-9095-c7b17bbd040c")
 			(units
 				(unit
 					(name "A")
@@ -684,7 +684,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "30754641-856c-4752-82f6-c46f09b2b7ba")
+			(tstamps "2eb110a6-30c1-4f3d-8c49-1c43f9c7b25e")
 			(units
 				(unit
 					(name "A")
@@ -738,7 +738,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "85d0dce1-9e01-4b5e-b774-38540a6dff55")
+			(tstamps "920cb05f-76c6-44a3-b952-215f5daac553")
 			(units
 				(unit
 					(name "A")
@@ -792,7 +792,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "38144472-be4a-48d6-8340-44a3cc0a7acf")
+			(tstamps "3c6bd263-36f9-4cb5-8019-8242ace749c4")
 			(units
 				(unit
 					(name "A")
@@ -846,7 +846,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "55740e5e-2507-49d2-a726-8c2b3dcb32a6")
+			(tstamps "acc720f0-215d-4ebb-8ca4-f9f32588e0c5")
 			(units
 				(unit
 					(name "A")
@@ -1176,14 +1176,14 @@
 			)
 			(node
 				(ref "J_CAM_L")
-				(pin "8")
-				(pinfunction "Pin_8_8")
+				(pin "1")
+				(pinfunction "Pin_1_1")
 				(pintype "passive")
 			)
 			(node
 				(ref "J_EXT")
-				(pin "6")
-				(pinfunction "Pin_6_6")
+				(pin "1")
+				(pinfunction "Pin_1_1")
 				(pintype "passive")
 			)
 		)
@@ -1193,14 +1193,14 @@
 			(class "Default")
 			(node
 				(ref "J_CAM_L")
-				(pin "3")
-				(pinfunction "Pin_3_3")
+				(pin "5")
+				(pinfunction "Pin_5_5")
 				(pintype "passive")
 			)
 			(node
 				(ref "J_EXT")
-				(pin "2")
-				(pinfunction "Pin_2_2")
+				(pin "4")
+				(pinfunction "Pin_4_4")
 				(pintype "passive")
 			)
 		)
@@ -1240,26 +1240,26 @@
 			)
 			(node
 				(ref "J_CAM_L")
-				(pin "7")
-				(pinfunction "Pin_7_7")
-				(pintype "passive")
-			)
-			(node
-				(ref "J_CAM_R")
 				(pin "2")
 				(pinfunction "Pin_2_2")
 				(pintype "passive")
 			)
 			(node
 				(ref "J_CAM_R")
-				(pin "7")
-				(pinfunction "Pin_7_7")
+				(pin "4")
+				(pinfunction "Pin_4_4")
+				(pintype "passive")
+			)
+			(node
+				(ref "J_CAM_R")
+				(pin "8")
+				(pinfunction "Pin_8_8")
 				(pintype "passive")
 			)
 			(node
 				(ref "J_EXT")
-				(pin "5")
-				(pinfunction "Pin_5_5")
+				(pin "2")
+				(pinfunction "Pin_2_2")
 				(pintype "passive")
 			)
 			(node
@@ -1316,8 +1316,8 @@
 			)
 			(node
 				(ref "J_CAM_L")
-				(pin "2")
-				(pinfunction "Pin_2_2")
+				(pin "4")
+				(pinfunction "Pin_4_4")
 				(pintype "passive")
 			)
 			(node
@@ -1337,8 +1337,8 @@
 			(class "Default")
 			(node
 				(ref "J_CAM_L")
-				(pin "4")
-				(pinfunction "Pin_4_4")
+				(pin "6")
+				(pinfunction "Pin_6_6")
 				(pintype "passive")
 			)
 			(node
@@ -1353,8 +1353,8 @@
 			(class "Default")
 			(node
 				(ref "J_EXT")
-				(pin "4")
-				(pinfunction "Pin_4_4")
+				(pin "5")
+				(pinfunction "Pin_5_5")
 				(pintype "passive")
 			)
 			(node
@@ -1370,14 +1370,14 @@
 			(class "Default")
 			(node
 				(ref "J_CAM_L")
-				(pin "5")
-				(pinfunction "Pin_5_5")
+				(pin "7")
+				(pinfunction "Pin_7_7")
 				(pintype "passive")
 			)
 			(node
 				(ref "J_EXT")
-				(pin "3")
-				(pinfunction "Pin_3_3")
+				(pin "6")
+				(pinfunction "Pin_6_6")
 				(pintype "passive")
 			)
 		)
@@ -1387,8 +1387,8 @@
 			(class "Default")
 			(node
 				(ref "J_EXT")
-				(pin "1")
-				(pinfunction "Pin_1_1")
+				(pin "3")
+				(pinfunction "Pin_3_3")
 				(pintype "passive")
 			)
 			(node
@@ -1399,45 +1399,45 @@
 		)
 		(net
 			(code "11")
-			(name "unconnected-(J_CAM_L-Pin_1-Pad1)")
+			(name "unconnected-(J_CAM_L-Pin_3-Pad3)")
 			(class "Default")
 			(node
 				(ref "J_CAM_L")
-				(pin "1")
-				(pinfunction "Pin_1_1")
-				(pintype "passive")
-			)
-		)
-		(net
-			(code "12")
-			(name "unconnected-(J_CAM_L-Pin_6-Pad6)")
-			(class "Default")
-			(node
-				(ref "J_CAM_L")
-				(pin "6")
-				(pinfunction "Pin_6_6")
-				(pintype "passive")
-			)
-		)
-		(net
-			(code "13")
-			(name "unconnected-(J_CAM_R-Pin_3-Pad3)")
-			(class "Default")
-			(node
-				(ref "J_CAM_R")
 				(pin "3")
 				(pinfunction "Pin_3_3")
 				(pintype "passive")
 			)
 		)
 		(net
-			(code "14")
-			(name "unconnected-(J_CAM_R-Pin_4-Pad4)")
+			(code "12")
+			(name "unconnected-(J_CAM_L-Pin_8-Pad8)")
+			(class "Default")
+			(node
+				(ref "J_CAM_L")
+				(pin "8")
+				(pinfunction "Pin_8_8")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "13")
+			(name "unconnected-(J_CAM_R-Pin_2-Pad2)")
 			(class "Default")
 			(node
 				(ref "J_CAM_R")
-				(pin "4")
-				(pinfunction "Pin_4_4")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "14")
+			(name "unconnected-(J_CAM_R-Pin_3-Pad3)")
+			(class "Default")
+			(node
+				(ref "J_CAM_R")
+				(pin "3")
+				(pinfunction "Pin_3_3")
 				(pintype "passive")
 			)
 		)
@@ -1465,12 +1465,12 @@
 		)
 		(net
 			(code "17")
-			(name "unconnected-(J_CAM_R-Pin_8-Pad8)")
+			(name "unconnected-(J_CAM_R-Pin_7-Pad7)")
 			(class "Default")
 			(node
 				(ref "J_CAM_R")
-				(pin "8")
-				(pinfunction "Pin_8_8")
+				(pin "7")
+				(pinfunction "Pin_7_7")
 				(pintype "passive")
 			)
 		)

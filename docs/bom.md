@@ -52,12 +52,12 @@ The wiring harness connects the carrier board's external terminal (`J_EXT`) to t
 
 | Signal Name | Carrier Pin (`J_EXT`) | Recommended Wire Color | Minimum Wire Gauge | Destination Connection |
 |:------------|:---------------------:|:-----------------------|:-------------------|:-----------------------|
-| `+5VSB` | Pin 6 | **Purple** / **Red** | 20–22 AWG | ATX 24-Pin Connector Pin 9 |
-| `GND` | Pin 5 | **Black** | 20–22 AWG | ATX 24-Pin Connector Pin 15 / 17 |
-| `PS_ON#` | Pin 4 | **Green** | 22–24 AWG | ATX 24-Pin Connector Pin 16 |
-| `PWR_BTN#` | Pin 3 | **Yellow** / **White** | 24–26 AWG | Motherboard Front Panel `POWER SW` (+) |
-| `BTN_A` | Pin 2 | **Blue** / **Orange** | 24–26 AWG | Front Panel Push Button Terminal A |
-| `TPMS1` | Pin 1 | **Gray** / **White** | 24–26 AWG | Motherboard TPMS1 Header Pin 9 |
+| `+5VSB` | Pin 1 | **Purple** / **Red** | 20–22 AWG | ATX 24-Pin Connector Pin 9 |
+| `GND` | Pin 2 | **Black** | 20–22 AWG | ATX 24-Pin Connector Pin 15 / 17 |
+| `TPMS1` | Pin 3 | **Gray** / **White** | 24–26 AWG | Motherboard TPMS1 Header Pin 9 |
+| `BTN_A` | Pin 4 | **Blue** / **Orange** | 24–26 AWG | Front Panel Push Button Terminal A |
+| `PS_ON#` | Pin 5 | **Green** | 22–24 AWG | ATX 24-Pin Connector Pin 16 |
+| `PWR_BTN#` | Pin 6 | **Yellow** / **White** | 24–26 AWG | Motherboard Front Panel `POWER SW` (+) |
 
 ---
 
@@ -69,7 +69,7 @@ Flashing and operating the AI-Thinker ESP32-CAM requires the module itself and a
 |:----:|:----------|:---:|:---------------|:--------------------------------------|:-------------------------------|
 | 1 | AI-Thinker ESP32-CAM Module | 1 | ESP32-D0WD module, 240 MHz dual-core, 4 MB Flash, 2 MB PSRAM, PCB antenna, OV2640 camera connector | AI-Thinker ESP32-CAM development board (ESP-32S) | Core microcontroller module executing the BC Awake firmware, Bluetooth server, and ATX control logic. *(Note: OV2640 camera sensor can be left unmounted to conserve power).* |
 | 2 | USB-to-UART Serial Adapter | 1 | 3.3V/5V logic USB serial interface (CP2102, FT232RL, or CH340G) with DTR/RTS or manual buttons | USB to TTL Serial Converter Cable / Module, or dedicated **ESP32-CAM-MB** daughterboard | Connects to PC host via USB to flash firmware binary (`pio run -t upload`) and view boot logs (`pio device monitor`). |
-| 3 | Flashing Boot Jumper | 1 | 2.54 mm pitch 2-pin shorting jumper shunt or female-to-female DuPont jumper | Standard 2.54 mm jumper shunt or 10 cm female-to-female DuPont wire | Connects `IO0` to `GND` on the ESP32-CAM right header to force bootloader download mode during flashing. Must be removed for normal boot. |
+| 3 | Flashing Boot Jumper | 1 | 2.54 mm pitch 2-pin shorting jumper shunt or female-to-female DuPont jumper | Standard 2.54 mm jumper shunt or 10 cm female-to-female DuPont wire | Connects `IO0` (Right header Pin 3) to `GND` (Right header Pin 4 or Left header Pin 2) to force bootloader download mode during flashing. Must be removed for normal boot. |
 
 ### Flashing Pin Interconnect (ESP32-CAM to Serial Adapter)
 
@@ -77,11 +77,11 @@ When using a standalone USB-to-UART adapter (without an ESP32-CAM-MB daughterboa
 
 | USB-UART Adapter Pin | ESP32-CAM Header Pin | Notes |
 |:---------------------|:---------------------|:------|
-| **5V / VCC** | **5V** (Left header pin 8) | Supply 5V power from USB adapter (ESP32-CAM onboard regulator generates 3.3V). |
-| **GND** | **GND** (Left header pin 7 or Right header pin 2) | Common ground reference. |
-| **RXD** | **U0TX** (Right header pin 4) | Serial receive line on adapter connects to ESP32 UART0 TX. |
-| **TXD** | **U0RX** (Right header pin 5) | Serial transmit line on adapter connects to ESP32 UART0 RX. |
-| **JUMPER** | **IO0** to **GND** | Straps ESP32 into ROM bootloader mode upon reset. |
+| **5V / VCC** | **5V** (Left header pin 1) | Supply 5V power from USB adapter (ESP32-CAM onboard regulator generates 3.3V). |
+| **GND** | **GND** (Left header pin 2 or Right header pin 4 / 8) | Common ground reference. **Do NOT connect to Right Pin 2 (IO16/PSRAM)!** |
+| **RXD** | **U0TX** (Right header pin 7) | Serial receive line on adapter connects to ESP32 UART0 TX. |
+| **TXD** | **U0RX** (Right header pin 6) | Serial transmit line on adapter connects to ESP32 UART0 RX. |
+| **JUMPER** | **IO0** (Right pin 3) to **GND** | Straps ESP32 into ROM bootloader mode upon reset. |
 
 ---
 
