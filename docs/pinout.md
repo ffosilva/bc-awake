@@ -101,7 +101,7 @@ The ESP32-CAM has two 8-pin headers (antenna at top):
 ```
 
 > [!TIP]
-> **ESP32-CAM Anti-Oscillation Circuit**: To avoid 3.3V AMS1117 brownout resets on radio bursts and overcome the 47 kΩ MicroSD pull-up on GPIO13, adding bulk decoupling, a 4.7 kΩ pull-down, and a MOSFET buffer is strongly recommended. See [AI-Thinker ESP32-CAM hardware resilience circuit](#ai-thinker-esp32-cam-hardware-resilience-circuit-anti-oscillation).
+> **ESP32-CAM Anti-Oscillation Circuit & Carrier Board**: To avoid 3.3V AMS1117 brownout resets on radio bursts and overcome the 47 kΩ MicroSD pull-up on GPIO13, adding bulk decoupling, a 4.7 kΩ pull-down, and a MOSFET buffer is strongly recommended. See [AI-Thinker ESP32-CAM hardware resilience circuit](#ai-thinker-esp32-cam-hardware-resilience-circuit-anti-oscillation) and the [ESP32-CAM Prototype Carrier Board Guide](esp32cam-carrier-pcb.md) for a single-layer PCB and perfboard layout reference.
 
 ## ESP32-C3 SuperMini header (USB-C)
 
@@ -241,7 +241,7 @@ The **AI-Thinker ESP32-CAM** is particularly prone to infinite power-cycle reboo
 2. **MicroSD pull-up on GPIO 13 (`BOARD_SENSE`)**: GPIO 13 is shared with MicroSD `DAT3` and has a physical **47 kΩ SMD pull-up to 3.3 V** on the camera PCB. When TPMS1 goes low or disconnects, this pull-up fights the ESP32's internal ~45 kΩ pull-down, biasing GPIO 13 at **~1.61 V** (the digital meta-stable threshold). Noise easily trips this as `HIGH`, tricking the ESP into adopting `STATE_ON` right after a brownout reset.
 3. **GPIO 14 over-voltage & float**: `PS_ON#` idles at ~5 V, stressing the GPIO 14 pad and floating high-Z during resets.
 
-To make an ESP32-CAM build rock-solid for 24/7 long-term operation, add this passive conditioning circuit (on a small perfboard or inline harness):
+To make an ESP32-CAM build rock-solid for 24/7 long-term operation, add this passive conditioning circuit (on a small perfboard or inline harness). For a complete KiCad single-layer PCB layout and step-by-step perfboard wiring diagram, see the [AI-Thinker ESP32-CAM Prototype Carrier Board Guide](esp32cam-carrier-pcb.md).
 
 ### ESP32-CAM Resilience Schematic
 
