@@ -8,6 +8,7 @@ import os
 import sys
 import uuid
 import subprocess
+import csv
 
 OUT_DIR = "hardware/kicad/esp32cam-carrier"
 os.makedirs(OUT_DIR, exist_ok=True)
@@ -18,6 +19,7 @@ PCB_PATH = os.path.join(OUT_DIR, "esp32cam-carrier.kicad_pcb")
 SVG_CU_PATH = os.path.join(OUT_DIR, "esp32cam-carrier-copper.svg")
 SVG_SILK_PATH = os.path.join(OUT_DIR, "esp32cam-carrier-silk.svg")
 PDF_PATH = os.path.join(OUT_DIR, "esp32cam-carrier.pdf")
+BOM_PATH = os.path.join(OUT_DIR, "esp32cam-carrier-bom.csv")
 
 KICAD_CLI = "/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli"
 
@@ -745,7 +747,146 @@ tracks.append(trk(gx(9), gy(7), gx(11), gy(7), 7, 0.8))
 pcb_full = pcb_header + "\n" + "\n".join(pcb_footprints) + "\n" + "\n".join(tracks) + "\n)\n"
 
 # ===========================================================================
-# 5. Execution & Validation
+# 5. Bill of Materials (BOM) Generation
+# ===========================================================================
+BOM_METADATA = {
+    "C_PWR1": {
+        "val": "470uF",
+        "desc": "Radial Electrolytic Capacitor (5V bulk reservoir)",
+        "ratings": "470µF 16V Low-ESR, 105°C, D8.0mm P3.5mm",
+        "mpn": "Panasonic EEU-FR1C471 / Nichicon UPW1C471MPD"
+    },
+    "C_PWR2": {
+        "val": "100nF",
+        "desc": "Ceramic Disc Capacitor (5V high-frequency decoupling)",
+        "ratings": "100nF 25V/50V X7R, D5.0mm P2.5mm",
+        "mpn": "Kemet C315C104K5R5TA / Generic"
+    },
+    "C_PWR3": {
+        "val": "47uF",
+        "desc": "Radial Electrolytic / Tantalum Capacitor (3.3V bulk reservoir)",
+        "ratings": "47µF 16V, D6.3mm P2.5mm",
+        "mpn": "Panasonic ECA-1CHG470 / Nichicon UVR1C470MDD"
+    },
+    "C_PWR4": {
+        "val": "100nF",
+        "desc": "Ceramic Disc Capacitor (3.3V high-frequency decoupling)",
+        "ratings": "100nF 25V/50V X7R, D5.0mm P2.5mm",
+        "mpn": "Kemet C315C104K5R5TA / Generic"
+    },
+    "C1": {
+        "val": "100nF",
+        "desc": "Ceramic Disc Capacitor (TPMS1 RC low-pass filter)",
+        "ratings": "100nF 25V/50V X7R, D5.0mm P2.5mm",
+        "mpn": "Kemet C315C104K5R5TA / Generic"
+    },
+    "C2": {
+        "val": "100nF",
+        "desc": "Ceramic Disc Capacitor (2N7000 gate glitch snubber)",
+        "ratings": "100nF 25V/50V X7R, D5.0mm P2.5mm",
+        "mpn": "Kemet C315C104K5R5TA / Generic"
+    },
+    "R1": {
+        "val": "1k",
+        "desc": "Metal Film Axial Resistor (TPMS1 series current limit)",
+        "ratings": "1kΩ 1/4W 1%, DIN0207 P7.62mm",
+        "mpn": "Yageo MFR-25FRF52-1K / TE LR0204F1K0"
+    },
+    "R2": {
+        "val": "4.7k",
+        "desc": "Metal Film Axial Resistor (TPMS1 digital pull-down)",
+        "ratings": "4.7kΩ 1/4W 1%, DIN0207 P7.62mm",
+        "mpn": "Yageo MFR-25FRF52-4K7 / TE LR0204F4K7"
+    },
+    "R3": {
+        "val": "1k",
+        "desc": "Metal Film Axial Resistor (2N7000 gate series resistor)",
+        "ratings": "1kΩ 1/4W 1%, DIN0207 P7.62mm",
+        "mpn": "Yageo MFR-25FRF52-1K / TE LR0204F1K0"
+    },
+    "R4": {
+        "val": "100k",
+        "desc": "Metal Film Axial Resistor (2N7000 gate pull-down)",
+        "ratings": "100kΩ 1/4W 1%, DIN0207 P7.62mm",
+        "mpn": "Yageo MFR-25FRF52-100K / TE LR0204F100K"
+    },
+    "Q1": {
+        "val": "2N7000",
+        "desc": "N-Channel MOSFET (PS_ON# low-side open-drain buffer)",
+        "ratings": "60V 200mA, Vgs(th) 0.8-3.0V, TO-92 Inline",
+        "mpn": "onsemi 2N7000 / Diotec 2N7000"
+    },
+    "J_CAM_L": {
+        "val": "1x08 Female Header",
+        "desc": "1x8 Female Pin Socket Header (ESP32-CAM Left)",
+        "ratings": "2.54mm pitch, vertical socket, 8.5mm height",
+        "mpn": "Generic 2.54mm 1x8 Female Socket Header"
+    },
+    "J_CAM_R": {
+        "val": "1x08 Female Header",
+        "desc": "1x8 Female Pin Socket Header (ESP32-CAM Right)",
+        "ratings": "2.54mm pitch, vertical socket, 8.5mm height",
+        "mpn": "Generic 2.54mm 1x8 Female Socket Header"
+    },
+    "J_EXT": {
+        "val": "1x06 Pin Header",
+        "desc": "1x6 Pin Header / Screw Terminal Block (External Harness)",
+        "ratings": "2.54mm pitch, vertical male / terminal block",
+        "mpn": "Generic 2.54mm 1x6 Pin Header / Terminal"
+    },
+}
+
+def export_bom(csv_path):
+    grouped = {}
+    for s in schematic_symbols:
+        ref = s["ref"]
+        fp = s["fp"]
+        meta = BOM_METADATA.get(ref, {})
+        val = meta.get("val", s["val"])
+        ratings = meta.get("ratings", "")
+        mpn = meta.get("mpn", "")
+
+        if ref in ("C1", "C2", "C_PWR2", "C_PWR4"):
+            desc = "Ceramic Disc Capacitor (Decoupling & filtering)"
+        elif ref in ("J_CAM_L", "J_CAM_R"):
+            desc = "1x8 Female Pin Socket Header (ESP32-CAM Sockets)"
+        elif ref in ("R1", "R3"):
+            desc = "Metal Film Axial Resistor"
+        else:
+            desc = meta.get("desc", s.get("desc", ""))
+
+        key = (val, fp, ratings, mpn, desc)
+        if key not in grouped:
+            grouped[key] = []
+        grouped[key].append(ref)
+
+    rows = []
+    item_num = 1
+    sorted_groups = sorted(grouped.items(), key=lambda g: (g[1][0][0], g[1][0]))
+    for (val, fp, ratings, mpn, desc), refs in sorted_groups:
+        sorted_refs = sorted(refs)
+        ref_str = ", ".join(sorted_refs)
+        qty = len(sorted_refs)
+        rows.append({
+            "Item": item_num,
+            "Reference": ref_str,
+            "Quantity": qty,
+            "Value": val,
+            "Footprint": fp,
+            "Description": desc,
+            "Ratings / Specs": ratings,
+            "Reference MPN": mpn
+        })
+        item_num += 1
+
+    fieldnames = ["Item", "Reference", "Quantity", "Value", "Footprint", "Description", "Ratings / Specs", "Reference MPN"]
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+# ===========================================================================
+# 6. Execution & Validation
 # ===========================================================================
 def main():
     print(f"Writing project file to {PRO_PATH}...")
@@ -793,6 +934,10 @@ def main():
     print("  - Copper Layer SVG:", SVG_CU_PATH)
     print("  - Silkscreen SVG:  ", SVG_SILK_PATH)
     print("  - Combined PDF:    ", PDF_PATH)
+
+    print(f"Generating BOM CSV to {BOM_PATH}...")
+    export_bom(BOM_PATH)
+    print("  - Carrier PCB BOM: ", BOM_PATH)
 
 if __name__ == "__main__":
     main()

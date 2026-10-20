@@ -63,7 +63,7 @@ between the ESP, the PSU, and the board.
 as an analog voltage with hysteresis rather than a digital pin (ADC1 on DevKitC and ESP32-C3; digital input with pull-down on ESP32-CAM).
 
 > [!TIP]
-> **ESP32-CAM deployments**: Due to the onboard AMS1117-3.3 regulator's dropout voltage and the 47 kΩ MicroSD pull-up on GPIO13, ESP32-CAM builds are prone to brownout resets and threshold floating. Adding power bulk decoupling (470 µF), an external 4.7 kΩ pull-down on GPIO13, and an N-MOSFET buffer on GPIO14 is strongly recommended for 24/7 reliability. See [docs/pinout.md: ESP32-CAM resilience circuit](docs/pinout.md#ai-thinker-esp32-cam-hardware-resilience-circuit-anti-oscillation).
+> **ESP32-CAM deployments**: Due to the onboard AMS1117-3.3 regulator's dropout voltage and the 47 kΩ MicroSD pull-up on GPIO13, ESP32-CAM builds are prone to brownout resets and threshold floating. Adding power bulk decoupling (470 µF), an external 4.7 kΩ pull-down on GPIO13, and an N-MOSFET buffer on GPIO14 is strongly recommended for 24/7 reliability. See [docs/pinout.md: ESP32-CAM resilience circuit](docs/pinout.md#ai-thinker-esp32-cam-hardware-resilience-circuit-anti-oscillation), the [carrier board guide](docs/esp32cam-carrier-pcb.md), and the dedicated [Bill of Materials](docs/bom.md).
 
 **Full pinout, header diagrams for DevKitC, ESP32-CAM, and ESP32-C3 (SuperMini & DevKitM-1), ATX 24-pin and TPMS1 connector diagrams, the
 `PS_ON#` buffer circuit, and the ESP32-CAM resilience circuit: [docs/pinout.md](docs/pinout.md).**

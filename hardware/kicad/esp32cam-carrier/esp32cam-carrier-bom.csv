@@ -1,0 +1,10 @@
+Item,Reference,Quantity,Value,Footprint,Description,Ratings / Specs,Reference MPN
+1,C_PWR1,1,470uF,Capacitor_THT:CP_Radial_D8.0mm_P3.50mm,Radial Electrolytic Capacitor (5V bulk reservoir),"470µF 16V Low-ESR, 105°C, D8.0mm P3.5mm",Panasonic EEU-FR1C471 / Nichicon UPW1C471MPD
+2,"C1, C2, C_PWR2, C_PWR4",4,100nF,Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm,Ceramic Disc Capacitor (Decoupling & filtering),"100nF 25V/50V X7R, D5.0mm P2.5mm",Kemet C315C104K5R5TA / Generic
+3,C_PWR3,1,47uF,Capacitor_THT:CP_Radial_D6.3mm_P2.50mm,Radial Electrolytic / Tantalum Capacitor (3.3V bulk reservoir),"47µF 16V, D6.3mm P2.5mm",Panasonic ECA-1CHG470 / Nichicon UVR1C470MDD
+4,"J_CAM_L, J_CAM_R",2,1x08 Female Header,Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical,1x8 Female Pin Socket Header (ESP32-CAM Sockets),"2.54mm pitch, vertical socket, 8.5mm height",Generic 2.54mm 1x8 Female Socket Header
+5,J_EXT,1,1x06 Pin Header,Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical,1x6 Pin Header / Screw Terminal Block (External Harness),"2.54mm pitch, vertical male / terminal block",Generic 2.54mm 1x6 Pin Header / Terminal
+6,Q1,1,2N7000,Package_TO_SOT_THT:TO-92_Inline_Wide,N-Channel MOSFET (PS_ON# low-side open-drain buffer),"60V 200mA, Vgs(th) 0.8-3.0V, TO-92 Inline",onsemi 2N7000 / Diotec 2N7000
+7,"R1, R3",2,1k,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,Metal Film Axial Resistor,"1kΩ 1/4W 1%, DIN0207 P7.62mm",Yageo MFR-25FRF52-1K / TE LR0204F1K0
+8,R2,1,4.7k,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,Metal Film Axial Resistor (TPMS1 digital pull-down),"4.7kΩ 1/4W 1%, DIN0207 P7.62mm",Yageo MFR-25FRF52-4K7 / TE LR0204F4K7
+9,R4,1,100k,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,Metal Film Axial Resistor (2N7000 gate pull-down),"100kΩ 1/4W 1%, DIN0207 P7.62mm",Yageo MFR-25FRF52-100K / TE LR0204F100K

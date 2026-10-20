@@ -22,6 +22,8 @@ KiCad 8/9/10 project files and exported vector graphics are located in [`hardwar
 
 ## 2. Bill of Materials (BOM)
 
+For an exhaustive catalog including ratings, manufacturer part numbers (LCSC, Digi-Key, Mouser), tolerances, wiring harness parts, and programmer tools, see the dedicated [AI-Thinker ESP32-CAM BOM Guide](bom.md) and machine-readable [CSV export](../hardware/kicad/esp32cam-carrier/esp32cam-carrier-bom.csv).
+
 | Designator | Component | Package | Value / Spec | Purpose |
 |------------|-----------|---------|--------------|---------|
 | `J_CAM_L` | 1×8 Female Socket Header | 2.54 mm THT | 8-pin 2.54mm pitch | ESP32-CAM Left Header (`IO12` to `5V`) |
@@ -190,6 +192,9 @@ All KiCad design files, schematics, netlists, and vector plots are stored in [`h
 - [`esp32cam-carrier-copper.svg`](../hardware/kicad/esp32cam-carrier/esp32cam-carrier-copper.svg): Vector plot of bottom copper tracks (`B.Cu`).
 - [`esp32cam-carrier-silk.svg`](../hardware/kicad/esp32cam-carrier/esp32cam-carrier-silk.svg): Vector plot of component placement silkscreen (`F.SilkS`).
 - [`esp32cam-carrier.pdf`](../hardware/kicad/esp32cam-carrier/esp32cam-carrier.pdf): Combined printable vector schematic & PCB document.
+- [`esp32cam-carrier-bom.csv`](../hardware/kicad/esp32cam-carrier/esp32cam-carrier-bom.csv): Machine-readable Bill of Materials CSV.
+
+For detailed hardware sourcing, tolerances, and external interconnect harness components, see [docs/bom.md](bom.md).
 
 To regenerate or verify the board programmatically at any time, run:
 ```bash

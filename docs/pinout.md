@@ -101,7 +101,7 @@ The ESP32-CAM has two 8-pin headers (antenna at top):
 ```
 
 > [!TIP]
-> **ESP32-CAM Anti-Oscillation Circuit & Carrier Board**: To avoid 3.3V AMS1117 brownout resets on radio bursts and overcome the 47 kΩ MicroSD pull-up on GPIO13, adding bulk decoupling, a 4.7 kΩ pull-down, and a MOSFET buffer is strongly recommended. See [AI-Thinker ESP32-CAM hardware resilience circuit](#ai-thinker-esp32-cam-hardware-resilience-circuit-anti-oscillation) and the [ESP32-CAM Prototype Carrier Board Guide](esp32cam-carrier-pcb.md) for a single-layer PCB and perfboard layout reference.
+> **ESP32-CAM Anti-Oscillation Circuit & Carrier Board**: To avoid 3.3V AMS1117 brownout resets on radio bursts and overcome the 47 kΩ MicroSD pull-up on GPIO13, adding bulk decoupling, a 4.7 kΩ pull-down, and a MOSFET buffer is strongly recommended. See [AI-Thinker ESP32-CAM hardware resilience circuit](#ai-thinker-esp32-cam-hardware-resilience-circuit-anti-oscillation), the [ESP32-CAM Prototype Carrier Board Guide](esp32cam-carrier-pcb.md), and the comprehensive [AI-Thinker ESP32-CAM Bill of Materials (BOM)](bom.md).
 
 ## ESP32-C3 SuperMini header (USB-C)
 
@@ -304,6 +304,8 @@ To make an ESP32-CAM build rock-solid for 24/7 long-term operation, add this pas
 ```
 
 ### Bill of Materials (BOM)
+
+For an exhaustive catalog including footprints, ratings, sourcing links, programming accessories, and machine-readable CSV export, see the dedicated [docs/bom.md](bom.md) and [docs/esp32cam-carrier-pcb.md](esp32cam-carrier-pcb.md).
 
 | Designator | Component | Value / Rating | Purpose |
 |------------|-----------|----------------|---------|
