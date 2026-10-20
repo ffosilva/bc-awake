@@ -6,27 +6,27 @@ Provides a captive WiFi access point and web interface for device configuration,
 ## Requirements
 
 ### Requirement: Setup Portal Activation
-The system SHALL launch a WiFi SoftAP setup portal automatically when unconfigured, or when explicitly requested by user input while off, while maintaining active power-button and power-state monitoring so the host computer can power on and operate during configuration.
+The system SHALL launch a WiFi SoftAP setup portal automatically when unconfigured, or when explicitly requested by user input while in STATE_OFF, and SHALL prevent the host computer from powering on while running in setup mode.
 
 #### Scenario: Unconfigured board boots into setup portal
 - **WHEN** the firmware boots and isConfigured is false or forceSetup is true
-- **THEN** the system launches the WiFi SoftAP broadcasting 'BC250_<SUFFIX>' on 192.168.4.1 and starts the web server while initializing the power state machine in STATE_OFF with push-button controls enabled
+- **THEN** the system keeps PS_ON# released in STATE_OFF, does not start Wi-Fi station mode, launches the WiFi SoftAP broadcasting 'BC250_<SUFFIX>' on 192.168.4.1 with Bluetooth discovery enabled, and starts the web server
 
 #### Scenario: Powering on host computer during setup portal
-- **WHEN** the momentary button is pressed while the setup portal is active in STATE_OFF
-- **THEN** the system asserts PS_ON# to power up the PSU, transitions to STATE_BOOTING and STATE_ON upon detecting TPMS1 HIGH, and keeps the WiFi SoftAP and web server running without interruption
+- **WHEN** the momentary button is tapped while the setup portal is active in STATE_OFF
+- **THEN** the system ignores the button tap, keeps PS_ON# released to high-impedance, and prevents the host computer from powering on
 
 #### Scenario: Button held for setup while off
-- **WHEN** the momentary button is held continuously for 8000 ms or longer while in STATE_OFF
-- **THEN** the system sets forceSetup to true and starts the setup portal without cutting PSU power if already running
+- **WHEN** the momentary button is held continuously for 8000 ms or longer while in STATE_OFF in normal mode
+- **THEN** the system sets forceSetup to true and restarts into the setup portal with PS_ON# released
 
 #### Scenario: Setup mode initiated via serial command
-- **WHEN** an 's' or 'S' character is received on the serial interface
-- **THEN** the system sets forceSetup to true and starts the setup portal without releasing PS_ON#
+- **WHEN** an 's' or 'S' character is received on the serial interface while in STATE_OFF
+- **THEN** the system sets forceSetup to true and restarts into the setup portal, whereas receiving 's' or 'S' while in STATE_BOOTING or STATE_ON is ignored
 
 #### Scenario: Button held to exit setup portal
-- **WHEN** the momentary button is held continuously for 8000 ms while running in setup mode and in STATE_OFF
-- **THEN** the system clears forceSetup, sets provisioned to true, and transitions to normal operation mode
+- **WHEN** the momentary button is held continuously for 8000 ms while running in setup mode
+- **THEN** the system clears forceSetup, sets provisioned to true, and reboots into normal operation mode
 
 ### Requirement: Captive Network and Web Serving
 The system SHALL broadcast an open WiFi SoftAP named 'BC250_<SUFFIX>', where <SUFFIX> is the 6-character uppercase hexadecimal representation of the last 3 bytes of the factory Wi-Fi MAC address, and serve the embedded setup interface from firmware memory without triggering captive network detection.
@@ -215,31 +215,31 @@ The portal web interface SHALL provide an in-page firmware update interface with
 - **THEN** the interface enables the firmware file input and clears any power lock notice
 
 ### Requirement: Persistent Web Portal and mDNS Service
-The system SHALL keep the HTTP web portal and REST API online in normal operation mode over Wi-Fi Station connectivity, SHALL advertise its presence via mDNS, and SHALL adapt interface editing locks based on operational mode and host power state.
+The system SHALL restrict the HTTP web portal and REST API server exclusively to Setup Mode over SoftAP connectivity, and SHALL NOT start or keep the web server or mDNS service online during normal operation mode over Wi-Fi Station connectivity.
 
 #### Scenario: Web server active in normal station mode
-- **WHEN** the system connects to a configured Wi-Fi network in normal operation mode
-- **THEN** the HTTP web server starts on port 80 and serves the portal UI and REST endpoints on the Station IP address
+- **WHEN** the system operates in normal station mode
+- **THEN** the HTTP web server does not bind or listen on port 80 and the web portal is kept offline
 
 #### Scenario: Web server deferred when Wi-Fi is disabled or disconnected
 - **WHEN** the system boots or operates in normal operation mode while Wi-Fi is disabled or not connected
 - **THEN** the HTTP web server does not attempt to bind or listen on port 80 and the system runs normal power control and Bluetooth wake without asserting or resetting
 
 #### Scenario: mDNS hostname advertised
-- **WHEN** the system establishes Wi-Fi Station connectivity
-- **THEN** the system registers the configured hostname (defaulting to bc-awake.local) via mDNS and configures the DHCP client hostname
+- **WHEN** the system is running in normal station mode
+- **THEN** mDNS advertisement is disabled and the web portal is not advertised on the local network
 
 #### Scenario: Reporting host power state in status API
-- **WHEN** a client performs a GET request to /api/status
-- **THEN** the JSON response includes a string field boardState reflecting the current power state ("OFF", "BOOTING", or "ON")
+- **WHEN** a client performs a GET request to /api/status while in setup mode
+- **THEN** the JSON response includes a string field boardState reflecting the current power state ("OFF")
 
 #### Scenario: Web UI adapts to powered-on state
-- **WHEN** the setup portal web interface is loaded in normal station mode while the board is in STATE_ON
-- **THEN** the interface marks the Network tab settings as read-only, disables the interactive pairing listener action in the Bluetooth tab, and disables firmware update controls in the System tab
+- **WHEN** the setup portal web interface is loaded in setup mode
+- **THEN** the interface keeps all configuration tabs editable because setup mode locks the host in STATE_OFF
 
 #### Scenario: Web UI allows network configuration while host is on in setup mode
-- **WHEN** the setup portal web interface is loaded in setup SoftAP mode while the board is in STATE_ON
-- **THEN** the interface keeps the Network tab inputs and save button editable, while keeping the interactive pairing listener action and firmware update controls disabled
+- **WHEN** the setup portal web interface is loaded in setup SoftAP mode
+- **THEN** the interface keeps the Network tab inputs and save button editable
 
 #### Scenario: Board power status indicator displays powered on
 - **WHEN** the setup portal web interface loads or refreshes status while boardState is "ON"
@@ -385,29 +385,6 @@ The system SHALL provide an authenticated HTTP POST endpoint at `/api/reset` to 
 - **WHEN** the user confirms the in-page reset prompt
 - **THEN** the interface sends an authenticated POST request to `/api/reset`, displays a notice that the device is resetting and rebooting into setup mode, and disables the action buttons
 
-### Requirement: Portal Power Actions Endpoints
-The portal SHALL provide authenticated HTTP POST endpoints at `/api/power/on` and `/api/power/off` to trigger system power-on and immediate power cut.
-
-#### Scenario: Power on requested while in STATE_OFF
-- **WHEN** an authenticated POST request is sent to `/api/power/on` while in STATE_OFF
-- **THEN** the system cancels any active controller pairing mode, starts the boot timer, asserts PS_ON# LOW, transitions to STATE_BOOTING, and returns HTTP 200 with `{"ok":true}`
-
-#### Scenario: Power on requested while not in STATE_OFF
-- **WHEN** an authenticated POST request is sent to `/api/power/on` while in STATE_BOOTING or STATE_ON
-- **THEN** the system rejects the request with HTTP status 409 Conflict without modifying power state
-
-#### Scenario: Force power off requested while running or booting
-- **WHEN** an authenticated POST request is sent to `/api/power/off` while in STATE_ON or STATE_BOOTING
-- **THEN** the system releases PS_ON# to high-impedance, transitions to STATE_OFF, arms the wake cooldown, and returns HTTP 200 with `{"ok":true}`
-
-#### Scenario: Force power off requested while in STATE_OFF
-- **WHEN** an authenticated POST request is sent to `/api/power/off` while in STATE_OFF
-- **THEN** the system rejects the request with HTTP status 409 Conflict without modifying power state
-
-#### Scenario: Power action endpoints rejected without authentication
-- **WHEN** a POST request is sent to `/api/power/on` or `/api/power/off` without a valid X-Auth-Token header
-- **THEN** the system rejects the request with HTTP status 401 Unauthorized without modifying power state
-
 ### Requirement: Graceful Shutdown Setting Endpoint
 The portal SHALL provide authenticated endpoints to read and persist the optional graceful shutdown setting, which is disabled by default.
 
@@ -423,55 +400,12 @@ The portal SHALL provide authenticated endpoints to read and persist the optiona
 - **WHEN** a POST request is sent to /api/power without a valid X-Auth-Token header
 - **THEN** the system rejects the request with HTTP status 401 Unauthorized without modifying stored configuration
 
-### Requirement: Graceful Shutdown Action Endpoint
-The portal SHALL provide an authenticated POST endpoint at /api/shutdown that triggers a graceful shutdown pulse only when the feature is enabled and the system is in STATE_ON.
+### Requirement: Motherboard Power Button Configuration User Interface
+The portal web interface SHALL provide a Power tab allowing the user to configure and save the optional motherboard power button (`gracefulShutdown`) setting during setup mode.
 
-#### Scenario: Shutdown while ON with feature enabled
-- **WHEN** an authenticated POST request is sent to /api/shutdown while gracefulShutdown is enabled and the system is in STATE_ON
-- **THEN** the system sends the 300 ms power-button pulse and returns HTTP 200 with `{"ok":true}`
-
-#### Scenario: Shutdown with feature disabled
-- **WHEN** an authenticated POST request is sent to /api/shutdown while gracefulShutdown is disabled
-- **THEN** the system returns HTTP 409 and does not pulse the power-button line
-
-#### Scenario: Shutdown while not ON
-- **WHEN** an authenticated POST request is sent to /api/shutdown while the system is in STATE_OFF or STATE_BOOTING
-- **THEN** the system returns HTTP 409 and does not pulse the power-button line
-
-#### Scenario: Shutdown rejected without authentication
-- **WHEN** a POST request is sent to /api/shutdown without a valid X-Auth-Token header
-- **THEN** the system rejects the request with HTTP status 401 Unauthorized and does not pulse the power-button line
-
-### Requirement: Power Tab User Interface
-The portal web interface SHALL provide a Power tab displaying live power state telemetry, ATX power supply controls with an in-page confirmed force-cut dialog, and optional motherboard power button controls.
-
-#### Scenario: Displaying Power tab
-- **WHEN** the user selects the Power tab
-- **THEN** the interface renders real-time power state telemetry, ATX power supply controls (Power On and Force Cut Power), and motherboard power button controls
-
-#### Scenario: Triggering power on from Power tab
-- **WHEN** the user clicks Power On while the machine is in STATE_OFF
-- **THEN** the interface sends an authenticated POST request to `/api/power/on` and updates the power indicator upon success
-
-#### Scenario: Opening force cut confirmation dialog
-- **WHEN** the user clicks Force Cut Power while the machine is in STATE_ON or STATE_BOOTING
-- **THEN** the interface opens an in-page modal dialog explaining the risk of data corruption and prompting for confirmation
-
-#### Scenario: Confirming force cut power
-- **WHEN** the user confirms the force cut modal dialog
-- **THEN** the interface sends an authenticated POST request to `/api/power/off`, closes the dialog, and updates the power indicator upon success
-
-#### Scenario: Canceling force cut power
-- **WHEN** the user cancels the force cut modal dialog
-- **THEN** the modal dialog closes without dispatching an API request
-
-#### Scenario: Motherboard power button pulse action
-- **WHEN** motherboard power button support is enabled and the board is in STATE_ON
-- **THEN** the interface displays an active "Shut Down OS" button that sends an authenticated POST request to `/api/shutdown` on click
-
-#### Scenario: Motherboard power button action unavailable
-- **WHEN** motherboard power button support is disabled or the board is not in STATE_ON
-- **THEN** the "Shut Down OS" button is disabled or accompanied by an explanatory message
+#### Scenario: Displaying and saving motherboard power button setting
+- **WHEN** the user opens the Power tab in setup mode, toggles the motherboard power button checkbox, and clicks Save
+- **THEN** the interface sends an authenticated POST request to `/api/power` with the selected `gracefulShutdown` boolean and displays a confirmation message
 
 ### Requirement: Portal Password Form Submission and Credential Management
 The portal web interface SHALL present the initial password creation and unlock screen within a semantic form that supports keyboard submission via the Enter key and provides standard credential attributes enabling web browser password managers to offer password saving without requiring a username.

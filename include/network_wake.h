@@ -8,8 +8,8 @@
 // Parameter isOff indicates whether the host is currently in STATE_OFF.
 bool networkWakeBegin(bool isOff = true);
 
-// Power state change notification to swap Station MAC dynamically between dongle MAC (OFF) and factory MAC (ON).
-void networkWakeOnStateChanged(PowerState state);
+// Completely stops UDP listeners, disconnects Wi-Fi, and disables the Wi-Fi radio.
+void networkWakeStop();
 
 // Polling loop for non-blocking Wi-Fi station management and incoming WOL magic packet processing.
 void networkWakeLoop();

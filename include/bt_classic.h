@@ -22,6 +22,9 @@ bool btBegin(const String &hostMac);
 // Re-initialise with a different host MAC (portal: host MAC changed).
 bool btRestart(const String &hostMac);
 
+// Completely disables and de-initializes the Classic Bluetooth controller.
+void btEnd();
+
 // Page scan on/off. Only meaningful after btBegin().
 void btSetConnectable(bool on);
 

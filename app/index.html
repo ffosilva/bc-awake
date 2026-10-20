@@ -580,11 +580,10 @@
           <span><b>Enable Wake-on-LAN (Wi-Fi)</b></span>
         </label>
         <div id="wol-fields" class="hidden" style="margin-top:10px">
-          <label for="device-hostname">Device Hostname / mDNS Name</label>
+          <label for="device-hostname">Device Hostname</label>
           <input id="device-hostname" placeholder="bc-awake" maxlength="32" autocomplete="off" autocapitalize="off" />
           <div class="help" style="margin-top:6px;font-size:11px">
-            Network hostname (accessible at http://&lt;hostname&gt;.local). 1–32 lowercase letters, numbers, and
-            hyphens.
+            Network DHCP hostname for your router. 1–32 lowercase letters, numbers, and hyphens.
           </div>
 
           <label for="wifi-ssid" style="margin-top:10px">Wi-Fi Network (SSID)</label>
@@ -621,18 +620,6 @@
         </div>
       </div>
 
-      <!-- ATX Power Supply Card -->
-      <div class="card" id="card-pwr-atx">
-        <div style="font-size:15px;font-weight:bold">ATX power supply</div>
-        <div class="sub" style="margin:6px 0 12px">
-          Direct control of the main ATX power rails via <code>PS_ON#</code>.
-        </div>
-        <button id="btn-power-on" style="margin-top:4px">Power On</button>
-        <button id="btn-force-off" class="btn-danger" style="margin-top:8px">Force Cut Power</button>
-        <div class="help" id="pwr-atx-hint" style="margin-top:6px;font-size:11px"></div>
-        <div class="msg" id="pwr-atx-msg"></div>
-      </div>
-
       <!-- Motherboard Power Button Card (optional feature) -->
       <div class="card" id="card-graceful">
         <div style="font-size:15px;font-weight:bold">Motherboard power button <span
@@ -649,8 +636,6 @@
           <span>Enable motherboard power button (PWR_BTN# wired)</span>
         </label>
         <button id="btn-save-graceful" class="secondary" style="margin-top:12px">Save</button>
-        <button id="btn-shutdown" class="secondary" style="margin-top:8px" disabled>Shut Down OS</button>
-        <div class="help" id="shutdown-hint" style="margin-top:6px;font-size:11px"></div>
         <div class="msg" id="graceful-msg"></div>
       </div>
     </div>
@@ -747,8 +732,7 @@
 
         <div
           style="margin-top:14px;padding:10px;border-radius:8px;background:#132235;border:1px solid #1c3d63;font-size:12px;color:var(--accent2);line-height:1.4;text-align:center">
-          <b>Board power-on is paused</b> while pairing is active so your PC won't boot up.<br>
-          <span style="color:var(--muted);font-size:11px">(Case power button remains active)</span>
+          <b>Host power is locked off</b> while in setup mode.
         </div>
 
         <div id="listen-countdown"
@@ -786,24 +770,6 @@
         <button id="modal-timeout-retry-btn" style="margin-top:16px">Try again</button>
         <button id="modal-timeout-close-btn" class="secondary" style="margin-top:8px">Close</button>
       </div>
-    </div>
-  </div>
-
-  <!-- Force Power Off Modal -->
-  <div class="modal-overlay hidden" id="modal-force-off">
-    <div class="modal-card">
-      <div style="font-weight:bold;font-size:16px;color:var(--err);text-align:center">Force Cut Power?</div>
-      <div style="font-size:13px;line-height:1.5;color:var(--fg);margin-top:12px;text-align:center">
-        This immediately releases ATX <code>PS_ON#</code>, cutting main power to the motherboard.
-      </div>
-      <div
-        style="margin-top:12px;padding:10px;border-radius:8px;background:#2a1414;border:1px solid #552222;font-size:12px;color:var(--err);line-height:1.4">
-        <b>Warning:</b> Forcing power off while an operating system is running may cause unsaved data loss or filesystem
-        corruption. If the OS is responsive, use <b>Shut Down OS</b> instead.
-      </div>
-      <button id="btn-force-off-confirm" class="btn-danger" style="margin-top:16px">Yes, Cut Power</button>
-      <button id="btn-force-off-cancel" class="secondary" style="margin-top:8px">Cancel</button>
-      <div class="msg" id="modal-force-off-msg"></div>
     </div>
   </div>
 
@@ -886,24 +852,9 @@
       }
     }
 
-    // The Shut Down OS button needs the feature enabled (saved) and the machine ON.
-    function refreshShutdownBtn() {
-      const btn = $("btn-shutdown");
-      const hint = $("shutdown-hint");
-      if (!btn || !hint) return;
-      const on = currentBoardState === "ON";
-      btn.disabled = !(gracefulSaved && on);
-      hint.textContent = !gracefulSaved ? "Enable and save the feature to use Shut Down OS."
-        : (on ? "" : "Available only while the machine is powered on.");
-    }
-
     function refreshPowerTab() {
-      refreshShutdownBtn();
       const tabState = $("pwr-tab-state");
       const tabSense = $("pwr-tab-sense");
-      const btnOn = $("btn-power-on");
-      const btnOff = $("btn-force-off");
-      const atxHint = $("pwr-atx-hint");
 
       if (tabState) {
         tabState.textContent = currentBoardState;
@@ -926,22 +877,6 @@
         } else {
           tabSense.textContent = "DOWN (LOW ~0V)";
           tabSense.style.color = "var(--muted)";
-        }
-      }
-
-      if (btnOn) {
-        btnOn.disabled = (currentBoardState !== "OFF");
-      }
-      if (btnOff) {
-        btnOff.disabled = (currentBoardState === "OFF");
-      }
-      if (atxHint) {
-        if (currentBoardState === "OFF") {
-          atxHint.textContent = "Machine is powered off. Click Power On to start.";
-        } else if (currentBoardState === "BOOTING") {
-          atxHint.textContent = "Machine is booting. Force cut power available if needed.";
-        } else {
-          atxHint.textContent = "Machine is running.";
         }
       }
     }
@@ -1141,7 +1076,6 @@
         $("card-exit-setup").classList.toggle("hidden", !isSetupMode);
         gracefulSaved = !!st.gracefulShutdown;
         $("graceful-enabled").checked = gracefulSaved;
-        refreshShutdownBtn();
 
         if (needsHost) {
           $("card-adapter").classList.remove("hidden");
@@ -1584,52 +1518,6 @@
     }
 
     // --- Power tab ---
-    $("btn-power-on").onclick = async () => {
-      const msg = $("pwr-atx-msg");
-      msg.className = "msg";
-      try {
-        $("btn-power-on").disabled = true;
-        await api("/api/power/on", "POST");
-        msg.className = "msg ok";
-        msg.textContent = "Power on request sent.";
-        updateBoardState("BOOTING");
-      } catch (e) {
-        msg.className = "msg err";
-        msg.textContent = e.message;
-      } finally {
-        refreshPowerTab();
-      }
-    };
-
-    $("btn-force-off").onclick = () => {
-      $("modal-force-off-msg").textContent = "";
-      $("modal-force-off").classList.remove("hidden");
-    };
-
-    $("btn-force-off-cancel").onclick = () => {
-      $("modal-force-off").classList.add("hidden");
-    };
-
-    $("btn-force-off-confirm").onclick = async () => {
-      const modalMsg = $("modal-force-off-msg");
-      modalMsg.className = "msg";
-      try {
-        $("btn-force-off-confirm").disabled = true;
-        await api("/api/power/off", "POST");
-        $("modal-force-off").classList.add("hidden");
-        const msg = $("pwr-atx-msg");
-        msg.className = "msg ok";
-        msg.textContent = "Force power cut sent.";
-        updateBoardState("OFF");
-      } catch (e) {
-        modalMsg.className = "msg err";
-        modalMsg.textContent = e.message;
-      } finally {
-        $("btn-force-off-confirm").disabled = false;
-        refreshPowerTab();
-      }
-    };
-
     // Motherboard power button (optional PWR_BTN# feature)
     $("btn-save-graceful").onclick = async () => {
       const msg = $("graceful-msg");
@@ -1639,7 +1527,6 @@
         const enabled = $("graceful-enabled").checked;
         await api("/api/power", "POST", { gracefulShutdown: enabled });
         gracefulSaved = enabled;
-        refreshShutdownBtn();
         msg.className = "msg ok";
         msg.textContent = enabled ? "Power button feature enabled." : "Power button feature disabled.";
       } catch (e) {
@@ -1647,22 +1534,6 @@
         msg.textContent = e.message;
       } finally {
         $("btn-save-graceful").disabled = false;
-      }
-    };
-
-    $("btn-shutdown").onclick = async () => {
-      const msg = $("graceful-msg");
-      msg.className = "msg";
-      try {
-        $("btn-shutdown").disabled = true;
-        await api("/api/shutdown", "POST");
-        msg.className = "msg ok";
-        msg.textContent = "Shutdown pulse sent.";
-      } catch (e) {
-        msg.className = "msg err";
-        msg.textContent = e.message;
-      } finally {
-        refreshShutdownBtn();
       }
     };
 
@@ -1864,7 +1735,6 @@
           const st = await api("/api/status");
           gracefulSaved = !!st.gracefulShutdown;
           if (st.boardState) updateBoardState(st.boardState);
-          refreshShutdownBtn();
         } catch (e) { /* ignore */ }
       }
     }, 4000);

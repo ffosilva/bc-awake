@@ -31,6 +31,7 @@
 //     machine just like a button tap.
 
 static PowerState state = STATE_OFF;
+static bool       g_setupMode = false;
 
 // --- Button debounce / press tracking ---
 static bool          buttonStable      = false;  // debounced "pressed" level
@@ -44,11 +45,6 @@ static bool          setupFired        = false;
 
 // --- Optional PWR_BTN# output (graceful shutdown) ---
 static bool          pwrBtnDriven      = false;  // pin currently driven LOW
-static bool          pwrPulseActive    = false;  // portal-triggered pulse running
-static unsigned long pwrPulseUntil     = 0;
-static volatile bool shutdownRequested = false; // set by the portal task
-static volatile bool powerOnRequested  = false; // set by the portal task
-static volatile bool powerOffRequested = false; // set by the portal task
 
 // --- Board-sense debounce ---
 static bool          boardSenseStable  = false;  // debounced TPMS1 HIGH
@@ -76,19 +72,24 @@ const char *getBoardStateName() {
   return stateName(state);
 }
 
+static void startWake();
+
 static void setState(PowerState next) {
   if (next == state) return;
   Serial.printf("[STATE] %s -> %s\n", stateName(state), stateName(next));
   state = next;
-  // Only watch for wake or run Bluetooth discovery while the machine is down.
   if (next == STATE_OFF) {
-    if (wakeActive) wakeSetConnectable(true);
-    if (isPortalSetupMode()) wakeSetDiscovery(true);
+    if (!g_setupMode) {
+      startWake();
+      networkWakeBegin(true);
+    } else {
+      wakeSetDiscovery(true);
+    }
   } else {
-    wakeSetDiscovery(false);
-    if (wakeActive) wakeSetConnectable(false);
+    wakeStop();
+    wakeActive = false;
+    networkWakeStop();
   }
-  networkWakeOnStateChanged(next);
 }
 
 // Raw (pre-time-debounce) board-up level, filtered against transient spikes.
@@ -167,55 +168,10 @@ static void pwrBtnRelease(const char *why) {
   Serial.printf("[PWR ] PWR_BTN# released (%s)\n", why);
 }
 
-// Called from the portal task: flags a remote power-on. Returns false if not in STATE_OFF.
-bool requestPowerOn() {
-  if (state != STATE_OFF) return false;
-  powerOnRequested = true;
-  return true;
-}
-
-// Called from the portal task: flags an immediate power cut. Returns false if already in STATE_OFF.
-bool requestPowerOff() {
-  if (state == STATE_OFF) return false;
-  powerOffRequested = true;
-  return true;
-}
-
-// Called from the portal task: only flags the request. All pin handling stays in
-// the main loop. Returns false if a shutdown cannot be sent right now.
-bool requestGracefulShutdown() {
-  if (!config.gracefulShutdown || state != STATE_ON) return false;
-  shutdownRequested = true;
-  return true;
-}
-
-// Drives PWR_BTN_PIN from the loop: services the 300 ms API pulse, otherwise
-// mirrors the physical button while ON for presses that began while ON.
 static void updatePwrBtn(unsigned long now) {
   if (!config.gracefulShutdown || state != STATE_ON) {
-    shutdownRequested = false;
-    pwrPulseActive = false;
     pwrBtnRelease("feature off or board not ON");
     return;
-  }
-
-  if (shutdownRequested) {
-    shutdownRequested = false;
-    if (pwrPulseActive) {
-      Serial.println("[PWR ] shutdown request ignored (pulse already active)");
-    } else {
-      pwrPulseActive = true;
-      pwrPulseUntil = millis() + PWR_PULSE_MS;
-      pwrBtnDrive("shutdown pulse start");
-    }
-  }
-
-  if (pwrPulseActive) {
-    if ((long)(now - pwrPulseUntil) >= 0) {
-      pwrPulseActive = false;
-      pwrBtnRelease("shutdown pulse end");
-    }
-    return;  // the pulse owns the line; mirroring resumes afterwards
   }
 
   if (buttonStable && pressStartedOn) {
@@ -242,6 +198,10 @@ static void psuOff() {
 // now makes (now - bootStart) underflow to a huge value and trip the timeout on
 // the very next loop. Sharing one clock per iteration keeps the math monotonic.
 static void powerOn(const char *reason, unsigned long now) {
+  if (g_setupMode) {
+    Serial.printf("[ACT ] %s -> power-on blocked (setup mode active)\n", reason);
+    return;
+  }
   Serial.printf("[ACT ] %s -> powering on\n", reason);
   psuOn();
   bootStart = now;
@@ -254,7 +214,6 @@ static void powerOn(const char *reason, unsigned long now) {
 static void powerOff(const char *reason, unsigned long now) {
   Serial.printf("[ACT ] %s -> powering off\n", reason);
   psuOff();
-  pwrPulseActive = false;
   pwrBtnRelease("powering off");
   wakeInhibitUntil = now + WAKE_WAKE_COOLDOWN_MS;
   setState(STATE_OFF);
@@ -296,9 +255,7 @@ static bool debounce(bool raw, bool *stable, bool *lastRaw,
   return false;
 }
 
-static void normalBegin() {
-  Serial.printf("=== BC250 PSU controller v%s (%s) ===\n", FW_VERSION, FW_TARGET);
-
+static void initHardware() {
   // PS_ON# open-drain, released by default so the PSU stays off at boot.
   // Pre-load the hardware output latch HIGH via ESP-IDF before enabling the
   // open-drain driver so PS_ON# never glitches LOW on startup, then sync the
@@ -331,6 +288,12 @@ static void normalBegin() {
 
   // Seed debounced states from the current levels.
   buttonStable = buttonLastRaw = (digitalRead(BUTTON_SENSE) == LOW);
+}
+
+static void normalBegin() {
+  Serial.printf("=== BC250 PSU controller v%s (%s) ===\n", FW_VERSION, FW_TARGET);
+
+  initHardware();
 
   esp_reset_reason_t rstReason = esp_reset_reason();
   if (rstReason == ESP_RST_BROWNOUT) {
@@ -359,7 +322,7 @@ static void normalBegin() {
     if (boardSenseStable) {
       psuOn();  // make sure PS_ON# matches reality
       setState(STATE_ON);
-      delay(200);  // stagger PSU assertion before radio startup
+      delay(200);  // stagger PSU assertion
     }
   }
   boardSenseChange = millis();
@@ -369,11 +332,12 @@ static void normalBegin() {
                 config.wakeAddr.isEmpty() ? "(none)" : config.wakeAddr.c_str(),
                 wakeModeName());
 
-  startWake();
-  networkWakeBegin(state == STATE_OFF);
+  // Only start wireless radios if booting in STATE_OFF
+  if (state == STATE_OFF) {
+    startWake();
+    networkWakeBegin(true);
+  }
 }
-
-static bool g_setupMode = false;
 
 void setup() {
   Serial.begin(115200);
@@ -386,13 +350,16 @@ void setup() {
 
   loadConfig();
 
-  normalBegin();
-
   // If the device is not yet provisioned, or if setup was explicitly requested
   // (e.g. 8s button hold while OFF or serial 's' command), start the setup portal.
   if (!isConfigured() || config.forceSetup) {
     g_setupMode = true;
+    initHardware();
+    state = STATE_OFF;
     portalBegin();
+  } else {
+    g_setupMode = false;
+    normalBegin();
   }
 }
 
@@ -403,22 +370,11 @@ static void normalLoop() {
   while (Serial.available()) {
     char c = Serial.read();
     if (c == 's' || c == 'S') {
-      enterSetupMode("serial 's' command");
-    }
-  }
-
-  // --- Portal power requests ---
-  if (powerOnRequested) {
-    powerOnRequested = false;
-    if (state == STATE_OFF) {
-      portalPairingStop();
-      powerOn("web portal", now);
-    }
-  }
-  if (powerOffRequested) {
-    powerOffRequested = false;
-    if (state != STATE_OFF) {
-      powerOff("web portal force off", now);
+      if (state == STATE_OFF) {
+        enterSetupMode("serial 's' command");
+      } else {
+        Serial.println("[ACT ] serial 's' ignored (machine is not in STATE_OFF)");
+      }
     }
   }
 
@@ -444,8 +400,12 @@ static void normalLoop() {
       Serial.printf("[BTN ] released after %lu ms\n", held);
       if (pressStartedOff && !setupFired && state == STATE_OFF &&
           held < SETUP_HOLD_MS) {
-        portalPairingStop();
-        powerOn("short press while OFF", now);
+        if (!g_setupMode) {
+          portalPairingStop();
+          powerOn("short press while OFF", now);
+        } else {
+          Serial.println("[BTN ] tap ignored while in setup mode");
+        }
       }
     }
   }
@@ -476,17 +436,19 @@ static void normalLoop() {
   wakeLoop();
   unsigned long wakeLast = 0;
   bool wakePresent = wakeSeen(&wakeLast) && (now - wakeLast) < WAKE_PRESENCE_TIMEOUT_MS;
-  bool wakeInhibited = ((int32_t)(wakeInhibitUntil - now) > 0) || portalIsPairingActive();
+  bool wakeInhibited = ((int32_t)(wakeInhibitUntil - now) > 0) || portalIsPairingActive() || g_setupMode;
   if (state == STATE_OFF && wakePresent && !wakeInhibited) {
     powerOn("controller present", now);
   }
 
   // --- Network Wake-on-LAN ---
-  networkWakeLoop();
-  unsigned long wolLast = 0;
-  bool wolPresent = networkWakeSeen(&wolLast);
-  if (state == STATE_OFF && wolPresent && !wakeInhibited) {
-    powerOn("WOL magic packet", now);
+  if (!g_setupMode) {
+    networkWakeLoop();
+    unsigned long wolLast = 0;
+    bool wolPresent = networkWakeSeen(&wolLast);
+    if (state == STATE_OFF && wolPresent && !wakeInhibited) {
+      powerOn("WOL magic packet", now);
+    }
   }
 
   bool boardChanged = debounce(boardRaw, &boardSenseStable, &boardSenseLastRaw,

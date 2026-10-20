@@ -16,6 +16,7 @@ bool        wakeNeedsHostAddr();    // true for Classic BT, false for BLE
 
 // Normal mode
 bool wakeBegin();
+void wakeStop();
 void wakeLoop();
 void wakeSetConnectable(bool on);
 bool wakeSeen(unsigned long *lastSeenMs);

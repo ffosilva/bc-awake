@@ -86,7 +86,6 @@ ESP32 (GPIO27 on DevKitC, GPIO2 on ESP32-CAM, GPIO7 on ESP32-C3) and enable the 
 | Short press | Mirrored to the board: OS gets an ACPI power-button event and shuts down cleanly |
 | Hold the button | Mirrored to the board for as long as you hold it, so the board's own long-press override can apply |
 | Hold ≥ 5 s | Unchanged backstop: the PSU is cut immediately |
-| Portal **Shut Down OS** | Sends a 300 ms press to the board |
 
 When the board powers down, `TPMS1` goes low and the existing logic releases `PS_ON#`
 automatically. There is no timeout: if the OS hangs, you decide (hold the button 5 s to cut
@@ -137,44 +136,27 @@ receive Wake-on-LAN packets natively. When **Enable Wake-on-LAN** is configured:
 
 ## Setup portal
 
-When unconfigured (or after a factory reset), the ESP32 **automatically launches the setup portal** (`BC250_<SUFFIX>`) on initial power-up while keeping push-button power controls active. You can tap the physical power button to boot your BC250 and configure the switch directly from your computer over Wi-Fi without needing an external smartphone!
+When unconfigured (or after a factory reset), the ESP32 **automatically launches the setup portal** (`BC250_<SUFFIX>`) on initial power-up. While in setup mode, the host machine remains safely powered off and unenergized so you can configure the switch from your smartphone, tablet, or laptop.
 
-If the switch is already configured, hold the power button ≥ 8 s while OFF (or send `'s'` over serial) to re-enter setup mode.
+If the switch is already configured, hold the power button ≥ 8 s while OFF (or send `'s'` over serial while off) to re-enter setup mode.
 
-### Method 1: Automated Setup Wizard (Recommended for Linux / Bazzite / SteamOS)
+### Setup Instructions
 
-Connect your BC250's Wi-Fi to the open network **`BC250_<SUFFIX>`** and run the standalone onboarding wizard:
-
-```bash
-python3 tools/bc250-setup/bc250-setup.py
-```
-
-The wizard automatically:
-1. Detects your host's BlueZ default Bluetooth controller MAC (`bluetoothctl list`).
-2. Detects all locally paired gamepads (`bluetoothctl devices`) and binds them.
-3. Inspects your network interfaces for your Ethernet / Wi-Fi MAC address for Wake-on-LAN.
-4. Prompts you to set a portal password and enter your home Wi-Fi credentials.
-5. Pushes the configuration to the ESP32 and restarts it into normal operation.
-
-### Method 2: Web Browser (Copy & Paste or Phone)
-
-1. Connect your BC250 (or smartphone/laptop) to the open Wi-Fi network **`BC250_<SUFFIX>`** and open `http://192.168.4.1`.
+1. Connect your smartphone, tablet, or laptop to the open Wi-Fi network **`BC250_<SUFFIX>`** and open `http://192.168.4.1`.
 2. Create a portal password (min 6 characters).
 3. Access the tabbed interface:
    - **Bluetooth tab**:
-     - Enter and save your BC250 Bluetooth adapter MAC (run `bluetoothctl show` in terminal to copy it).
+     - Enter and save your BC250 Bluetooth adapter MAC (run `bluetoothctl show` on Linux to copy it).
      - Manage controllers: bind paired controllers interactively or add MACs manually (up to 8 controllers).
      - (ESP32-CAM) Toggle flash LED blink on wake.
    - **Network tab**:
      - Configure Wake-on-LAN: check **Enable Wake-on-LAN (Wi-Fi)**, enter your home Wi-Fi SSID, password, device hostname, and BC250 Ethernet MAC address (from `ip link`), then click **Save Network Settings**.
    - **Power tab**:
-     - View real-time power status and motherboard `TPMS1` signal state.
-     - ATX power supply controls: remotely **Power On** (when off) or **Force Cut Power**.
-     - Motherboard power button: toggle optional `PWR_BTN#` and trigger clean ACPI shutdown via **Shut Down OS**.
+     - Motherboard power button: toggle optional `PWR_BTN#` mirroring for clean OS shutdown on short press.
    - **System tab**:
      - Firmware update (OTA): upload a compiled `.bin` binary wirelessly.
      - Change portal password or reset configuration back to defaults.
-     - Click **Exit setup mode & reboot** to restart the switch into normal operation. Once connected to your home Wi-Fi, the portal remains accessible at `http://bc-awake.local`.
+     - Click **Exit setup mode & reboot** to restart the switch into normal operation.
 
 
 ## Build & flash

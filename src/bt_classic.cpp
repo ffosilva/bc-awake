@@ -528,12 +528,25 @@ bool btBegin(const String &hostMac) {
   return true;
 }
 
-bool btRestart(const String &hostMac) {
+void btEnd() {
   if (btUp) {
     btUp = false;
+    connectable = false;
+    discovery = false;
+    inquiryActive = false;
+    cmdPending = false;
+    namePending = false;
+    portENTER_CRITICAL(&qMux);
+    qHead = qCount = 0;
+    portEXIT_CRITICAL(&qMux);
     esp_bt_controller_disable();
     esp_bt_controller_deinit();
+    Serial.println("[BT  ] controller disabled and deinitialized");
   }
+}
+
+bool btRestart(const String &hostMac) {
+  btEnd();
   return btBegin(hostMac);
 }
 

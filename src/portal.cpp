@@ -421,49 +421,6 @@ static void handlePower(AsyncWebServerRequest *req, JsonVariant &json) {
   req->send(200, "application/json", "{\"ok\":true}");
 }
 
-// Send a 300 ms PWR_BTN# pulse so the board shuts down as if its button were
-// tapped.
-static void handleShutdown(AsyncWebServerRequest *req) {
-  if (!authed(req)) {
-    sendJsonError(req, 401, "unauthorized");
-    return;
-  }
-  if (!requestGracefulShutdown()) {
-    sendJsonError(req, 409,
-                  config.gracefulShutdown ? "board is not ON"
-                                          : "graceful shutdown is disabled");
-    return;
-  }
-  Serial.println("[PORTAL] graceful shutdown requested");
-  req->send(200, "application/json", "{\"ok\":true}");
-}
-
-static void handlePowerOn(AsyncWebServerRequest *req) {
-  if (!authed(req)) {
-    sendJsonError(req, 401, "unauthorized");
-    return;
-  }
-  if (!requestPowerOn()) {
-    sendJsonError(req, 409, "board is not OFF");
-    return;
-  }
-  Serial.println("[PORTAL] power on requested");
-  req->send(200, "application/json", "{\"ok\":true}");
-}
-
-static void handlePowerOff(AsyncWebServerRequest *req) {
-  if (!authed(req)) {
-    sendJsonError(req, 401, "unauthorized");
-    return;
-  }
-  if (!requestPowerOff()) {
-    sendJsonError(req, 409, "board is already OFF");
-    return;
-  }
-  Serial.println("[PORTAL] force power off requested");
-  req->send(200, "application/json", "{\"ok\":true}");
-}
-
 static void handleNetwork(AsyncWebServerRequest *req, JsonVariant &json) {
   if (!authed(req)) {
     sendJsonError(req, 401, "unauthorized");
@@ -636,9 +593,6 @@ static void registerRoutes() {
   server.on("/api/ble/devices", HTTP_GET, handleDevices);
   server.on("/api/finish", HTTP_POST, handleFinish);
   server.on("/api/reset", HTTP_POST, handleReset);
-  server.on("/api/shutdown", HTTP_POST, handleShutdown);
-  server.on("/api/power/on", HTTP_POST, handlePowerOn);
-  server.on("/api/power/off", HTTP_POST, handlePowerOff);
   server.on("/api/update", HTTP_POST, handleUpdateResponse, handleUpdateUpload);
   server.on("/api/listener/start", HTTP_POST, handleListenerStart);
   server.on("/api/listener/stop", HTTP_POST, handleListenerStop);

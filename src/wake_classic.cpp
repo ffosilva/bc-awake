@@ -46,6 +46,10 @@ void wakeLoop() {
   btLoop();
 }
 
+void wakeStop() {
+  btEnd();
+}
+
 void wakeSetConnectable(bool on) {
   btSetConnectable(on);
 }

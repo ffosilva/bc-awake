@@ -88,6 +88,19 @@ void wakeLoop() {
   // NimBLE scan runs on its own background task
 }
 
+void wakeStop() {
+  if (bleInitialized) {
+    NimBLEScan *scan = NimBLEDevice::getScan();
+    if (scan && scan->isScanning()) {
+      scan->stop();
+    }
+    NimBLEDevice::deinit(true);
+    bleInitialized = false;
+    bleSeenEver = false;
+    Serial.println("[BLE ] NimBLE stack deinitialized and radio stopped");
+  }
+}
+
 void wakeSetConnectable(bool on) {
   if (!bleInitialized) return;
   NimBLEScan *scan = NimBLEDevice::getScan();
