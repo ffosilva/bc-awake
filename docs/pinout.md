@@ -47,6 +47,7 @@ active PlatformIO environment (`esp32dev`, `esp32cam`, or `esp32-c3-devkitm-1`).
   - `GPIO12`: Strapping pin MTDI (if pulled HIGH at boot by 3.3 V TPMS1, sets flash VDD to 1.8 V and prevents boot).
   - `GPIO16`: Connected to the external PSRAM chip CS line.
   - `GPIO0`: Boot mode strapping pin (must be LOW to flash, HIGH to boot).
+  - `GND/R` (Right header pin 8): Labeled `GND/R` (or `GND` on some pinout diagrams), this pin is wired to the active-low `RST`/`EN` line on many ESP32-CAM boards. Connecting it to `GND` holds the ESP32 permanently in reset. Always use Left header pin 2 (`GND`) or Right header pin 4 (`GND`) for ground.
 
 ## DevKitC header (left column, USB at the bottom)
 
@@ -96,7 +97,7 @@ The ESP32-CAM has two 8-pin headers (looking at the camera side with the antenna
          │ IO15 ◄─ switch A   VCC  │  (3.3V/5V out)
          │ IO14 ──► PS_ON#    U0RX │  (GPIO3 / UART RX)
          │ IO2  ──► PWR_BTN#  U0TX │  (GPIO1 / UART TX)
-         │ IO4  (flash LED)   GND  │  (bottom ground)
+         │ IO4  (flash LED)  GND/R │  (RESET - LEAVE FLOATING!)
          └─────────────────────────┘
 ```
 

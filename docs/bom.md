@@ -78,7 +78,7 @@ When using a standalone USB-to-UART adapter (without an ESP32-CAM-MB daughterboa
 | USB-UART Adapter Pin | ESP32-CAM Header Pin | Notes |
 |:---------------------|:---------------------|:------|
 | **5V / VCC** | **5V** (Left header pin 1) | Supply 5V power from USB adapter (ESP32-CAM onboard regulator generates 3.3V). |
-| **GND** | **GND** (Left header pin 2 or Right header pin 4 / 8) | Common ground reference. **Do NOT connect to Right Pin 2 (IO16/PSRAM)!** |
+| **GND** | **GND** (Left header pin 2 or Right header pin 4) | Common ground reference. **Do NOT connect to Right Pin 2 (`IO16`/PSRAM) or Right Pin 8 (`GND/R` Reset)!** |
 | **RXD** | **U0TX** (Right header pin 7) | Serial receive line on adapter connects to ESP32 UART0 TX. |
 | **TXD** | **U0RX** (Right header pin 6) | Serial transmit line on adapter connects to ESP32 UART0 RX. |
 | **JUMPER** | **IO0** (Right pin 3) to **GND** | Straps ESP32 into ROM bootloader mode upon reset. |

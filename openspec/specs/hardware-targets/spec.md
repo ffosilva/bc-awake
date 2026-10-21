@@ -95,7 +95,7 @@ The repository SHALL provide a KiCad single-layer prototype carrier PCB design f
 
 #### Scenario: Socket pin mapping to physical ESP32-CAM headers
 - **WHEN** wiring female socket headers to the carrier circuit
-- **THEN** the socket pins match the physical AI-Thinker ESP32-CAM module pinout with 5V on Left Pin 1, GND on Left Pin 2, signal lines on Left Pins 4-7, and leaving IO16 (PSRAM) completely isolated and ungrounded
+- **THEN** the socket pins match the physical AI-Thinker ESP32-CAM module pinout with 5V on Left Pin 1, GND on Left Pin 2 and Right Pin 4, signal lines on Left Pins 4-7, and leaving IO16 (PSRAM, Right Pin 2) and GND/R (Reset, Right Pin 8) completely isolated and ungrounded
 
 ### Requirement: AI-Thinker ESP32-CAM Bill of Materials
 The repository SHALL provide a detailed Bill of Materials (BOM) in documentation and machine-readable format specifying component packages, electrical ratings, tolerances, and wiring harness components dedicated specifically to the AI-Thinker ESP32-CAM module and prototype carrier board.

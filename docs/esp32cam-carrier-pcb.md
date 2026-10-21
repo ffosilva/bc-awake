@@ -27,7 +27,7 @@ For an exhaustive catalog including ratings, manufacturer part numbers (LCSC, Di
 | Designator | Component | Package | Value / Spec | Purpose |
 |------------|-----------|---------|--------------|---------|
 | `J_CAM_L` | 1×8 Female Socket Header | 2.54 mm THT | 8-pin 2.54mm pitch | ESP32-CAM Left Header (`5V` to `IO4`) |
-| `J_CAM_R` | 1×8 Female Socket Header | 2.54 mm THT | 8-pin 2.54mm pitch | ESP32-CAM Right Header (`3V3` to `GND`, `IO16` floating) |
+| `J_CAM_R` | 1×8 Female Socket Header | 2.54 mm THT | 8-pin 2.54mm pitch | ESP32-CAM Right Header (`3V3`, middle `GND`; `IO16` & `GND/R` floating) |
 | `J_EXT` | 1×6 Male Header / Screw Terminal | 2.54 mm THT | 6-pin 2.54mm pitch | External ATX and Motherboard Connections |
 | `C_PWR1` | Radial Electrolytic Capacitor | THT (D8.0mm, P3.5mm) | **470 µF**, 16V Low ESR | Bulk 5V rail reservoir against Wi-Fi/BT bursts |
 | `C_PWR2` | Ceramic Disc Capacitor | THT (D5.0mm, P2.5mm) | **100 nF** (0.1 µF), 25V X7R | High-frequency 5V decoupling |
@@ -68,20 +68,20 @@ The layout is arranged on a standard dot-matrix protoboard coordinate grid (Colu
 Col:  01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27
 Row:
  1   [GND-BUS─────────────────────────────────────────────────────────────]  [GND-BUS───────]
- 2    .  .  .  .  .  .  .  .  .  . [5V-IN] . [CAM_L:5V] .  .  .  .  .  .  .  [CAM_R:3V3]-[C3+]-[C4+]
- 3    . [EXT:5V]  .  .  .  .  .  . [C1_+] [C2_+] . [CAM_L:GND] . .  .  .  .  [CAM_R:IO16] .  .  .
- 4    . [EXT:GND] .  .  .  .  .  .  .  .   .  .  . [CAM_L:IO12]. .  .  .  .  [CAM_R:IO0]  .  .  .
- 5    . [EXT:TPMS1]  [R1_1]──────[R1_2][R2_2][C1_2] [CAM_L:IO13]. .  .  .  . [CAM_R:GND]─────────[GND]
- 6    . [EXT:BTN_A]─────────────────────────────────[CAM_L:IO15]. .  .  .  . [CAM_R:VCC]  .  .  .
- 7    . [EXT:PS_ON]  . [Q1:D][Q1:G] . [C2_1][R4_1][R3_1]-[R3_2]-[CAM_L:IO14] [CAM_R:RX]   .  .  .
- 8    . [EXT:PWR_B]─────────────────────────────────[CAM_L:IO2] . .  .  .  . [CAM_R:TX]   .  .  .
- 9    .  .  .  .  .  . [Q1:S][C2_2][R4_2]  .   .  . [CAM_L:IO4] . .  .  .  . [CAM_R:GND]─────────[GND]
-10    .  .  .  .  .  .  .  .  .  .  . [GND-BYPASS] . .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+ 2   [G] .  .  .  .  .  .  .  .  . [5V-IN] . [CAM_L:5V] .  .  .  .  .  .  .  [CAM_R:3V3]-[C3+]-[C4+]
+ 3   [G][EXT:5V]  .  .  .  .  .  . [C1_+] [C2_+] . [CAM_L:GND] . .  .  .  .  [CAM_R:IO16] .  .  .
+ 4   [G][EXT:GND] .  .  .  .  .  .  .  .   .  .  . [CAM_L:IO12]. .  .  .  .  [CAM_R:IO0]  .  .  .
+ 5   [G][EXT:TPMS1]  [R1_1]──────[R1_2][R2_2][C1_2] [CAM_L:IO13]. .  .  .  . [CAM_R:GND]─────────[GND]
+ 6   [G][EXT:BTN_A]─────────────────────────────────[CAM_L:IO15]. .  .  .  . [CAM_R:VCC]  .  .  .
+ 7   [G][EXT:PS_ON]  . [Q1:D][Q1:G] . [C2_1][R4_1][R3_1]-[R3_2]-[CAM_L:IO14] [CAM_R:RX]   .  .  .
+ 8   [G][EXT:PWR_B]─────────────────────────────────[CAM_L:IO2] . .  .  .  . [CAM_R:TX]   .  .  .
+ 9   [GND-BUS──────────[Q1:S][C2_2][R4_2]] .   .  . [CAM_L:IO4] . .  .  .  . [CAM_R:GND/R] .  .  .
 ```
 
 > [!IMPORTANT]
 > **Pin Safety Note**:
-> - `IO16` (Column 22, Row 3) is the ESP32-CAM **PSRAM line**. It has **zero connections and is left completely floating**.
+> - `GND/R` (Right Header Pin 8, Column 22, Row 9) is an active-low reset pin (`RST` / `EN`) on many ESP32-CAM boards despite the silkscreen label. Grounding this pin holds the ESP32 permanently in reset mode. It has **zero connections and is left completely floating**.
+> - `IO16` (Right Header Pin 2, Column 22, Row 3) is the ESP32-CAM **PSRAM line**. It has **zero connections and is left completely floating**.
 > - `IO12`, `IO4`, `IO0`, `VCC`, `U0RX`, and `U0TX` are likewise left completely unconnected.
 
 ---
@@ -91,10 +91,10 @@ Row:
 All traces run on the bottom copper foil (`B.Cu`). Since every track runs in its own dedicated lane or grid coordinate, there are **zero crossing tracks** and **zero jumper wires required**.
 
 ### Bottom Copper Routing Lanes
-1. **Row 1 & 9/10 (`GND` Ground Ring)**:
-   - Top bus (Row 1): Runs from `J_EXT` pin 2 (Col 2, Row 4) up Col 1 to Row 1, across to Col 27, dropping into `R2` pin 1, `C1` pin 1, `C_PWR1` (-), `C_PWR2` (-), `J_CAM_L` pin 2 (`GND`), `C_PWR3` (-), and `C_PWR4` (-).
-   - Right link: Runs down Col 27 to `J_CAM_R` pin 4 (`GND`) and `J_CAM_R` pin 8 (`GND`).
-   - Bottom bus (Row 9/10): Connects `J_CAM_R` pin 8 (`GND`), dips to Row 10 to bypass `IO4`, and connects `R4` (-), `C2` (-), and `Q1` Source/Emitter on Row 9.
+1. **Row 1, Column 1 & Row 9 (`GND` Ground Bus)**:
+   - Top bus (Row 1): Runs from `J_EXT` pin 2 (Col 2, Row 4) left to Col 1, up to Row 1, and across to Col 27, connecting `R2` pin 1 (Col 8), `C1` pin 1 (Col 9), `C_PWR1` (-) (Col 10), `C_PWR2` (-) (Col 11), `J_CAM_L` pin 2 (`GND`, Col 13 Row 3 via Col 14), `C_PWR3` (-) (Col 24), and `C_PWR4` (-) (Col 26).
+   - Right link: Runs down Col 27 from Row 1 to Row 5 to connect `J_CAM_R` pin 4 (middle `GND`, Col 22 Row 5).
+   - Left link & bottom bus (Col 1 & Row 9): Runs down Col 1 from Row 4 to Row 9 and across Row 9 to connect `Q1` Source/Emitter (Col 7), `C2` (-) (Col 8), and `R4` (-) (Col 9), while leaving `J_CAM_R` pin 8 (`GND/R`, Col 22 Row 9) completely isolated.
 2. **Row 3 to Row 2 (`+5VSB` Power Bus)**:
    - Solder bridge / 20 AWG wire from `J_EXT` pin 1 (Col 2, Row 3) → `C_PWR1` (+) (Col 10, Row 3) → `C_PWR2` (+) (Col 11, Row 3) → steps up to Row 2 → `J_CAM_L` pin 1 (Col 13, Row 2).
 3. **Row 2 (`+3V3` Power Rail)**:
@@ -120,26 +120,26 @@ All traces run on the bottom copper foil (`B.Cu`). Since every track runs in its
 
 ### Step 1: Install Low-Profile Passive Components
 1. **Resistors**:
-   - Insert `R1` (1 kΩ) horizontally at Col 4..7 on Row 2.
-   - Insert `R2` (4.7 kΩ) horizontally at Col 5..8 on Row 3.
-   - Insert `R3` (1 kΩ) vertically at Col 11 spanning Row 5 to Row 7.
-   - Insert `R4` (100 kΩ) vertically at Col 9 spanning Row 7 to Row 8.
+   - Insert `R1` (1 kΩ) horizontally at Col 4..7 on Row 5.
+   - Insert `R2` (4.7 kΩ) vertically at Col 8 spanning Row 1 to Row 5.
+   - Insert `R3` (1 kΩ) horizontally at Col 10..12 on Row 7.
+   - Insert `R4` (100 kΩ) vertically at Col 9 spanning Row 7 to Row 9.
 2. **Ceramic Capacitors**:
-   - Insert `C1` (100 nF) at Col 9 spanning Row 2 to Row 3.
-   - Insert `C2` (100 nF) at Col 8 spanning Row 7 to Row 8.
-   - Insert `C_PWR2` (100 nF) at Col 11 spanning Row 8 to Row 9.
-   - Insert `C_PWR4` (100 nF) at Col 26 spanning Row 2 to Row 3.
+   - Insert `C1` (100 nF) vertically at Col 9 spanning Row 1 to Row 5.
+   - Insert `C2` (100 nF) vertically at Col 8 spanning Row 7 to Row 9.
+   - Insert `C_PWR2` (100 nF) vertically at Col 11 spanning Row 1 (`GND`) to Row 3 (`+5VSB`).
+   - Insert `C_PWR4` (100 nF) vertically at Col 26 spanning Row 1 (`GND`) to Row 2 (`+3V3`).
 3. Bend leads slightly on the bottom side to hold components flush, solder pads, and trim excess lead length.
 
 ### Step 2: Install Transistor and Electrolytic Capacitors
 1. **MOSFET `Q1` (2N7000)**:
-   - Form the leads to 2.54 mm inline pitch.
-   - Insert Pin 3 (Drain) at Col 5 Row 7, Pin 2 (Gate) at Col 6 Row 7, and Pin 1 (Source) at Col 7 Row 8.
+   - Form the leads to 2.54 mm pitch.
+   - Insert Pin 3 (Drain) at Col 5 Row 7, Pin 2 (Gate) at Col 6 Row 7, and Pin 1 (Source) at Col 7 Row 9.
    - Ensure the flat face faces toward the top of the board. Solder and trim.
 2. **Bulk Capacitors `C_PWR1` and `C_PWR3`**:
-   - **Observe polarity**: Pin 1 (+) connects to power (`+5VSB` on Row 9 or `+3V3` on Row 2); Pin 2 (-) connects to `GND` (Row 8 or Row 3).
-   - Insert `C_PWR1` (470 µF) at Col 10 (Pad 1 at Row 9, Pad 2 at Row 8).
-   - Insert `C_PWR3` (47 µF) at Col 24 (Pad 1 at Row 2, Pad 2 at Row 3).
+   - **Observe polarity**: Pin 1 (+) connects to power (`+5VSB` on Row 3 or `+3V3` on Row 2); Pin 2 (-) connects to `GND` (Row 1).
+   - Insert `C_PWR1` (470 µF) at Col 10 (Pad 1 at Row 3, Pad 2 at Row 1).
+   - Insert `C_PWR3` (47 µF) at Col 24 (Pad 1 at Row 2, Pad 2 at Row 1).
    - Solder and trim.
 
 ### Step 3: Install Socket Headers & External Connector
@@ -150,22 +150,23 @@ All traces run on the bottom copper foil (`B.Cu`). Since every track runs in its
    - Verify that row-to-row spacing is exactly **22.86 mm (9 hole spaces)** so the ESP32-CAM module seats smoothly.
    - Tack opposite corner pins, verify perpendicular alignment to the board, and solder all remaining pins.
 2. **External Header `J_EXT`**:
-   - Insert 1×6 male pin header or screw terminal at Column 2, Rows 4 through 9. Solder all pins.
+   - Insert 1×6 male pin header or screw terminal at Column 2, Rows 3 through 8. Solder all pins.
 
 ### Step 4: Solder Bottom Copper Bus Tracks
 1. Form solder bridges or lay stripped 22–24 AWG tinned solid wire along the bottom rows matching the routing lanes described in Section 5.
-2. Solder the main `GND` bus (Row 8) and `+5VSB` bus (Row 9) using 20–22 AWG wire to handle current surges.
-3. Connect the top GND bus (Row 1) and right-side GND loop (Col 27) using wire jumpers on the solder side.
+2. Solder the main `GND` bus (Row 1, Col 1, and Row 9 Cols 1–9) and `+5VSB` bus (Row 3 to Row 2) using 20–22 AWG wire to handle current surges.
+3. Connect the right-side GND link (Col 27 from Row 1 to Row 5 into `J_CAM_R` Pin 4). **Do NOT connect `J_CAM_R` Pin 8 (Row 9) to `GND`**, as it is `GND/R` (Reset).
 
 ### Step 5: Verification & Testing Before Module Insertion
 1. **Continuity Check (Multimeter)**:
-   - Probe between `J_EXT` Pin 6 (`+5VSB`) and `J_CAM_L` Pin 8: verify **0 Ω**.
-   - Probe between `J_EXT` Pin 5 (`GND`) and `J_CAM_L` Pin 7, `J_CAM_R` Pin 2, and `J_CAM_R` Pin 7: verify **0 Ω**.
+   - Probe between `J_EXT` Pin 1 (`+5VSB`) and `J_CAM_L` Pin 1: verify **0 Ω**.
+   - Probe between `J_EXT` Pin 2 (`GND`) and `J_CAM_L` Pin 2 and `J_CAM_R` Pin 4: verify **0 Ω**.
+   - Probe between `J_CAM_R` Pin 8 (`GND/R`) and `GND`: verify **open circuit** (must NOT be grounded).
    - Probe between `+5VSB` and `GND`: verify **open circuit / high resistance** (no short).
    - Probe between `+3V3` (`J_CAM_R` Pin 1) and `GND`: verify **open circuit**.
 2. **Cold Power Test**:
-   - Apply 5V DC from bench PSU or ATX +5VSB to `J_EXT` Pin 6 (`+5VSB`) and Pin 5 (`GND`) with ESP32-CAM **unplugged**.
-   - Verify 5.0 V on `J_CAM_L` Pin 8. Verify 0 V on all other pins.
+   - Apply 5V DC from bench PSU or ATX +5VSB to `J_EXT` Pin 1 (`+5VSB`) and Pin 2 (`GND`) with ESP32-CAM **unplugged**.
+   - Verify 5.0 V on `J_CAM_L` Pin 1. Verify 0 V on all other pins.
    - Power off. Plug in the AI-Thinker ESP32-CAM module (camera module facing up, antenna at top).
 3. **Operational Test**:
    - Power on. Confirm the ESP32-CAM boots cleanly without brownout reset (`ESP_RST_POWERON`).

@@ -251,7 +251,6 @@ pin_net_map = {
 
     ("J_CAM_R", "1"): "+3V3",
     ("J_CAM_R", "4"): "GND",
-    ("J_CAM_R", "8"): "GND",
 
     ("C_PWR1", "1"): "+5VSB",
     ("C_PWR1", "2"): "GND",
@@ -528,7 +527,7 @@ cam_r_pads = [
     (5, gx(22), gy(6), 0, "", False),           # VCC  (NC)
     (6, gx(22), gy(7), 0, "", False),           # U0RX (NC)
     (7, gx(22), gy(8), 0, "", False),           # U0TX (NC)
-    (8, gx(22), gy(9), 1, "GND", False)         # GND (bottom)
+    (8, gx(22), gy(9), 0, "", False)            # GND/R (Reset - NC! Grounding holds ESP32 in reset)
 ]
 cam_r_str = "\n".join([pad_tht(p[0], p[1], p[2], p[3], p[4], p[5]) for p in cam_r_pads])
 pcb_footprints.append(f"""\t(footprint "Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical"
@@ -685,21 +684,18 @@ tracks.append(trk(gx(26), gy(1), gx(27), gy(1), 1, 1.2))
 tracks.append(trk(gx(14), gy(1), gx(14), gy(3), 1, 0.8))
 tracks.append(trk(gx(14), gy(3), gx(13), gy(3), 1, 0.8))
 
-# --- Net 1 (GND) Right Link and Bottom Bus ---
+# --- Net 1 (GND) Right Link to J_CAM_R pin 4 ---
 # (27,1) -> (27,5) -> J_CAM_R pin 4 (22,5)
 tracks.append(trk(gx(27), gy(1), gx(27), gy(5), 1, 0.8))
 tracks.append(trk(gx(27), gy(5), gx(22), gy(5), 1, 0.8))
 
-# (27,5) -> (27,9) -> J_CAM_R pin 8 (22,9) -> bypass J_CAM_L pad 8 (13,9) via Row 10 -> (9,9) -> (8,9) -> (7,9)
-tracks.append(trk(gx(27), gy(5), gx(27), gy(9), 1, 1.2))
-tracks.append(trk(gx(27), gy(9), gx(22), gy(9), 1, 1.2))
-tracks.append(trk(gx(22), gy(9), gx(14), gy(9), 1, 1.2))
-tracks.append(trk(gx(14), gy(9), gx(14), gy(10), 1, 1.2))
-tracks.append(trk(gx(14), gy(10), gx(12), gy(10), 1, 1.2))
-tracks.append(trk(gx(12), gy(10), gx(12), gy(9), 1, 1.2))
-tracks.append(trk(gx(12), gy(9), gx(9), gy(9), 1, 1.2))
-tracks.append(trk(gx(9), gy(9), gx(8), gy(9), 1, 1.2))
-tracks.append(trk(gx(8), gy(9), gx(7), gy(9), 1, 1.2))
+# --- Net 1 (GND) Left Link and Bottom Bus ---
+# (1,4) -> (1,9) -> Q1 Source (7,9) -> C2 (8,9) -> R4 (9,9)
+# Note: J_CAM_R pin 8 (22,9) is GND/R (active-low reset on many ESP32-CAM boards) and MUST stay unconnected!
+tracks.append(trk(gx(1), gy(4), gx(1), gy(9), 1, 1.2))
+tracks.append(trk(gx(1), gy(9), gx(7), gy(9), 1, 1.2))
+tracks.append(trk(gx(7), gy(9), gx(8), gy(9), 1, 1.2))
+tracks.append(trk(gx(8), gy(9), gx(9), gy(9), 1, 1.2))
 
 # --- Net 4 (TPMS1) along Row 5 ---
 # J_EXT pin 3 (2,5) -> R1 pad 1 (4,5)

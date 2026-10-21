@@ -2,7 +2,7 @@
 	(version "E")
 	(design
 		(source "/Users/ffosilva/repos/ffosilva/bc-awake/hardware/kicad/esp32cam-carrier/esp32cam-carrier.kicad_sch")
-		(date "2026-10-20T18:46:56")
+		(date "2026-10-21T16:12:38")
 		(tool "Eeschema 10.0.7")
 		(sheet
 			(number "1")
@@ -93,7 +93,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "acc533ef-fa10-49e3-aa93-319a1467daf7")
+			(tstamps "814328bd-d698-4edf-904e-39c87f3bc31c")
 			(units
 				(unit
 					(name "A")
@@ -147,7 +147,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "917597bf-30b7-40f6-ad5e-6ad9292ce4ac")
+			(tstamps "f1ff0b82-1475-4e80-ac9c-b4c6669d0a1e")
 			(units
 				(unit
 					(name "A")
@@ -201,7 +201,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "13c57bc7-a1d4-4a56-90e3-beda0cbfee2b")
+			(tstamps "0500d912-560e-42b1-b648-5575924749ac")
 			(units
 				(unit
 					(name "A")
@@ -255,7 +255,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "fa2e4f7f-54da-4e8d-aa28-011c4b527b1e")
+			(tstamps "10c0ff1b-18d8-417f-805b-b2c5d905af5d")
 			(units
 				(unit
 					(name "A")
@@ -309,7 +309,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "d5372910-2b45-4b1a-a3ba-399553a0109f")
+			(tstamps "19a0281c-1d3f-4c8c-9677-df0ea70da572")
 			(units
 				(unit
 					(name "A")
@@ -363,7 +363,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "da8b7660-5043-4658-970a-db9ca9a4f63c")
+			(tstamps "d8f6f615-d1c0-4856-97e3-48083bb9c75f")
 			(units
 				(unit
 					(name "A")
@@ -417,7 +417,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "2b7aa3e1-6631-4f0f-b4ca-fd0cae220bac")
+			(tstamps "bb345953-7b3a-4ee8-aa69-ec587aa4516e")
 			(units
 				(unit
 					(name "A")
@@ -489,7 +489,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "b9ee791d-749f-41ff-976e-8f9a3e2767c0")
+			(tstamps "d4fe8f1d-d0a8-40aa-8a73-a8e24b42d3fa")
 			(units
 				(unit
 					(name "A")
@@ -561,7 +561,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "bc2a18ac-a3f4-4b90-804a-443c5cb24e4e")
+			(tstamps "d6e8c90e-df1d-494f-bca0-daab60fae2d6")
 			(units
 				(unit
 					(name "A")
@@ -627,7 +627,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "4315fcc8-49e1-4745-9095-c7b17bbd040c")
+			(tstamps "dcf8508f-3325-47bb-9716-cfdddf057e5f")
 			(units
 				(unit
 					(name "A")
@@ -684,7 +684,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "2eb110a6-30c1-4f3d-8c49-1c43f9c7b25e")
+			(tstamps "b0d78032-6e58-4726-8349-cb28c30f4483")
 			(units
 				(unit
 					(name "A")
@@ -738,7 +738,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "920cb05f-76c6-44a3-b952-215f5daac553")
+			(tstamps "b904c30f-4828-4ce9-89d2-56292a035a33")
 			(units
 				(unit
 					(name "A")
@@ -792,7 +792,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "3c6bd263-36f9-4cb5-8019-8242ace749c4")
+			(tstamps "676d314f-fc49-43e2-bcc9-073bfc70f688")
 			(units
 				(unit
 					(name "A")
@@ -846,7 +846,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "acc720f0-215d-4ebb-8ca4-f9f32588e0c5")
+			(tstamps "f0c5a55f-fae7-458b-96ad-b55803372a09")
 			(units
 				(unit
 					(name "A")
@@ -1251,12 +1251,6 @@
 				(pintype "passive")
 			)
 			(node
-				(ref "J_CAM_R")
-				(pin "8")
-				(pinfunction "Pin_8_8")
-				(pintype "passive")
-			)
-			(node
 				(ref "J_EXT")
 				(pin "2")
 				(pinfunction "Pin_2_2")
@@ -1471,6 +1465,17 @@
 				(ref "J_CAM_R")
 				(pin "7")
 				(pinfunction "Pin_7_7")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "18")
+			(name "unconnected-(J_CAM_R-Pin_8-Pad8)")
+			(class "Default")
+			(node
+				(ref "J_CAM_R")
+				(pin "8")
+				(pinfunction "Pin_8_8")
 				(pintype "passive")
 			)
 		)
