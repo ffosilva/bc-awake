@@ -53,6 +53,7 @@ static unsigned long boardSenseChange  = 0;
 
 // --- Wake subsystem ---
 static bool          wakeActive        = false;
+static bool          radiosActive      = false;
 static unsigned long wakeInhibitUntil  = 0;      // wakes ignored until this
 
 // --- Misc timers ---
@@ -74,11 +75,20 @@ const char *getBoardStateName() {
 
 static void startWake();
 
+// Raw (pre-time-debounce) board-up level, filtered against transient spikes.
+static bool senseLevel = false;
+
 static void setState(PowerState next) {
   if (next == state) return;
   Serial.printf("[STATE] %s -> %s\n", stateName(state), stateName(next));
   state = next;
   if (next == STATE_OFF) {
+#if defined(BOARD_ESP32CAM)
+    // Detach ADC2 before starting Wi-Fi/BT radios, which share ADC2 hardware.
+    pinMode(BOARD_SENSE, INPUT);
+    senseLevel = false;
+#endif
+    radiosActive = true;
     if (!g_setupMode) {
       startWake();
       networkWakeBegin(true);
@@ -89,34 +99,9 @@ static void setState(PowerState next) {
     wakeStop();
     wakeActive = false;
     networkWakeStop();
+    radiosActive = false;
   }
 }
-
-// Raw (pre-time-debounce) board-up level, filtered against transient spikes.
-static bool senseLevel = false;
-
-#if defined(BOARD_ESP32CAM)
-// ESP32-CAM: GPIO13 is on ADC2, which cannot be sampled while Bluetooth is
-// running. It is also shared with SD DAT3 which floats HIGH unless pulled down.
-// We configure GPIO13 with INPUT_PULLDOWN and require unanimous agreement
-// across SENSE_OVERSAMPLE consecutive digital reads before changing state.
-static bool readBoardSense(uint32_t *outMv = nullptr) {
-  int highCount = 0;
-  for (int i = 0; i < SENSE_OVERSAMPLE; i++) {
-    if (i > 0) delayMicroseconds(200);
-    if (digitalRead(BOARD_SENSE) == HIGH) {
-      highCount++;
-    }
-  }
-  if (highCount == SENSE_OVERSAMPLE) {
-    senseLevel = true;
-  } else if (highCount == 0) {
-    senseLevel = false;
-  }
-  if (outMv) *outMv = senseLevel ? 3300 : 0;
-  return senseLevel;
-}
-#else
 
 // One ADC sample in mV. The classic ESP32's analogReadMilliVolts() needs an eFuse
 // calibration (vref) that many modules never had burned; without it every read
@@ -132,6 +117,17 @@ static uint32_t senseReadMv() {
 }
 
 static bool readBoardSense(uint32_t *outMv = nullptr) {
+#if defined(BOARD_ESP32CAM)
+  // GPIO13 is on ADC2, which cannot be sampled while Wi-Fi or Bluetooth radios
+  // are active. Radios are only active in STATE_OFF / setup mode; during
+  // initial boot qualification, STATE_BOOTING, and STATE_ON, radios are off
+  // and ADC2 can be sampled cleanly.
+  if (radiosActive || g_setupMode) {
+    senseLevel = false;
+    if (outMv) *outMv = 0;
+    return false;
+  }
+#endif
   // Average several reads to reject single-sample ADC/line spikes. Without this,
   // one stray spike past SENSE_HIGH_MV chatters the hysteresis and restarts the
   // board-off debounce, stalling shutdown detection (see SENSE_OVERSAMPLE).
@@ -148,7 +144,6 @@ static bool readBoardSense(uint32_t *outMv = nullptr) {
   }
   return senseLevel;
 }
-#endif
 
 // PWR_BTN_PIN is a high-Z INPUT unless we are emulating a press. The motherboard
 // owns the HIGH level (~3.4V pull-up), so we only ever pull the line LOW and
@@ -261,7 +256,7 @@ static void initHardware() {
   // open-drain driver so PS_ON# never glitches LOW on startup, then sync the
   // Arduino GPIO HAL after pinMode registers the pin.
   gpio_set_level((gpio_num_t)PS_ON_PIN, PS_ON_RELEASE);
-  pinMode(PS_ON_PIN, OUTPUT_OPEN_DRAIN);
+  pinMode(PS_ON_PIN, OUTPUT);
   digitalWrite(PS_ON_PIN, PS_ON_RELEASE);
 
   // Optional PWR_BTN#: always start as a high-Z input, never driven unless the
@@ -278,7 +273,7 @@ static void initHardware() {
 #if defined(BOARD_ESP32CAM)
   pinMode(FLASH_LED, OUTPUT);
   digitalWrite(FLASH_LED, LOW);
-  pinMode(BOARD_SENSE, INPUT_PULLDOWN);
+  analogSetAttenuation(ADC_11db);
 #elif defined(BOARD_ESP32C3)
   analogSetPinAttenuation(BOARD_SENSE, ADC_11db);
 #else
@@ -334,6 +329,11 @@ static void normalBegin() {
 
   // Only start wireless radios if booting in STATE_OFF
   if (state == STATE_OFF) {
+#if defined(BOARD_ESP32CAM)
+    pinMode(BOARD_SENSE, INPUT);
+    senseLevel = false;
+#endif
+    radiosActive = true;
     startWake();
     networkWakeBegin(true);
   }
@@ -354,6 +354,7 @@ void setup() {
   // (e.g. 8s button hold while OFF or serial 's' command), start the setup portal.
   if (!isConfigured() || config.forceSetup) {
     g_setupMode = true;
+    radiosActive = true;
     initHardware();
     state = STATE_OFF;
     portalBegin();

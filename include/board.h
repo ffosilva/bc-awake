@@ -88,8 +88,16 @@ const int PWR_BTN_PIN = 27;
 //   reading rises above HIGH -> treat as "board up"
 //   reading falls below LOW  -> treat as "board down"
 //   in between               -> hold previous state
+#if defined(BOARD_ESP32CAM)
+// On the ESP32-CAM carrier board, R1 (1 kOhm series) and R2 (4.7 kOhm
+// pull-down) divide the high-impedance TPMS1 signal to ~1200-1300 mV when ON
+// and divide the onboard 47 kOhm SD pull-up to ~300 mV when OFF.
+const int SENSE_HIGH_MV = 900;
+const int SENSE_LOW_MV = 500;
+#else
 const int SENSE_HIGH_MV = 2000;
 const int SENSE_LOW_MV = 800;
+#endif
 
 // TPMS1 is high-impedance and the ESP32 single-shot ADC is noisy, so an
 // isolated analogReadMilliVolts() can spike hundreds of mV above the true
@@ -103,8 +111,8 @@ const int SENSE_OVERSAMPLE = 16;
 
 //*******  Logic levels  ***************
 
-const int PS_ON_ASSERT = LOW;   // PSU on
-const int PS_ON_RELEASE = HIGH; // PSU off (open-drain -> high-Z)
+const int PS_ON_ASSERT = HIGH;  // MOSFET on  -> PS_ON# pulled LOW -> PSU on
+const int PS_ON_RELEASE = LOW;  // MOSFET off -> PSU pull-up wins  -> PSU off
 
 //*******  Power states  ***************
 
