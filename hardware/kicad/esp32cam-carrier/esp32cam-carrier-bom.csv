@@ -4,7 +4,7 @@ Item,Reference,Quantity,Value,Footprint,Description,Ratings / Specs,Reference MP
 3,C_PWR3,1,47uF,Capacitor_THT:CP_Radial_D6.3mm_P2.50mm,Radial Electrolytic / Tantalum Capacitor (3.3V bulk reservoir),"47µF 16V, D6.3mm P2.5mm",Panasonic ECA-1CHG470 / Nichicon UVR1C470MDD
 4,"J_CAM_L, J_CAM_R",2,1x08 Female Header,Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical,1x8 Female Pin Socket Header (ESP32-CAM Sockets),"2.54mm pitch, vertical socket, 8.5mm height",Generic 2.54mm 1x8 Female Socket Header
 5,J_EXT,1,1x06 Pin Header,Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical,1x6 Pin Header / Screw Terminal Block (External Harness),"2.54mm pitch, vertical male / terminal block",Generic 2.54mm 1x6 Pin Header / Terminal
-6,Q1,1,2N7000,Package_TO_SOT_THT:TO-92_Inline_Wide,N-Channel MOSFET (PS_ON# low-side open-drain buffer),"60V 200mA, Vgs(th) 0.8-3.0V, TO-92 Inline",onsemi 2N7000 / Diotec 2N7000
+6,Q1,1,BC547,Package_TO_SOT_THT:TO-92_Inline,NPN BJT Transistor (PS_ON# low-side open-collector buffer),"45V 100mA, TO-92 Inline (C-B-E)",onsemi BC547B / Diotec BC547B / BC548
 7,"R1, R3",2,1k,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,Metal Film Axial Resistor,"1kΩ 1/4W 1%, DIN0207 P7.62mm",Yageo MFR-25FRF52-1K / TE LR0204F1K0
-8,R2,1,4.7k,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,Metal Film Axial Resistor (TPMS1 digital pull-down),"4.7kΩ 1/4W 1%, DIN0207 P7.62mm",Yageo MFR-25FRF52-4K7 / TE LR0204F4K7
-9,R4,1,100k,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,Metal Film Axial Resistor (2N7000 gate pull-down),"100kΩ 1/4W 1%, DIN0207 P7.62mm",Yageo MFR-25FRF52-100K / TE LR0204F100K
+8,R2,1,4.7k,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,Metal Film Axial Resistor (TPMS1 pull-down),"4.7kΩ 1/4W 1%, DIN0207 P7.62mm",Yageo MFR-25FRF52-4K7 / TE LR0204F4K7
+9,R4,1,100k,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,Metal Film Axial Resistor (BC547 base pull-down),"100kΩ 1/4W 1%, DIN0207 P7.62mm",Yageo MFR-25FRF52-100K / TE LR0204F100K

@@ -88,8 +88,8 @@ const int PWR_BTN_PIN = 27;
 //   reading rises above HIGH -> treat as "board up"
 //   reading falls below LOW  -> treat as "board down"
 //   in between               -> hold previous state
-#if defined(BOARD_ESP32CAM)
-// On the ESP32-CAM carrier board, R1 (1 kOhm series) and R2 (4.7 kOhm
+#if defined(BOARD_ESP32CAM_CARRIER)
+// On the ESP32-CAM prototype carrier board, R1 (1 kOhm series) and R2 (4.7 kOhm
 // pull-down) divide the high-impedance TPMS1 signal to ~1200-1300 mV when ON
 // and divide the onboard 47 kOhm SD pull-up to ~300 mV when OFF.
 const int SENSE_HIGH_MV = 900;
@@ -111,8 +111,16 @@ const int SENSE_OVERSAMPLE = 16;
 
 //*******  Logic levels  ***************
 
-const int PS_ON_ASSERT = HIGH;  // MOSFET on  -> PS_ON# pulled LOW -> PSU on
-const int PS_ON_RELEASE = LOW;  // MOSFET off -> PSU pull-up wins  -> PSU off
+#if defined(BOARD_ESP32CAM_CARRIER)
+// Carrier board uses a low-side NPN BJT (BC547/BC548) buffer:
+// GPIO HIGH drives base -> transistor turns ON -> pulls PS_ON# to GND -> PSU turns ON.
+const int PS_ON_ASSERT = HIGH;
+const int PS_ON_RELEASE = LOW;
+#else
+// Direct-wire open-drain: active LOW asserts PS_ON#, high-Z releases PS_ON#.
+const int PS_ON_ASSERT = LOW;
+const int PS_ON_RELEASE = HIGH;
+#endif
 
 //*******  Power states  ***************
 

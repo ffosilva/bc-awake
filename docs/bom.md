@@ -14,22 +14,22 @@ All components on the carrier board use standard **Through-Hole Technology (THT)
 | Item | Designator | Qty | Value | Package / Footprint | Ratings & Tolerances | Reference MPN / Search Keywords | Purpose & Circuit Function |
 |:----:|:-----------|:---:|:------|:--------------------|:---------------------|:--------------------------------|:---------------------------|
 | 1 | `C_PWR1` | 1 | 470 µF | Radial Electrolytic (D8.0mm, P3.5mm) | 16V (or 25V), ±20%, Low-ESR, 105°C | Panasonic `EEU-FR1C471`, Nichicon `UPW1C471MPD` | 5V bulk reservoir capacitor; absorbs Wi-Fi/Bluetooth TX current transients (>300 mA pulses) and prevents ESP32 brownout resets. |
-| 2 | `C1`, `C2`, `C_PWR2`, `C_PWR4` | 4 | 100 nF (0.1 µF) | Ceramic Disc / MLCC (D5.0mm, P2.5mm) | 25V or 50V, X7R / Y5V, ±10% or ±20% | Kemet `C315C104K5R5TA`, Vishay `K104K15X7RF5TL2`, Generic 100nF disc | High-frequency bypass and RF noise suppression: `C_PWR2` (5V rail), `C_PWR4` (3.3V rail), `C1` (TPMS1 RC filter), `C2` (2N7000 gate snubber). |
+| 2 | `C1`, `C2`, `C_PWR2`, `C_PWR4` | 4 | 100 nF (0.1 µF) | Ceramic Disc / MLCC (D5.0mm, P2.5mm) | 25V or 50V, X7R / Y5V, ±10% or ±20% | Kemet `C315C104K5R5TA`, Vishay `K104K15X7RF5TL2`, Generic 100nF disc | High-frequency bypass and RF noise suppression: `C_PWR2` (5V rail), `C_PWR4` (3.3V rail), `C1` (TPMS1 RC filter), `C2` (BC547 base snubber). |
 | 3 | `C_PWR3` | 1 | 47 µF | Radial Electrolytic / Tantalum (D6.3mm, P2.5mm) | 16V, ±20%, 85°C/105°C | Panasonic `ECA-1CHG470`, Nichicon `UVR1C470MDD` | 3.3V bulk reservoir; buffers the ESP32-CAM onboard AMS1117-3.3 regulator output during heavy CPU/radio load. |
 | 4 | `J_CAM_L`, `J_CAM_R` | 2 | 1×8 Female Header | 1×8 Female Pin Socket (2.54 mm pitch) | 2.54 mm (100 mil) pitch, 8.5 mm insulator height | Standard 1×8 2.54mm Female Header Socket | Mates with the two 8-pin male headers of the AI-Thinker ESP32-CAM module spaced 22.86 mm (0.9 in) apart. |
 | 5 | `J_EXT` | 1 | 1×6 Pin Header / Terminal | 1×6 Pin Header or 2.54mm Screw Terminal Block | 2.54 mm pitch, vertical through-hole | Molex `22-28-4063`, Wurth `691216510006`, Generic 1x6 header | Connects the carrier board to the external wiring harness: TPMS1, BTN_A, PWR_BTN#, PS_ON#, GND, +5VSB. |
-| 6 | `Q1` | 1 | 2N7000 | TO-92 (Formed leads to 2.54 mm pitch) | $V_{DS} = 60\text{ V}$, $I_D = 200\text{ mA}$, $V_{GS(th)} = 0.8\text{--}3.0\text{ V}$ | onsemi `2N7000`, Diotec `2N7000` | N-channel MOSFET low-side open-drain buffer; isolates ESP32-CAM GPIO14 from the ATX +5V standby pull-up and pulls `PS_ON#` LOW when active. |
-| 7 | `R1`, `R3` | 2 | 1 kΩ | Axial Resistor (DIN0207, P7.62mm / P10.16mm) | 1/4 W (0.25 W), 1% Metal Film (or 5% Carbon) | Yageo `MFR-25FRF52-1K`, TE Connectivity `LR0204F1K0` | `R1`: Series current limiter for TPMS1 sense input. `R3`: Series gate protection resistor for Q1. |
+| 6 | `Q1` | 1 | BC547 | TO-92 Inline (C-B-E pinout) | $V_{CEO} = 45\text{ V}$, $I_C = 100\text{ mA}$, NPN BJT | onsemi `BC547B`, Diotec `BC547B` / `BC548` | NPN BJT low-side open-collector buffer; isolates ESP32-CAM GPIO14 from the ATX +5V standby pull-up and pulls `PS_ON#` LOW when active. |
+| 7 | `R1`, `R3` | 2 | 1 kΩ | Axial Resistor (DIN0207, P7.62mm / P10.16mm) | 1/4 W (0.25 W), 1% Metal Film (or 5% Carbon) | Yageo `MFR-25FRF52-1K`, TE Connectivity `LR0204F1K0` | `R1`: Series current limiter for TPMS1 sense input. `R3`: Series base protection resistor for Q1. |
 | 8 | `R2` | 1 | 4.7 kΩ | Axial Resistor (DIN0207, P7.62mm / P10.16mm) | 1/4 W (0.25 W), 1% Metal Film (or 5% Carbon) | Yageo `MFR-25FRF52-4K7`, TE Connectivity `LR0204F4K7` | Pull-down resistor on GPIO13 (`BOARD_SENSE`); divides against the ESP32-CAM internal 47 kΩ SD card DAT3 pull-up to keep input solidly LOW when PC is OFF. |
-| 9 | `R4` | 1 | 100 kΩ | Axial Resistor (DIN0207, P7.62mm / P10.16mm) | 1/4 W (0.25 W), 1% Metal Film (or 5% Carbon) | Yageo `MFR-25FRF52-100K`, TE Connectivity `LR0204F100K` | Gate pull-down resistor for Q1; guarantees `Q1` gate remains at 0V during ESP32 power-on reset, bootloader flashing, and deep sleep. |
+| 9 | `R4` | 1 | 100 kΩ | Axial Resistor (DIN0207, P7.62mm / P10.16mm) | 1/4 W (0.25 W), 1% Metal Film (or 5% Carbon) | Yageo `MFR-25FRF52-100K`, TE Connectivity `LR0204F100K` | Base pull-down resistor for Q1; guarantees `Q1` base remains at 0V during ESP32 power-on reset, bootloader flashing, and deep sleep. |
 
 ### Component Notes & Selection Rules
 
 - **Electrolytic Capacitors (`C_PWR1`, `C_PWR3`)**:
   - `C_PWR1` is critical. The ESP32 2.4 GHz radio draws momentary peaks up to 300–400 mA. Without at least 220 µF–470 µF low-ESR bulk capacitance directly adjacent to the 5V power inlet, the board can suffer spontaneous brownout resets during Bluetooth connection handshakes.
   - Pay strict attention to polarity: the negative stripe on radial capacitors must connect to the `GND` bus (Row 8 on the carrier board).
-- **2N7000 MOSFET Pinout**:
-  - The TO-92 package lead arrangement used on this board corresponds to standard 2N7000 (Source = Pin 1, Gate = Pin 2, Drain = Pin 3). If substituting with a BS170, be aware that BS170 has Drain and Source reversed relative to 2N7000.
+- **BC547 / BC548 NPN Transistor Pinout**:
+  - The TO-92 package lead arrangement used on this board corresponds to standard BC547 / BC548 (Pin 1 = Collector, Pin 2 = Base, Pin 3 = Emitter). Looking from the component side, the flat face points toward Row 9 (bottom). Pin 1 connects to `PS_ON#` (Col 5, Row 7), Pin 2 to Base drive (Col 6, Row 7), and Pin 3 to `GND` (Col 7, Row 9).
 - **Resistor Power Ratings**:
   - Standard 1/4W (0.25W) axial metal film resistors are recommended for their precision (1%), temperature stability, and standard lead diameter (0.5 mm) fitting cleanly into perfboard holes.
 
@@ -91,9 +91,9 @@ Components can be acquired from standard catalog electronic distributors (Digi-K
 
 | Distributor | Search Term / Part Family | Notes |
 |:------------|:--------------------------|:------|
-| **LCSC** | `2N7000`, `EEU-FR1C471`, `C315C104K5R5TA`, `MFR-25FRF52-1K` | Fast one-stop order for all passives, connectors, and transistors with exact KiCad footprints. |
-| **Digi-Key** | `2N7000-ND`, `P10225-ND` (470uF), `399-4454-1-ND` (100nF) | High reliability, rapid domestic shipping. |
-| **Mouser** | `512-2N7000`, `667-EEU-FR1C471`, `80-C315C104K5R` | Complete matching BOM with factory datasheets. |
+| **LCSC** | `BC547B`, `EEU-FR1C471`, `C315C104K5R5TA`, `MFR-25FRF52-1K` | Fast one-stop order for all passives, connectors, and transistors with exact KiCad footprints. |
+| **Digi-Key** | `BC547B-ND`, `P10225-ND` (470uF), `399-4454-1-ND` (100nF) | High reliability, rapid domestic shipping. |
+| **Mouser** | `512-BC547B`, `667-EEU-FR1C471`, `80-C315C104K5R` | Complete matching BOM with factory datasheets. |
 | **AliExpress** | `"ESP32-CAM with MB programmer"`, `"single side perfboard 2.54mm"`, `"24-pin ATX extension cable"` | Cost-effective bulk procurement for carrier protoboards, DuPont wires, and ATX breakout harness. |
 
 ---

@@ -2,7 +2,7 @@
 	(version "E")
 	(design
 		(source "/Users/ffosilva/repos/ffosilva/bc-awake/hardware/kicad/esp32cam-carrier/esp32cam-carrier.kicad_sch")
-		(date "2026-10-21T16:12:38")
+		(date "2026-10-22T08:57:13")
 		(tool "Eeschema 10.0.7")
 		(sheet
 			(number "1")
@@ -11,8 +11,8 @@
 			(title_block
 				(title "BC Awake ESP32-CAM Single-Layer Prototype Carrier Board")
 				(company)
-				(rev "1.0")
-				(date "2026-10-20")
+				(rev "1.1")
+				(date "2026-10-22")
 				(source "esp32cam-carrier.kicad_sch")
 				(comment
 					(number "1")
@@ -20,7 +20,7 @@
 				)
 				(comment
 					(number "2")
-					(value "Bulk decoupling, TPMS1 RC filter, and PS_ON# MOSFET buffer")
+					(value "Bulk decoupling, TPMS1 RC filter, and PS_ON# BC547/BC548 NPN buffer")
 				)
 				(comment
 					(number "3")
@@ -93,7 +93,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "814328bd-d698-4edf-904e-39c87f3bc31c")
+			(tstamps "601a0010-a695-4863-826b-70aa806282df")
 			(units
 				(unit
 					(name "A")
@@ -112,7 +112,7 @@
 			(ref "C2")
 			(value "100nF")
 			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
-			(description "2N7000 gate snubber")
+			(description "BC547 base snubber")
 			(fields
 				(field
 					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm")
@@ -120,7 +120,7 @@
 					(name "Datasheet")
 				)
 				(field
-					(name "Description") "2N7000 gate snubber")
+					(name "Description") "BC547 base snubber")
 			)
 			(libsource
 				(lib "Device")
@@ -147,7 +147,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "f1ff0b82-1475-4e80-ac9c-b4c6669d0a1e")
+			(tstamps "3aca079b-66a2-41a1-b7c2-1c744ac4ca32")
 			(units
 				(unit
 					(name "A")
@@ -201,7 +201,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "0500d912-560e-42b1-b648-5575924749ac")
+			(tstamps "bf7e395d-7dcc-4087-bae7-42c193111af5")
 			(units
 				(unit
 					(name "A")
@@ -255,7 +255,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "10c0ff1b-18d8-417f-805b-b2c5d905af5d")
+			(tstamps "66154913-f8f9-4b62-bb51-0c8e66be028e")
 			(units
 				(unit
 					(name "A")
@@ -309,7 +309,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "19a0281c-1d3f-4c8c-9677-df0ea70da572")
+			(tstamps "cd52cb27-ede7-4793-9bf3-da374f0d6a2c")
 			(units
 				(unit
 					(name "A")
@@ -363,7 +363,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "d8f6f615-d1c0-4856-97e3-48083bb9c75f")
+			(tstamps "48998933-f732-44b0-ae71-5fcdf41b6ca5")
 			(units
 				(unit
 					(name "A")
@@ -417,7 +417,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "bb345953-7b3a-4ee8-aa69-ec587aa4516e")
+			(tstamps "50938d49-7a41-4eb1-8b03-5823fb8d75fd")
 			(units
 				(unit
 					(name "A")
@@ -489,7 +489,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "d4fe8f1d-d0a8-40aa-8a73-a8e24b42d3fa")
+			(tstamps "288041cf-d35a-4cd6-8d07-fa3080434e06")
 			(units
 				(unit
 					(name "A")
@@ -561,7 +561,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "d6e8c90e-df1d-494f-bca0-daab60fae2d6")
+			(tstamps "16272cad-26f2-4667-8ed2-4e9cab6241dd")
 			(units
 				(unit
 					(name "A")
@@ -590,22 +590,22 @@
 		)
 		(comp
 			(ref "Q1")
-			(value "2N7000")
-			(footprint "Package_TO_SOT_THT:TO-92_Inline_Wide")
-			(description "PS_ON# Buffer")
+			(value "BC547")
+			(footprint "Package_TO_SOT_THT:TO-92_Inline")
+			(description "PS_ON# NPN Buffer")
 			(fields
 				(field
-					(name "Footprint") "Package_TO_SOT_THT:TO-92_Inline_Wide")
+					(name "Footprint") "Package_TO_SOT_THT:TO-92_Inline")
 				(field
 					(name "Datasheet")
 				)
 				(field
-					(name "Description") "PS_ON# Buffer")
+					(name "Description") "PS_ON# NPN Buffer")
 			)
 			(libsource
-				(lib "Transistor_FET")
-				(part "2N7000")
-				(description "0.2A Id, 200V Vds, N-Channel MOSFET, 2.6V Logic Level, TO-92")
+				(lib "Transistor_BJT")
+				(part "BC547")
+				(description "0.1A Ic, 45V Vce, Small Signal NPN Transistor, TO-92")
 			)
 			(property
 				(name "Sheetname")
@@ -617,7 +617,7 @@
 			)
 			(property
 				(name "ki_keywords")
-				(value "N-Channel MOSFET Logic-Level")
+				(value "NPN Transistor")
 			)
 			(property
 				(name "ki_fp_filters")
@@ -627,21 +627,11 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "dcf8508f-3325-47bb-9716-cfdddf057e5f")
+			(tstamps "0523792e-3577-426f-a507-b8c3573c8f5e")
 			(units
 				(unit
 					(name "A")
-					(pins
-						(pin
-							(num "2")
-						)
-						(pin
-							(num "3")
-						)
-						(pin
-							(num "1")
-						)
-					)
+					(pins)
 				)
 			)
 		)
@@ -684,7 +674,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "b0d78032-6e58-4726-8349-cb28c30f4483")
+			(tstamps "887ea293-9edd-4c7f-93aa-117ee5840df9")
 			(units
 				(unit
 					(name "A")
@@ -738,7 +728,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "b904c30f-4828-4ce9-89d2-56292a035a33")
+			(tstamps "31133892-480b-4832-9a92-52943d2190ee")
 			(units
 				(unit
 					(name "A")
@@ -757,7 +747,7 @@
 			(ref "R3")
 			(value "1k")
 			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal")
-			(description "2N7000 gate resistor")
+			(description "BC547 base resistor")
 			(fields
 				(field
 					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal")
@@ -765,7 +755,7 @@
 					(name "Datasheet")
 				)
 				(field
-					(name "Description") "2N7000 gate resistor")
+					(name "Description") "BC547 base resistor")
 			)
 			(libsource
 				(lib "Device")
@@ -792,7 +782,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "676d314f-fc49-43e2-bcc9-073bfc70f688")
+			(tstamps "5166c5a0-9c18-45a5-bb49-9ab2e264cd1e")
 			(units
 				(unit
 					(name "A")
@@ -811,7 +801,7 @@
 			(ref "R4")
 			(value "100k")
 			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal")
-			(description "2N7000 gate pull-down")
+			(description "BC547 base pull-down")
 			(fields
 				(field
 					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal")
@@ -819,7 +809,7 @@
 					(name "Datasheet")
 				)
 				(field
-					(name "Description") "2N7000 gate pull-down")
+					(name "Description") "BC547 base pull-down")
 			)
 			(libsource
 				(lib "Device")
@@ -846,7 +836,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "f0c5a55f-fae7-458b-96ad-b55803372a09")
+			(tstamps "fb56857d-62f0-4a66-8b54-e85666511b04")
 			(units
 				(unit
 					(name "A")
@@ -1086,10 +1076,10 @@
 			)
 		)
 		(libpart
-			(lib "Transistor_FET")
-			(part "2N7000")
-			(description "0.2A Id, 200V Vds, N-Channel MOSFET, 2.6V Logic Level, TO-92")
-			(docs "https://www.vishay.com/docs/70226/70226.pdf")
+			(lib "Transistor_BJT")
+			(part "BC547")
+			(description "0.1A Ic, 45V Vce, Small Signal NPN Transistor, TO-92")
+			(docs "https://www.onsemi.com/pub/Collateral/BC550-D.pdf")
 			(footprints
 				(fp "TO?92*")
 			)
@@ -1097,30 +1087,13 @@
 				(field
 					(name "Reference") "Q")
 				(field
-					(name "Value") "2N7000")
+					(name "Value") "BC547")
 				(field
 					(name "Footprint") "Package_TO_SOT_THT:TO-92_Inline")
 				(field
-					(name "Datasheet") "https://www.vishay.com/docs/70226/70226.pdf")
+					(name "Datasheet") "https://www.onsemi.com/pub/Collateral/BC550-D.pdf")
 				(field
-					(name "Description") "0.2A Id, 200V Vds, N-Channel MOSFET, 2.6V Logic Level, TO-92")
-			)
-			(pins
-				(pin
-					(num "1")
-					(name "S")
-					(type "passive")
-				)
-				(pin
-					(num "2")
-					(name "G")
-					(type "input")
-				)
-				(pin
-					(num "3")
-					(name "D")
-					(type "passive")
-				)
+					(name "Description") "0.1A Ic, 45V Vce, Small Signal NPN Transistor, TO-92")
 			)
 		)
 	)
@@ -1134,8 +1107,8 @@
 			(uri "${KICAD10_SYMBOL_DIR}/Device.kicad_sym")
 		)
 		(library
-			(logical "Transistor_FET")
-			(uri "${KICAD10_SYMBOL_DIR}/Transistor_FET.kicad_sym")
+			(logical "Transistor_BJT")
+			(uri "${KICAD10_SYMBOL_DIR}/Transistor_BJT.kicad_sym")
 		)
 	)
 	(nets
@@ -1257,12 +1230,6 @@
 				(pintype "passive")
 			)
 			(node
-				(ref "Q1")
-				(pin "1")
-				(pinfunction "S_1")
-				(pintype "passive")
-			)
-			(node
 				(ref "R2")
 				(pin "1")
 				(pintype "passive")
@@ -1281,12 +1248,6 @@
 				(ref "C2")
 				(pin "1")
 				(pintype "passive")
-			)
-			(node
-				(ref "Q1")
-				(pin "2")
-				(pinfunction "G_2")
-				(pintype "input")
 			)
 			(node
 				(ref "R3")
@@ -1349,12 +1310,6 @@
 				(ref "J_EXT")
 				(pin "5")
 				(pinfunction "Pin_5_5")
-				(pintype "passive")
-			)
-			(node
-				(ref "Q1")
-				(pin "3")
-				(pinfunction "D_3")
 				(pintype "passive")
 			)
 		)

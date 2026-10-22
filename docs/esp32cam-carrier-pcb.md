@@ -1,6 +1,6 @@
 # AI-Thinker ESP32-CAM Prototype Carrier Board
 
-Single-layer PCB and dot-matrix protoboard / perfboard reference layout for the AI-Thinker ESP32-CAM carrier board. This board integrates female socket headers for the ESP32-CAM module, power bulk decoupling, TPMS1 input conditioning, a 2N7000 MOSFET low-side buffer for `PS_ON#`, and an external wiring terminal.
+Single-layer PCB and dot-matrix protoboard / perfboard reference layout for the AI-Thinker ESP32-CAM carrier board. This board integrates female socket headers for the ESP32-CAM module, power bulk decoupling, TPMS1 input conditioning, a BC547/BC548 NPN BJT low-side buffer for `PS_ON#`, and an external wiring terminal.
 
 All pads and traces are aligned to a strict **2.54 mm (100 mil)** pitch grid on a single copper layer (`B.Cu`), making it straightforward to build on standard prototype boards with holes and solder pads.
 
@@ -36,10 +36,10 @@ For an exhaustive catalog including ratings, manufacturer part numbers (LCSC, Di
 | `R1` | Metal Film Axial Resistor | THT (DIN0207, P7.62mm) | **1 kΩ**, 1/4W 1% | Series current limit & filter for TPMS1 |
 | `R2` | Metal Film Axial Resistor | THT (DIN0207, P10.16mm) | **4.7 kΩ**, 1/4W 1% | Pull-down for TPMS1 (divides 47 kΩ SD pull-up) |
 | `C1` | Ceramic Disc Capacitor | THT (D5.0mm, P10.16mm) | **100 nF** (0.1 µF), 25V X7R | TPMS1 low-pass filter ($f_c \approx 1.6\text{ kHz}$) |
-| `Q1` | N-Channel MOSFET / NPN BJT | TO-92 Inline (2.54mm formed) | **2N7000 / BC547** | Low-side buffer isolates GPIO 14 from PSU 5V line |
-| `R3` | Metal Film Axial Resistor | THT (DIN0207, P7.62mm) | **1 kΩ**, 1/4W 1% | Gate protection resistor for Q1 |
-| `R4` | Metal Film Axial Resistor | THT (DIN0207, P5.08mm) | **100 kΩ**, 1/4W 1% | Gate pull-down (keeps PS_ON# off during ESP reset) |
-| `C2` | Ceramic Disc Capacitor | THT (D5.0mm, P5.08mm) | **100 nF** (0.1 µF), 25V X7R | Gate snubber (filters reset-time microsecond glitches) |
+| `Q1` | NPN BJT Transistor | TO-92 Inline (2.54mm formed) | **BC547 / BC548** | Low-side buffer isolates GPIO 14 from PSU 5V line (C-B-E pinout) |
+| `R3` | Metal Film Axial Resistor | THT (DIN0207, P7.62mm) | **1 kΩ**, 1/4W 1% | Base series protection resistor for Q1 |
+| `R4` | Metal Film Axial Resistor | THT (DIN0207, P5.08mm) | **100 kΩ**, 1/4W 1% | Base pull-down (keeps PS_ON# off during ESP reset) |
+| `C2` | Ceramic Disc Capacitor | THT (D5.0mm, P5.08mm) | **100 nF** (0.1 µF), 25V X7R | Base snubber (filters reset-time microsecond glitches) |
 
 ---
 
@@ -94,7 +94,7 @@ All traces run on the bottom copper foil (`B.Cu`). Since every track runs in its
 1. **Row 1, Column 1 & Row 9 (`GND` Ground Bus)**:
    - Top bus (Row 1): Runs from `J_EXT` pin 2 (Col 2, Row 4) left to Col 1, up to Row 1, and across to Col 27, connecting `R2` pin 1 (Col 8), `C1` pin 1 (Col 9), `C_PWR1` (-) (Col 10), `C_PWR2` (-) (Col 11), `J_CAM_L` pin 2 (`GND`, Col 13 Row 3 via Col 14), `C_PWR3` (-) (Col 24), and `C_PWR4` (-) (Col 26).
    - Right link: Runs down Col 27 from Row 1 to Row 5 to connect `J_CAM_R` pin 4 (middle `GND`, Col 22 Row 5).
-   - Left link & bottom bus (Col 1 & Row 9): Runs down Col 1 from Row 4 to Row 9 and across Row 9 to connect `Q1` Source/Emitter (Col 7), `C2` (-) (Col 8), and `R4` (-) (Col 9), while leaving `J_CAM_R` pin 8 (`GND/R`, Col 22 Row 9) completely isolated.
+   - Left link & bottom bus (Col 1 & Row 9): Runs down Col 1 from Row 4 to Row 9 and across Row 9 to connect `Q1` Emitter (Col 7), `C2` (-) (Col 8), and `R4` (-) (Col 9), while leaving `J_CAM_R` pin 8 (`GND/R`, Col 22 Row 9) completely isolated.
 2. **Row 3 to Row 2 (`+5VSB` Power Bus)**:
    - Solder bridge / 20 AWG wire from `J_EXT` pin 1 (Col 2, Row 3) → `C_PWR1` (+) (Col 10, Row 3) → `C_PWR2` (+) (Col 11, Row 3) → steps up to Row 2 → `J_CAM_L` pin 1 (Col 13, Row 2).
 3. **Row 2 (`+3V3` Power Rail)**:
@@ -104,8 +104,8 @@ All traces run on the bottom copper foil (`B.Cu`). Since every track runs in its
 5. **Row 6 (`BTN_A`)**:
    - Straight trace from `J_EXT` pin 4 (Col 2, Row 6) to `J_CAM_L` pin 5 (Col 13, Row 6).
 6. **Row 7 (`PS_ON#` & `NET_IO14`)**:
-   - `PS_ON#` from `J_EXT` pin 5 (Col 2, Row 7) → `Q1` Drain (Col 5, Row 7).
-   - `NET_GATE` connects `Q1` Gate (Col 6) → `C2` (Col 8) → `R4` (Col 9) → `R3` (Col 10..12).
+   - `PS_ON#` from `J_EXT` pin 5 (Col 2, Row 7) → `Q1` Collector (Col 5, Row 7).
+   - `NET_GATE` connects `Q1` Base (Col 6) → `C2` (Col 8) → `R4` (Col 9) → `R3` (Col 10..12).
    - `NET_IO14` from `R3` pad 2 (Col 12, Row 7) into `J_CAM_L` pin 6 (Col 13, Row 7).
 7. **Row 8 (`PWR_BTN#`)**:
    - Straight trace from `J_EXT` pin 6 (Col 2, Row 8) to `J_CAM_L` pin 7 (Col 13, Row 8).
@@ -132,10 +132,10 @@ All traces run on the bottom copper foil (`B.Cu`). Since every track runs in its
 3. Bend leads slightly on the bottom side to hold components flush, solder pads, and trim excess lead length.
 
 ### Step 2: Install Transistor and Electrolytic Capacitors
-1. **MOSFET `Q1` (2N7000)**:
-   - Form the leads to 2.54 mm pitch.
-   - Insert Pin 3 (Drain) at Col 5 Row 7, Pin 2 (Gate) at Col 6 Row 7, and Pin 1 (Source) at Col 7 Row 9.
-   - Ensure the flat face faces toward the top of the board. Solder and trim.
+1. **NPN Transistor `Q1` (BC547 / BC548)**:
+   - Standard TO-92 pinout: Pin 1 = Collector, Pin 2 = Base, Pin 3 = Emitter.
+   - Insert Pin 1 (Collector) at Col 5 Row 7, Pin 2 (Base) at Col 6 Row 7, and Pin 3 (Emitter) at Col 7 Row 9.
+   - **Orientation**: Looking from the component side, the **curved face points toward the top of the board (Row 1)** and the **flat face points toward the bottom of the board (Row 9)**. Solder and trim.
 2. **Bulk Capacitors `C_PWR1` and `C_PWR3`**:
    - **Observe polarity**: Pin 1 (+) connects to power (`+5VSB` on Row 3 or `+3V3` on Row 2); Pin 2 (-) connects to `GND` (Row 1).
    - Insert `C_PWR1` (470 µF) at Col 10 (Pad 1 at Row 3, Pad 2 at Row 1).

@@ -28,6 +28,14 @@ The power controller SHALL maintain three mutually exclusive operational states:
 - **WHEN** the system transitions from STATE_ON or STATE_BOOTING to STATE_OFF in normal operation mode
 - **THEN** the system re-initializes Bluetooth wake listening and re-starts Wi-Fi station WOL listeners if enabled in configuration
 
+#### Scenario: PS_ON# pin drive mode on direct wire targets
+- **WHEN** compiled for direct-wire targets (esp32dev, bare esp32cam, or esp32-c3)
+- **THEN** PS_ON_PIN is configured as open-drain (OUTPUT_OPEN_DRAIN), active-LOW (PS_ON_ASSERT = LOW, PS_ON_RELEASE = HIGH)
+
+#### Scenario: PS_ON# pin drive mode on carrier board target
+- **WHEN** compiled for BOARD_ESP32CAM_CARRIER
+- **THEN** PS_ON_PIN is configured as push-pull output (OUTPUT), active-HIGH (PS_ON_ASSERT = HIGH, PS_ON_RELEASE = LOW) to drive the base of the BC547/BC548 transistor
+
 ### Requirement: Push-Button Power On
 The system SHALL trigger a system power-on sequence when the momentary power button is tapped while in STATE_OFF in normal operation mode, but SHALL NOT trigger power-on while running in setup mode.
 
@@ -72,12 +80,16 @@ The system SHALL force an immediate power cut when the user holds the momentary 
 The system SHALL filter and condition the board sense signal against high-impedance line noise and transient spikes across both analog and digital hardware targets.
 
 #### Scenario: Noise rejection via oversampled hysteresis
-- **WHEN** analog board sense voltage is read on ADC-equipped hardware targets
+- **WHEN** analog board sense voltage is read on standard ADC-equipped hardware targets (DevKitC, ESP32-C3)
 - **THEN** the system averages 16 consecutive ADC samples and applies hysteresis thresholds of 2000 mV for HIGH and 800 mV for LOW
 
 #### Scenario: Noise rejection on digital board sense target
-- **WHEN** digital board sense level is read on the ESP32-CAM target
-- **THEN** the system samples GPIO13 across 16 consecutive reads spaced by 200 microseconds (~3.2 ms total window) and only updates the raw sense state when all 16 samples agree on HIGH or LOW, holding the previous state otherwise
+- **WHEN** digital board sense level is read on the bare ESP32-CAM target without carrier board
+- **THEN** the system samples GPIO13 across 16 consecutive reads spaced by 200 microseconds (~3.2 ms total window) with INPUT_PULLDOWN and only updates the raw sense state when all 16 samples agree on HIGH or LOW, holding the previous state otherwise
+
+#### Scenario: Noise rejection on ESP32-CAM carrier board target
+- **WHEN** board sense is read on the BOARD_ESP32CAM_CARRIER target
+- **THEN** the system reads ADC2 with 16 consecutive samples and applies hysteresis thresholds of 900 mV for HIGH and 500 mV for LOW while wireless radios are off, and detaches ADC2 before wireless radios start in STATE_OFF
 
 ### Requirement: Power Button Mirroring
 When graceful shutdown is enabled, the system SHALL mirror the momentary power button to the motherboard power-button line while in STATE_ON, pulling the line LOW while the button is pressed and releasing it to high-impedance when released, without ever driving it HIGH.

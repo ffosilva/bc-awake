@@ -202,8 +202,8 @@ ESP32's ~3.6 V limit. If your board's pin idles at 5 V, do not wire it directly.
 `PS_ON#` idles at ~5 V, pulled up **inside the PSU**. Open-drain firmware means the
 ESP32 never *drives* 5 V, but the pin still *sees* 5 V whenever it's released, and
 that is above the ESP32 GPIO absolute maximum (VDD + 0.3 V ≈ 3.6 V). It tends to work,
-but it stresses the pad over time. Recommended fix — use a small low-side switch so the
-ESP32 only ever drives a 3.3 V gate:
+but it stresses the pad over time. Recommended fix — use a small low-side transistor buffer so the
+ESP32 only drives a 3.3 V base:
 
 ```
                                   PSU PS_ON# (green)
@@ -211,29 +211,27 @@ ESP32 only ever drives a 3.3 V gate:
                                          ├───────────  (PSU pull-up to ~5V is internal)
                                          │
                                        ┌─┴─┐
-                    1 kΩ                │ D │   2N7000 / BSS138 N-MOSFET
- GPIO32 ──[ 1 kΩ ]──────────────────── │ G │   (or any small NPN: 1 kΩ base resistor,
-                                        │ S │    emitter to GND)
+                    1 kΩ             1 │ C │   BC547 / BC548 NPN BJT
+ GPIO14/32 ──[ 1 kΩ ]─────────────── 2 │ B │   (Standard TO-92 pinout:
+                                     3 │ E │    1=Collector, 2=Base, 3=Emitter)
                                        └─┬─┘
                                          │
                                         GND
 
- + 100 kΩ from gate to GND so PS_ON# stays released while the ESP32 boots.
+ + 100 kΩ from base to GND so PS_ON# stays released while the ESP32 boots.
 ```
 
-The buffer **inverts** the signal: GPIO32 HIGH turns the MOSFET on and pulls `PS_ON#`
-LOW (PSU on). If you add it, flip the logic levels in
-[include/board.h](../include/board.h):
+The buffer **inverts** the signal: GPIO HIGH turns the transistor on and pulls `PS_ON#`
+LOW (PSU on). When using the carrier board or adding this buffer to an ESP32-CAM build,
+simply flash using the dedicated PlatformIO environment:
 
-```cpp
-const int PS_ON_ASSERT  = HIGH;  // MOSFET on  -> PS_ON# pulled LOW -> PSU on
-const int PS_ON_RELEASE = LOW;   // MOSFET off -> PSU pull-up wins  -> PSU off
+```bash
+pio run -e esp32cam-carrier -t upload
 ```
 
-and change `pinMode(PS_ON_PIN, OUTPUT_OPEN_DRAIN)` to `OUTPUT` in
-[src/main.cpp](../src/main.cpp) and [src/portal.cpp](../src/portal.cpp). If you skip the
-buffer, at minimum put a ~1 kΩ series resistor between `PS_ON#` and GPIO32 to limit
-the clamp-diode current.
+This automatically enables `BOARD_ESP32CAM_CARRIER`, configuring `PS_ON_PIN` as push-pull `OUTPUT`
+with active-`HIGH` assertion and `ADC2` oversampled hysteresis sensing. If building on a bare board
+without a transistor buffer, use `esp32cam` or `esp32dev` which default to open-drain active-`LOW`.
 
 ## AI-Thinker ESP32-CAM hardware resilience circuit (anti-oscillation)
 
@@ -293,14 +291,14 @@ To make an ESP32-CAM build rock-solid for 24/7 long-term operation, add this pas
                                                    ├────────  (PSU ~5V internal pull-up)
                                                    │
                                                  ┌─┴─┐
-                             R3: 1 kΩ            │ D │  2N7000 / BSS138 N-MOSFET
- ESP32-CAM "IO14" ───────────[ 1 kΩ ]──────┬─────┤ G │
- (PS_ON_PIN)                               │     │ S │
+                             R3: 1 kΩ          1 │ C │  BC547 / BC548 NPN Transistor
+ ESP32-CAM "IO14" ───────────[ 1 kΩ ]──────┬─────┤ B │  (1=Collector, 2=Base, 3=Emitter)
+ (PS_ON_PIN)                               │   3 │ E │
                                          [ C2 ]  └─┬─┘
                                          [ R4 ]    │
                                            │      GND
                                           GND
-      (R4 = 100 kΩ pull-down to GND; C2 = 100 nF ceramic gate snubber)
+      (R4 = 100 kΩ pull-down to GND; C2 = 100 nF ceramic base snubber)
 ========================================================================================
 ```
 
@@ -317,17 +315,17 @@ For an exhaustive catalog including footprints, ratings, sourcing links, program
 | `R1` | Metal Film Resistor | **1 kΩ**, 1/4W | Series current limit & input filter resistor for TPMS1 |
 | `R2` | Metal Film Resistor | **4.7 kΩ**, 1/4W | Pull-down to GND: divides onboard 47 kΩ pull-up down to ~0.30 V when off |
 | `C1` | Ceramic Capacitor | **100 nF** (0.1 µF), 25V X7R | Low-pass filter ($f_c \approx 1.6\text{ kHz}$) with R1 against VRM noise |
-| `Q1` | N-Channel MOSFET | **2N7000** (TO-92) or **BSS138** (SOT-23) | Low-side buffer isolates GPIO 14 from PSU 5 V line |
-| `R3` | Metal Film Resistor | **1 kΩ**, 1/4W | Gate series protection resistor |
-| `R4` | Metal Film Resistor | **100 kΩ**, 1/4W | Gate bleed-down to GND: keeps MOSFET off when ESP32 resets |
-| `C2` | Ceramic Capacitor | **100 nF** (0.1 µF), 25V X7R | Gate snubber: absorbs bootloader microsecond output glitches |
+| `Q1` | NPN BJT Transistor | **BC547 / BC548** (TO-92, C-B-E) | Low-side open-collector buffer isolates GPIO 14 from PSU 5 V line |
+| `R3` | Metal Film Resistor | **1 kΩ**, 1/4W | Base series protection resistor |
+| `R4` | Metal Film Resistor | **100 kΩ**, 1/4W | Base bleed-down to GND: keeps transistor off when ESP32 resets |
+| `C2` | Ceramic Capacitor | **100 nF** (0.1 µF), 25V X7R | Base snubber: absorbs bootloader microsecond output glitches |
 
 ### Wiring & Assembly Notes
 
-- **Logic Inversion with MOSFET**: The N-MOSFET inverts logic. In [include/board.h](../include/board.h), set `PS_ON_ASSERT = HIGH` and `PS_ON_RELEASE = LOW`, and change `OUTPUT_OPEN_DRAIN` to `OUTPUT` in `initHardware()`.
+- **Dedicated Carrier Build Environment**: The BC547/BC548 transistor inverts logic. Compile and flash using `pio run -e esp32cam-carrier -t upload`, which automatically sets `PS_ON_ASSERT = HIGH`, `PS_ON_RELEASE = LOW`, push-pull `OUTPUT`, and `ADC2` oversampled hysteresis sensing.
 - **Wire Gauge**: Use 20–22 AWG wire for `5V` and `GND`. Avoid thin 28–30 AWG breadboard jumpers for power, as their resistance causes voltage drop under load.
 - **Capacitor Placement**: Solder the 470 µF electrolytic capacitor as close as physically possible to the ESP32-CAM's header pins.
-- **Never put raw capacitors directly on `PS_ON#`**: Always filter the MOSFET gate (`R3`/`R4`/`C2`), never the green wire directly to GND. Placing a large capacitor directly on `PS_ON#` discharges violently through the transistor and forces the PSU on during cold boot.
+- **Never put raw capacitors directly on `PS_ON#`**: Always filter the transistor base (`R3`/`R4`/`C2`), never the green wire directly to GND. Placing a large capacitor directly on `PS_ON#` discharges violently through the transistor and forces the PSU on during cold boot.
 
 ## Connector pinouts
 

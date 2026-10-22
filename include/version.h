@@ -4,7 +4,9 @@
 #define FW_VERSION "2.0.0"
 #endif
 
-#if defined(BOARD_ESP32CAM)
+#if defined(BOARD_ESP32CAM_CARRIER)
+  #define FW_TARGET "esp32cam-carrier"
+#elif defined(BOARD_ESP32CAM)
   #define FW_TARGET "esp32cam"
 #elif defined(BOARD_ESP32C3)
   #define FW_TARGET "esp32-c3"

@@ -19,7 +19,8 @@ The AMD **BC250** is a powerhouse for budget desktop conversions, living room ga
 
 Supports multiple targets from the same repository:
 - **ESP32-WROOM (DevKitC)**: Classic Bluetooth (BR/EDR) controller wake.
-- **AI-Thinker ESP32-CAM**: Classic Bluetooth wake with onboard flash LED wake indicator.
+- **AI-Thinker ESP32-CAM (Bare module)**: Classic Bluetooth wake with onboard flash LED wake indicator.
+- **AI-Thinker ESP32-CAM (Carrier Board)**: Dedicated carrier target with BC547/BC548 transistor buffer and ADC2 sensing.
 - **ESP32-C3 (SuperMini / DevKitM-1)**: Bluetooth Low Energy (BLE) controller wake.
 
 > [!CAUTION]
@@ -63,7 +64,7 @@ between the ESP, the PSU, and the board.
 as an analog voltage with hysteresis rather than a digital pin (ADC1 on DevKitC and ESP32-C3; digital input with pull-down on ESP32-CAM).
 
 > [!TIP]
-> **ESP32-CAM deployments**: Due to the onboard AMS1117-3.3 regulator's dropout voltage and the 47 kΩ MicroSD pull-up on GPIO13, ESP32-CAM builds are prone to brownout resets and threshold floating. Adding power bulk decoupling (470 µF), an external 4.7 kΩ pull-down on GPIO13, and an N-MOSFET buffer on GPIO14 is strongly recommended for 24/7 reliability. See [docs/pinout.md: ESP32-CAM resilience circuit](docs/pinout.md#ai-thinker-esp32-cam-hardware-resilience-circuit-anti-oscillation), the [carrier board guide](docs/esp32cam-carrier-pcb.md), and the dedicated [Bill of Materials](docs/bom.md).
+> **ESP32-CAM deployments**: Due to the onboard AMS1117-3.3 regulator's dropout voltage and the 47 kΩ MicroSD pull-up on GPIO13, ESP32-CAM builds are prone to brownout resets and threshold floating. Adding power bulk decoupling (470 µF), an external 4.7 kΩ pull-down on GPIO13, and a BC547/BC548 NPN buffer on GPIO14 is strongly recommended for 24/7 reliability. When using this circuit or the carrier board, flash with `pio run -e esp32cam-carrier -t upload`. See [docs/pinout.md: ESP32-CAM resilience circuit](docs/pinout.md#ai-thinker-esp32-cam-hardware-resilience-circuit-anti-oscillation), the [carrier board guide](docs/esp32cam-carrier-pcb.md), and the dedicated [Bill of Materials](docs/bom.md).
 
 **Full pinout, header diagrams for DevKitC, ESP32-CAM, and ESP32-C3 (SuperMini & DevKitM-1), ATX 24-pin and TPMS1 connector diagrams, the
 `PS_ON#` buffer circuit, and the ESP32-CAM resilience circuit: [docs/pinout.md](docs/pinout.md).**
@@ -171,11 +172,16 @@ PlatformIO (pioarduino). Flashing is a single step — the setup portal web UI (
 pio run -e esp32dev -t upload
 ```
 
-**AI-Thinker ESP32-CAM (`esp32cam` — Classic BT wake):**
+**AI-Thinker ESP32-CAM (Bare module — Classic BT wake):**
 ```bash
 pio run -e esp32cam -t upload
 ```
 > *ESP32-CAM flashing note*: Use a USB-to-UART adapter (or ESP32-CAM-MB base board). Connect **GPIO0 to GND** before powering on to enter download mode; disconnect GPIO0 and reset to run.
+
+**AI-Thinker ESP32-CAM (Carrier Board with BC547/BC548 buffer):**
+```bash
+pio run -e esp32cam-carrier -t upload
+```
 
 **ESP32-C3 DevKitM-1 (`esp32-c3-devkitm-1` — BLE wake):**
 ```bash

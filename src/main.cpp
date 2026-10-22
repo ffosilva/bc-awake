@@ -83,7 +83,7 @@ static void setState(PowerState next) {
   Serial.printf("[STATE] %s -> %s\n", stateName(state), stateName(next));
   state = next;
   if (next == STATE_OFF) {
-#if defined(BOARD_ESP32CAM)
+#if defined(BOARD_ESP32CAM_CARRIER)
     // Detach ADC2 before starting Wi-Fi/BT radios, which share ADC2 hardware.
     pinMode(BOARD_SENSE, INPUT);
     senseLevel = false;
@@ -103,6 +103,29 @@ static void setState(PowerState next) {
   }
 }
 
+#if defined(BOARD_ESP32CAM) && !defined(BOARD_ESP32CAM_CARRIER)
+// Bare ESP32-CAM: GPIO13 is on ADC2, which cannot be sampled while Bluetooth is
+// running. It is also shared with SD DAT3 which floats HIGH unless pulled down.
+// In direct-wire setups we configure GPIO13 with INPUT_PULLDOWN and require
+// unanimous agreement across SENSE_OVERSAMPLE consecutive digital reads.
+static bool readBoardSense(uint32_t *outMv = nullptr) {
+  int highCount = 0;
+  for (int i = 0; i < SENSE_OVERSAMPLE; i++) {
+    if (i > 0) delayMicroseconds(200);
+    if (digitalRead(BOARD_SENSE) == HIGH) {
+      highCount++;
+    }
+  }
+  if (highCount == SENSE_OVERSAMPLE) {
+    senseLevel = true;
+  } else if (highCount == 0) {
+    senseLevel = false;
+  }
+  if (outMv) *outMv = senseLevel ? 3300 : 0;
+  return senseLevel;
+}
+#else
+
 // One ADC sample in mV. The classic ESP32's analogReadMilliVolts() needs an eFuse
 // calibration (vref) that many modules never had burned; without it every read
 // fails and returns 0. Use the raw 12-bit count instead: the ADC1 + 11 dB range is
@@ -117,7 +140,7 @@ static uint32_t senseReadMv() {
 }
 
 static bool readBoardSense(uint32_t *outMv = nullptr) {
-#if defined(BOARD_ESP32CAM)
+#if defined(BOARD_ESP32CAM_CARRIER)
   // GPIO13 is on ADC2, which cannot be sampled while Wi-Fi or Bluetooth radios
   // are active. Radios are only active in STATE_OFF / setup mode; during
   // initial boot qualification, STATE_BOOTING, and STATE_ON, radios are off
@@ -144,6 +167,7 @@ static bool readBoardSense(uint32_t *outMv = nullptr) {
   }
   return senseLevel;
 }
+#endif
 
 // PWR_BTN_PIN is a high-Z INPUT unless we are emulating a press. The motherboard
 // owns the HIGH level (~3.4V pull-up), so we only ever pull the line LOW and
@@ -251,12 +275,14 @@ static bool debounce(bool raw, bool *stable, bool *lastRaw,
 }
 
 static void initHardware() {
-  // PS_ON# open-drain, released by default so the PSU stays off at boot.
-  // Pre-load the hardware output latch HIGH via ESP-IDF before enabling the
-  // open-drain driver so PS_ON# never glitches LOW on startup, then sync the
-  // Arduino GPIO HAL after pinMode registers the pin.
+  // Pre-load the hardware output latch via ESP-IDF before enabling the pin driver
+  // so PS_ON# never glitches on startup.
   gpio_set_level((gpio_num_t)PS_ON_PIN, PS_ON_RELEASE);
+#if defined(BOARD_ESP32CAM_CARRIER)
   pinMode(PS_ON_PIN, OUTPUT);
+#else
+  pinMode(PS_ON_PIN, OUTPUT_OPEN_DRAIN);
+#endif
   digitalWrite(PS_ON_PIN, PS_ON_RELEASE);
 
   // Optional PWR_BTN#: always start as a high-Z input, never driven unless the
@@ -273,7 +299,11 @@ static void initHardware() {
 #if defined(BOARD_ESP32CAM)
   pinMode(FLASH_LED, OUTPUT);
   digitalWrite(FLASH_LED, LOW);
-  analogSetAttenuation(ADC_11db);
+  #if defined(BOARD_ESP32CAM_CARRIER)
+    analogSetAttenuation(ADC_11db);
+  #else
+    pinMode(BOARD_SENSE, INPUT_PULLDOWN);
+  #endif
 #elif defined(BOARD_ESP32C3)
   analogSetPinAttenuation(BOARD_SENSE, ADC_11db);
 #else
@@ -329,7 +359,7 @@ static void normalBegin() {
 
   // Only start wireless radios if booting in STATE_OFF
   if (state == STATE_OFF) {
-#if defined(BOARD_ESP32CAM)
+#if defined(BOARD_ESP32CAM_CARRIER)
     pinMode(BOARD_SENSE, INPUT);
     senseLevel = false;
 #endif

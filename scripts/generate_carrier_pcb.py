@@ -162,7 +162,9 @@ sym_c06 = extract_sym("Connector_Generic", "Conn_01x06").replace('(symbol "Conn_
 sym_r = extract_sym("Device", "R").replace('(symbol "R"', '(symbol "Device:R"', 1)
 sym_c = extract_sym("Device", "C").replace('(symbol "C"', '(symbol "Device:C"', 1)
 sym_cp = extract_sym("Device", "C_Polarized").replace('(symbol "C_Polarized"', '(symbol "Device:C_Polarized"', 1)
-sym_fet = extract_sym("Transistor_FET", "2N7000").replace('(symbol "2N7000"', '(symbol "Transistor_FET:2N7000"', 1)
+sym_bjt = extract_sym("Transistor_BJT", "BC547").replace('(symbol "BC547"', '(symbol "Transistor_BJT:BC547"', 1)
+# Also include Q_NPN_CBE base symbol that BC547 extends
+sym_npn_base = extract_sym("Transistor_BJT", "Q_NPN_CBE")
 
 def pin_pos(sx, sy, px, py, rot):
     if rot == 0:
@@ -228,10 +230,10 @@ schematic_symbols = [
     {"lib": "Device:R", "ref": "R1", "val": "1k", "fp": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal", "x": 76.2, "y": 38.1, "rot": 90, "pins": ["1", "2"], "desc": "TPMS1 series resistor"},
     {"lib": "Device:R", "ref": "R2", "val": "4.7k", "fp": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal", "x": 88.9, "y": 38.1, "rot": 0, "pins": ["1", "2"], "desc": "TPMS1 pull-down"},
     {"lib": "Device:C", "ref": "C1", "val": "100nF", "fp": "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm", "x": 101.6, "y": 38.1, "rot": 0, "pins": ["1", "2"], "desc": "TPMS1 filter"},
-    {"lib": "Transistor_FET:2N7000", "ref": "Q1", "val": "2N7000", "fp": "Package_TO_SOT_THT:TO-92_Inline_Wide", "x": 63.5, "y": 88.9, "rot": 0, "pins": ["1", "2", "3"], "desc": "PS_ON# Buffer"},
-    {"lib": "Device:R", "ref": "R3", "val": "1k", "fp": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal", "x": 88.9, "y": 88.9, "rot": 90, "pins": ["1", "2"], "desc": "2N7000 gate resistor"},
-    {"lib": "Device:R", "ref": "R4", "val": "100k", "fp": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal", "x": 76.2, "y": 101.6, "rot": 0, "pins": ["1", "2"], "desc": "2N7000 gate pull-down"},
-    {"lib": "Device:C", "ref": "C2", "val": "100nF", "fp": "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm", "x": 63.5, "y": 101.6, "rot": 0, "pins": ["1", "2"], "desc": "2N7000 gate snubber"}
+    {"lib": "Transistor_BJT:BC547", "ref": "Q1", "val": "BC547", "fp": "Package_TO_SOT_THT:TO-92_Inline", "x": 63.5, "y": 88.9, "rot": 0, "pins": ["1", "2", "3"], "desc": "PS_ON# NPN Buffer"},
+    {"lib": "Device:R", "ref": "R3", "val": "1k", "fp": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal", "x": 88.9, "y": 88.9, "rot": 90, "pins": ["1", "2"], "desc": "BC547 base resistor"},
+    {"lib": "Device:R", "ref": "R4", "val": "100k", "fp": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal", "x": 76.2, "y": 101.6, "rot": 0, "pins": ["1", "2"], "desc": "BC547 base pull-down"},
+    {"lib": "Device:C", "ref": "C2", "val": "100nF", "fp": "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm", "x": 63.5, "y": 101.6, "rot": 0, "pins": ["1", "2"], "desc": "BC547 base snubber"}
 ]
 
 pin_net_map = {
@@ -273,9 +275,9 @@ pin_net_map = {
     ("C1", "1"): "GND",
     ("C1", "2"): "NET_IO13",
 
-    ("Q1", "1"): "GND",
+    ("Q1", "1"): "PS_ON#",
     ("Q1", "2"): "NET_GATE",
-    ("Q1", "3"): "PS_ON#",
+    ("Q1", "3"): "GND",
 
     ("R3", "1"): "NET_IO14",
     ("R3", "2"): "NET_GATE",
@@ -293,7 +295,7 @@ sym_pin_offsets = {
     "Device:R": {"1": (0, 3.81), "2": (0, -3.81)},
     "Device:C": {"1": (0, 3.81), "2": (0, -3.81)},
     "Device:C_Polarized": {"1": (0, 3.81), "2": (0, -3.81)},
-    "Transistor_FET:2N7000": {"1": (2.54, -5.08), "2": (-5.08, 0), "3": (2.54, 5.08)}
+    "Transistor_BJT:BC547": {"1": (2.54, 5.08), "2": (-5.08, 0), "3": (2.54, -5.08)}
 }
 
 labels_list = []
@@ -322,10 +324,10 @@ sch_full = f"""(kicad_sch
 \t(paper "A4")
 \t(title_block
 \t\t(title "BC Awake ESP32-CAM Single-Layer Prototype Carrier Board")
-\t\t(date "2026-10-20")
-\t\t(rev "1.0")
+\t\t(date "2026-10-22")
+\t\t(rev "1.1")
 \t\t(comment 1 "Single-layer PCB for protoboard replication")
-\t\t(comment 2 "Bulk decoupling, TPMS1 RC filter, and PS_ON# MOSFET buffer")
+\t\t(comment 2 "Bulk decoupling, TPMS1 RC filter, and PS_ON# BC547/BC548 NPN buffer")
 \t)
 \t(lib_symbols
 {sym_c08}
@@ -333,7 +335,8 @@ sch_full = f"""(kicad_sch
 {sym_r}
 {sym_c}
 {sym_cp}
-{sym_fet}
+{sym_npn_base}
+{sym_bjt}
 \t)
 
 {symbols_inst_txt}
@@ -590,18 +593,20 @@ pcb_footprints.append(f"""\t(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50
 {pad_tht(2, gx(9), gy(5), 5, "NET_IO13", False)}
 \t)""")
 
-# 9. Q1 (2N7000 / BC547 N-Channel buffer) on Row 7: Col 5..7
-# Pad 3 (Drain/Collector) at (Col 5, Row 7) -> PS_ON#
-# Pad 2 (Gate/Base)       at (Col 6, Row 7) -> NET_GATE
-# Pad 1 (Source/Emitter)  at (Col 7, Row 9) -> GND
-pcb_footprints.append(f"""\t(footprint "Package_TO_SOT_THT:TO-92_Inline_Wide"
+# 9. Q1 (BC547 / BC548 NPN BJT buffer) on Row 7: Col 5..7
+# Standard TO-92 pinout (Pin 1 = Collector, Pin 2 = Base, Pin 3 = Emitter)
+# Pad 1 (Collector)       at (Col 5, Row 7) -> PS_ON#
+# Pad 2 (Base)            at (Col 6, Row 7) -> NET_GATE
+# Pad 3 (Emitter)         at (Col 7, Row 9) -> GND
+# Silkscreen flat face points toward bottom (Row 9)
+pcb_footprints.append(f"""\t(footprint "Package_TO_SOT_THT:TO-92_Inline"
 \t\t(layer "F.Cu") (uuid "{u()}") (at 0 0)
 \t\t(property "Reference" "Q1" (at {gx(6)} {gy(6.2)} 0) (layer "F.SilkS") (effects (font (size 0.6 0.6) (thickness 0.1))))
-\t\t(property "Value" "2N7000" (at {gx(6)} {gy(8.0)} 0) (layer "F.Fab") (effects (font (size 0.6 0.6) (thickness 0.1))))
-\t\t(fp_line (start {gx(4.2)} {gy(6.5)}) (end {gx(6.8)} {gy(6.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
-{pad_tht(1, gx(7), gy(9), 1, "GND", False)}
+\t\t(property "Value" "BC547" (at {gx(6)} {gy(8.0)} 0) (layer "F.Fab") (effects (font (size 0.6 0.6) (thickness 0.1))))
+\t\t(fp_line (start {gx(4.2)} {gy(8.5)}) (end {gx(6.8)} {gy(8.5)}) (stroke (width 0.1) (type solid)) (layer "F.SilkS"))
+{pad_tht(1, gx(5), gy(7), 6, "PS_ON#", False)}
 {pad_tht(2, gx(6), gy(7), 7, "NET_GATE", False)}
-{pad_tht(3, gx(5), gy(7), 6, "PS_ON#", False)}
+{pad_tht(3, gx(7), gy(9), 1, "GND", False)}
 \t)""")
 
 # 10. R3 (1k series gate) horizontal on Row 7: Col 10 to Col 12
@@ -772,7 +777,7 @@ BOM_METADATA = {
     },
     "C2": {
         "val": "100nF",
-        "desc": "Ceramic Disc Capacitor (2N7000 gate glitch snubber)",
+        "desc": "Ceramic Disc Capacitor (BC547 base glitch snubber)",
         "ratings": "100nF 25V/50V X7R, D5.0mm P2.5mm",
         "mpn": "Kemet C315C104K5R5TA / Generic"
     },
@@ -784,27 +789,27 @@ BOM_METADATA = {
     },
     "R2": {
         "val": "4.7k",
-        "desc": "Metal Film Axial Resistor (TPMS1 digital pull-down)",
+        "desc": "Metal Film Axial Resistor (TPMS1 pull-down)",
         "ratings": "4.7kΩ 1/4W 1%, DIN0207 P7.62mm",
         "mpn": "Yageo MFR-25FRF52-4K7 / TE LR0204F4K7"
     },
     "R3": {
         "val": "1k",
-        "desc": "Metal Film Axial Resistor (2N7000 gate series resistor)",
+        "desc": "Metal Film Axial Resistor (BC547 base series resistor)",
         "ratings": "1kΩ 1/4W 1%, DIN0207 P7.62mm",
         "mpn": "Yageo MFR-25FRF52-1K / TE LR0204F1K0"
     },
     "R4": {
         "val": "100k",
-        "desc": "Metal Film Axial Resistor (2N7000 gate pull-down)",
+        "desc": "Metal Film Axial Resistor (BC547 base pull-down)",
         "ratings": "100kΩ 1/4W 1%, DIN0207 P7.62mm",
         "mpn": "Yageo MFR-25FRF52-100K / TE LR0204F100K"
     },
     "Q1": {
-        "val": "2N7000",
-        "desc": "N-Channel MOSFET (PS_ON# low-side open-drain buffer)",
-        "ratings": "60V 200mA, Vgs(th) 0.8-3.0V, TO-92 Inline",
-        "mpn": "onsemi 2N7000 / Diotec 2N7000"
+        "val": "BC547",
+        "desc": "NPN BJT Transistor (PS_ON# low-side open-collector buffer)",
+        "ratings": "45V 100mA, TO-92 Inline (C-B-E)",
+        "mpn": "onsemi BC547B / Diotec BC547B / BC548"
     },
     "J_CAM_L": {
         "val": "1x08 Female Header",
