@@ -274,6 +274,29 @@ static bool debounce(bool raw, bool *stable, bool *lastRaw,
   return false;
 }
 
+// Non-blocking status LED. Setup mode (1 Hz blink) overrides the power-state
+// pattern: ON = solid, BOOTING = fast blink (~4 Hz), OFF = dark. Compiles to a
+// no-op on targets without a status LED (STATUS_LED_PIN < 0).
+static void statusLedUpdate(unsigned long now) {
+  if (STATUS_LED_PIN < 0) return;
+
+  bool lit;
+  if (g_setupMode) {
+    lit = ((now / 500) % 2) == 0;
+  } else if (state == STATE_BOOTING) {
+    lit = ((now / 125) % 2) == 0;
+  } else {
+    lit = (state == STATE_ON);
+  }
+
+  static int lastLevel = -1;
+  int level = lit ? STATUS_LED_ON : !STATUS_LED_ON;
+  if (level != lastLevel) {
+    digitalWrite(STATUS_LED_PIN, level);
+    lastLevel = level;
+  }
+}
+
 static void initHardware() {
   // Pre-load the hardware output latch via ESP-IDF before enabling the pin driver
   // so PS_ON# never glitches on startup.
@@ -295,6 +318,12 @@ static void initHardware() {
     digitalWrite(BUTTON_GND, LOW);
   }
   pinMode(BUTTON_SENSE, INPUT_PULLUP);
+
+  // Status LED: start off until statusLedUpdate() applies a pattern.
+  if (STATUS_LED_PIN >= 0) {
+    digitalWrite(STATUS_LED_PIN, !STATUS_LED_ON);
+    pinMode(STATUS_LED_PIN, OUTPUT);
+  }
 
 #if defined(BOARD_ESP32CAM)
   pinMode(FLASH_LED, OUTPUT);
@@ -396,6 +425,8 @@ void setup() {
 
 static void normalLoop() {
   unsigned long now = millis();
+
+  statusLedUpdate(now);
 
   // --- Serial commands for debugging ---
   while (Serial.available()) {

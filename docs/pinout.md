@@ -18,6 +18,7 @@ active PlatformIO environment (`esp32dev`, `esp32cam`, or `esp32-c3-devkitm-1`).
 | `BOARD_SENSE` | **GPIO34** | **GPIO13** | **GPIO3** | BC250 `TPMS1` pin 9 | ~3.3 V when up, 0 when off (DevKitC/C3: ADC with hysteresis; CAM: digital INPUT_PULLDOWN) |
 | `PWR_BTN_PIN` | **GPIO27** | **GPIO2** | **GPIO7** | Motherboard `PWR_BTN#` (optional) | Direct wire, idles ~3.4 V. High-Z input; pulled LOW only while mirroring the button or sending a 300 ms shutdown pulse; never driven HIGH |
 | `FLASH_LED` | — | **GPIO4** | — | Onboard white LED | Held permanently LOW so the onboard flash LED never illuminates |
+| `STATUS_LED_PIN` | — | **GPIO33** | — | Onboard red LED (active LOW) | Firmware status LED on all ESP32-CAM builds (with or without carrier): solid = ON, ~4 Hz blink = BOOTING, off = OFF, 1 Hz blink = setup mode |
 | `5V` / `VIN` | **5V** | **5V** | **5V** | PSU `+5VSB` | Permanent power for the ESP |
 | `GND` | **GND** | **GND** | **GND** | PSU GND + board GND | Common ground |
 

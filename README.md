@@ -142,7 +142,9 @@ receive Wake-on-LAN packets natively. When **Enable Wake-on-LAN** is configured:
 
 When unconfigured (or after a factory reset), the ESP32 **automatically launches the setup portal** (`BC250_<SUFFIX>`) on initial power-up. While in setup mode, the host machine remains safely powered off and unenergized so you can configure the switch from your smartphone, tablet, or laptop.
 
-If the switch is already configured, hold the power button ≥ 8 s while OFF (or send `'s'` over serial while off) to re-enter setup mode.
+If the switch is already configured, hold the power button ≥ 8 s while OFF (or send `'s'` over serial while off) to re-enter setup mode. Hold ≥ 8 s again while in setup mode to return to normal operation.
+
+On every ESP32-CAM build (with or without the carrier board) the onboard red LED (GPIO33) shows the state: off = machine off, fast blink = booting, solid = machine on, 1 Hz blink = setup mode.
 
 ### Setup Instructions
 

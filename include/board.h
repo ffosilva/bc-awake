@@ -38,6 +38,13 @@ const int PWR_BTN_PIN = 2;
 // or floats due to SD card trace leakage.
 const int FLASH_LED = 4;
 
+// Onboard red status LED (GPIO 33, active LOW, not broken out to the header).
+// Used as the firmware status indicator on every ESP32-CAM build, with or
+// without the carrier board. GPIO33 is not a strapping pin and is otherwise
+// unused here.
+const int STATUS_LED_PIN = 33;
+const int STATUS_LED_ON = LOW;
+
 #elif defined(BOARD_ESP32C3)
 // ESP32-C3 DevKitM-1 wiring:
 //
@@ -60,6 +67,10 @@ const int BOARD_SENSE = 3;
 // pull-up): kept as a high-Z INPUT, only pulled LOW to emulate a press.
 const int PWR_BTN_PIN = 7;
 
+// No status LED on this target.
+const int STATUS_LED_PIN = -1;
+const int STATUS_LED_ON = HIGH;
+
 #else
 // Standard ESP32-WROOM (DevKitC) wiring:
 //
@@ -81,6 +92,10 @@ const int BOARD_SENSE = 34;
 // Optional: motherboard PWR_BTN# header pin, wired directly. Idles ~3.4V (board
 // pull-up): kept as a high-Z INPUT, only pulled LOW to emulate a press.
 const int PWR_BTN_PIN = 27;
+
+// No status LED on this target.
+const int STATUS_LED_PIN = -1;
+const int STATUS_LED_ON = HIGH;
 #endif
 
 // Hysteresis thresholds for the analog board-sense reading. The gap between
